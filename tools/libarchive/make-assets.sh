@@ -28,7 +28,7 @@ done
 raw() { curl -sfL "https://raw.githubusercontent.com/$1"; }
 {
   echo "libarchive-jni.so from me.zhanghai.android.libarchive:library:$VERSION (Maven Central, $M)"
-  echo "Used by Pebble Desk to read covers of comic archives. Licenses of the code built into it follow."
+  echo "Used by BookLauncher to read covers of comic archives. Licenses of the code built into it follow."
   for part in \
     "libarchive-android (Apache-2.0)|zhanghai/libarchive-android/v$VERSION/LICENSE" \
     "libarchive (BSD-2-Clause and others, incl. bundled libb2 CC0)|libarchive/libarchive/master/COPYING" \

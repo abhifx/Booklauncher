@@ -250,7 +250,7 @@ Pebble Desk(1.2.x)를 기본 홈으로 쓰는 홈 화면. 책 1권(밀리의서�
 - **읽는 책 자동 추가가 켜지지 않는다**: 접근성 › 다운로드한 앱 › Pebble Desk 가 흐리게 `사용 안함`, 누르면 `제한된 설정 — 보안을 위해 이 설정은 현재 사용할 수 없습니다`. iReader 고유 제한이 아니라 **안드로이드 13+ 의 제한된 설정**이다: 파일(APK)로 직접 깐 앱은 접근성·알림 접근 같은 권한을 켜지 못하게 막는다(앱 장터의 세션 설치는 해당 없음). 같은 화면의 Smart Launcher Gestures 는 흐리지 않다(Play 로 깐 것으로 보인다).
   - 푸는 법: 접근성에서 Pebble Desk 를 한 번 눌러 `제한된 설정` 창을 본 뒤(그래야 `⋮` 에 항목이 생긴다. 에뮬레이터 API 33 에서 확인: 창을 보면 `ACCESS_RESTRICTED_SETTINGS` 가 `deny` → `ignore`), 설정 › 앱 › Pebble Desk › 앱 정보 오른쪽 위 `⋮` › **제한된 설정 허용** → 다시 접근성에서 켠다. SmartOS 앱 정보 화면에 `⋮` 가 있는지는 **(미확인)**.
   - Pebble Desk 1.3.2 는 ⑭ 시작하기 1쪽에 이 순서를 단계로 보이고 `앱 정보 열기 ›` 로 앱 정보를 직접 연다(기기 설정 아이콘을 숨긴 SmartOS 에서도 열릴 것 **(추정)**. 안드로이드 13 설정 앱은 extra `uId` 가 있어야 직접 연 앱 정보에 `⋮` 를 만든다. 14 도 같은지 **(미확인)**). 설정 › 독서 › 읽는 책 자동 추가 창에도 같은 안내와 버튼이 있다.
-  - 안 되면 PC 에서 `adb shell appops set com.woody.pebbledesk ACCESS_RESTRICTED_SETTINGS allow`(adb 가 되는 경우) 또는 adb 로 다시 설치(`adb install` 은 제한이 걸리지 않는다).
+  - 안 되면 PC 에서 `adb shell appops set com.woody.booklauncher ACCESS_RESTRICTED_SETTINGS allow`(adb 가 되는 경우) 또는 adb 로 다시 설치(`adb install` 은 제한이 걸리지 않는다).
   - 페블·메이북(안드로이드 11)에는 이 제한이 없다. AiPaper Mini(안드로이드 13)는 같은 제한이 있을 텐데 보고가 없었다 **(미확인)**.
 
 ### 기기 정보 사진 (2026-10-14 08:55, Pebble Desk 1.5.2)
@@ -381,7 +381,7 @@ Pebble Desk(1.2.x)를 기본 홈으로 쓰는 홈 화면. 책 1권(밀리의서�
 1. **설정 › 독서 › 오늘 읽은 시간을 누르면 `설정이(가) 계속 중단됨`**: 앱이 여는 사용 기록 액세스 화면(`Settings.ACTION_USAGE_ACCESS_SETTINGS`)에서 **시스템 설정 앱이 멈춘다**(사진). Pebble Desk 쪽은 화면을 열었을 뿐이라 실패를 알 수 없다. 그래서 오늘 읽은 시간을 켤 수 없다.
    - 1.4.0 기기 정보의 시스템 화면 시험으로 확인(2026-10-10 19:10 댓글): `사용 기록 ›`(목록)은 그대로 멈추고, **`이 앱 기록 ›`(이 앱만의 사용 기록 화면, 같은 동작 + `package:` 주소)은 열려** 거기서 허용하니 오늘 읽은 시간이 켜졌다.
    - → 1.4.1 부터 앱이 처음부터 이 앱만의 화면을 연다(그 화면이 없는 기기는 목록, `ReadingLog.openAccessSettings`).
-   - PC 우회(필요 없어짐): `adb shell appops set com.woody.pebbledesk GET_USAGE_STATS allow`.
+   - PC 우회(필요 없어짐): `adb shell appops set com.woody.booklauncher GET_USAGE_STATS allow`.
 2. **읽는 책 자동 추가를 켰는데 다시 꺼지는 때가 있다**: 1.3.0 은 앱 안의 켜짐 값과 접근성이 따로라(1.3.1 에서 하나로 함) 어긋나 보였을 수 있다. 실제로 접근성 서비스가 꺼진다면, 백그라운드 정리로 앱이 강제 종료돼 시스템이 서비스를 끄는 것으로 보인다(`APPS_WHITE_LIST_KEY` 에 없는 앱) **(추정)**.
    - 2026-10-10 18:25 기준: 지금은 켜져 있고, 사용자가 메모리 정리를 한 적은 없다고 한다. 꺼진다면 사용자 정리가 아니라 시스템의 자동 정리일 것이다 **(추정)**.
    - 사용자 답(2026-10-10 19:10): 재부팅하면서 백그라운드에서 앱이 꺼진 것 같다. **Moaan 설정에서 Pebble Desk 를 백그라운드에서 꺼지지 않게 바꾼 뒤로는 괜찮다**. 어느 화면의 어떤 설정인지는 **(미확인)**(`APPS_WHITE_LIST_KEY` 에 들어가는지는 다음 기기 정보 사진의 자동 추가 서비스 기록 끝에 보인다).
@@ -495,7 +495,7 @@ Leaf(7인치 1264×1680, 2021)·Poke3(6인치 1072×1448, 2020). 사용자가 �
 - Pebble Desk 가 고칠 수 있는 화면이 아니다. 해 볼 것:
   1. 권한 목록 바로 아래 빈 곳(첫 단추 `Allow` 자리)을 눌러 본다. 그 아래가 `Deny` 라 잘못 눌러도 창이 닫힐 뿐이다 **(미확인)**.
   2. BOOX 앱 최적화(설정 앱에 대비·진하게)로 단추 글자가 보이게 한다 **(미확인)**.
-  3. PC 에서 켠다: `adb shell settings put secure enabled_accessibility_services com.woody.pebbledesk/com.woody.pebbledesk.ReaderWatchService` 와 `adb shell settings put secure accessibility_enabled 1`.
+  3. PC 에서 켠다: `adb shell settings put secure enabled_accessibility_services com.woody.booklauncher/com.woody.booklauncher.ReaderWatchService` 와 `adb shell settings put secure accessibility_enabled 1`.
 - 처음 보고(15:42)에서 "권한을 아무리 주고 싶어도 안 된다"고 한 것이 이것이다. 시작하기에서 켜지 못해 나갈 수 없던 문제는 1.4.0 의 `나중에 하기` 로 풀었다.
 - 2026-10-10 18:25 기준: 위 1 을 해 봤는데 **빈자리를 다 눌러도 반응이 없다**. 단추가 안 보일 뿐 아니라 눌러도 안 되므로, 창 아래가 잘려 단추가 화면 밖에 있거나 창이 터치를 받지 않는 것일 수 있다 **(추정)**. 남은 길은 2(앱 최적화)·3(adb).
 - **해결(2026-10-11 21:41 답글)**: "allow 는 안 보이지만 아래 shortcut 인가 그걸 켜면 위에도 켜지더라". 접근성 › Pebble Desk 화면의 아래 스위치(`Pebble Desk shortcut`, 한국어 11·12 `단축키`·13+ `바로가기`)를 켜면 서비스도 켜진다. 이때 확인 창이 떴는지, 왜 되는지는 **(미확인)**. 앱 안내 창(꺼져 있을 때 설명 아래 단락)과 TROUBLESHOOTING.md 에 이 방법을 적었다. 에뮬레이터(안드로이드 11, 영어)에서 위 스위치 `Use Pebble Desk` 를 누르면 `Allow`/`Deny` 확인 창이 뜨는 것을 봤다. 아래 스위치로 켜는 것은 Leaf2 사용자 확인뿐이다.
@@ -668,7 +668,7 @@ jadx --no-res -d src/framework fs/system/system/framework/framework.jar
 
 - 펌웨어 자체는 에뮬레이터에서 부팅되지 않는다(Rockchip 커널·HAL). 펌웨어 앱만 옮겨 심는 것도 수정된 `framework.jar`(`android.util.haoqing`, `EinkManager`)·플랫폼 서명에 묶여 있어 사실상 시스템 이미지를 통째로 바꾸는 일이다. 전자잉크 갱신·대비는 어차피 재현되지 않는다.
 - 화면 규격만 맞춘 AVD 로 배치를 본다. 예: `MeebookE6_A11` = `system-images;android-30;google_apis;arm64-v8a`, `hw.lcd.width=1072`, `hw.lcd.height=1448`, `hw.lcd.density=320`, `hw.mainKeys=yes`(내비게이션 바 없음). 페블은 `CremaPebble_A11`(같은 이미지, `hw.lcd.height=1456`, `hw.lcd.density=300`, `hw.mainKeys=yes`). AVD 는 실제 기기와 같게 만든다(안드로이드 버전·해상도·밀도·내비게이션 바 없음). 예전 `CremaPebble`(안드로이드 15·1448px·내비게이션 바 있음)은 앱 높이가 실기기보다 45px+ 작아 홈 책 자리가 잘려 보인다.
-- 깔고 홈으로: `adb install -r …apk`, `adb shell cmd package set-home-activity com.woody.pebbledesk/.HomeActivity`.
+- 깔고 홈으로: `adb install -r …apk`, `adb shell cmd package set-home-activity com.woody.booklauncher/.HomeActivity`.
 - **기기 이름을 메이북으로 바꾸기**(앱의 `Build.*`·`Device.kind` 시험용). 에뮬레이터 `-prop` 으로는 `ro.product.*` 가 바뀌지 않는다. 시스템을 쓸 수 있게 켜서 `build.prop` 을 고친다.
   ```bash
   emulator -avd MeebookE6_A11 -writable-system

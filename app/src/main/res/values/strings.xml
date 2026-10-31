@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Pebble Desk</string>
+    <string name="app_name">BookLauncher</string>
     <!-- 설정의 언어 항목: 어느 언어에서도 찾을 수 있게 두 언어로 쓴다 -->
     <string name="language" translatable="false">언어 · Language</string>
     <!-- 언어 설정의 기기 언어 따르기. %s 는 지금 보이는 언어(한국어 / English) -->
@@ -8,6 +8,25 @@
     <string name="favorites">자주 쓰는 앱</string>
     <string name="all_apps">모든 앱</string>
     <string name="all_apps_link">모든 앱  ›</string>
+    <string name="stats">통계</string>
+    <string name="widgets">위젯</string>
+    <string name="widgets_title">위젯</string>
+    <string name="widget_media_title">미디어 조절</string>
+    <string name="widget_media_tip">재생 중인 오디오북·TTS 앱에 재생 키를 보냅니다.</string>
+    <string name="widget_media_hint">오디오북·TTS 재생을 여기서 조절합니다.</string>
+    <string name="widget_add">위젯 추가  ›</string>
+    <string name="widget_none">아직 추가한 위젯이 없습니다</string>
+    <string name="widget_none_desc">아래 `위젯 추가`에서 안드로이드 위젯을 고르세요. 미디어 조절은 늘 첫 쪽에 있습니다.</string>
+    <string name="widget_picker_title">위젯 고르기</string>
+    <string name="widget_picker_empty">추가할 수 있는 위젯이 없습니다.</string>
+    <string name="widget_remove">이 위젯 빼기</string>
+    <string name="widget_remove_confirm">이 위젯을 빼시겠습니까?</string>
+    <string name="widget_add_failed">위젯을 추가하지 못했습니다. 기기 설정에서 위젯을 허용해 주세요.</string>
+    <string name="media_previous">이전 곡</string>
+    <string name="media_rewind">뒤로 10초</string>
+    <string name="media_play_pause">재생·일시정지</string>
+    <string name="media_forward">앞으로 10초</string>
+    <string name="media_next">다음 곡</string>
     <string name="settings">설정</string>
     <string name="favorites_empty">모든 앱에서 앱을 길게 눌러 자주 쓰는 앱에 넣으세요</string>
     <string name="fav_remove">자주 쓰는 앱에서 빼기</string>
@@ -66,11 +85,11 @@
     <string name="update_server_title">서버가 응답하지 않습니다</string>
     <string name="update_server_desc">잠시 뒤 다시 눌러 주세요.</string>
     <string name="update_new_title">새 버전이 나왔습니다</string>
-    <string name="update_new_versions">Pebble Desk %1$s · 지금 %2$s</string>
+    <string name="update_new_versions">BookLauncher %1$s · 지금 %2$s</string>
     <string name="update_skip">이 버전은 알리지 않기</string>
     <string name="update_install">설치</string>
     <string name="update_allow_title">설치 허용</string>
-    <string name="update_allow_desc">새 버전을 설치하려면 Pebble Desk 에 \'알 수 없는 앱 설치\'를 허용해야 합니다. 허용한 뒤 돌아와 다시 누르세요.</string>
+    <string name="update_allow_desc">새 버전을 설치하려면 BookLauncher 에 \'알 수 없는 앱 설치\'를 허용해야 합니다. 허용한 뒤 돌아와 다시 누르세요.</string>
     <string name="update_allow_open">허용 화면 열기</string>
     <string name="device_android">안드로이드</string>
     <string name="device_screen">화면</string>
@@ -223,7 +242,7 @@
     <string name="page_key_next">다음 쪽 버튼</string>
     <string name="page_keys_home">홈에서 넘길 곳</string>
     <string name="page_keys_clear">모두 지우기</string>
-    <string name="page_keys_desc">Pebble Desk 화면(홈·목록·메뉴)에서 쪽을 넘기는 버튼입니다. 정하지 않으면 버튼으로는 넘기지 않습니다. 이북 앱 안에서는 그 앱의 설정을 따릅니다.\n\n홈에는 넘기는 줄이 둘이라 버튼은 \'홈에서 넘길 곳\'만 넘깁니다. 손가락으로 밀기는 그대로입니다.\n음량 버튼은 소리가 나는 동안에는 음량을 바꿉니다.</string>
+    <string name="page_keys_desc">BookLauncher 화면(홈·목록·메뉴)에서 쪽을 넘기는 버튼입니다. 정하지 않으면 버튼으로는 넘기지 않습니다. 이북 앱 안에서는 그 앱의 설정을 따릅니다.\n\n홈에는 넘기는 줄이 둘이라 버튼은 \'홈에서 넘길 곳\'만 넘깁니다. 손가락으로 밀기는 그대로입니다.\n음량 버튼은 소리가 나는 동안에는 음량을 바꿉니다.</string>
     <string name="page_key_ask_prev">앞 쪽으로 넘길 때 쓸 버튼을 한 번 눌러 주세요.\n뒤로·홈·전원 버튼은 쓸 수 없습니다.</string>
     <string name="page_key_ask_next">다음 쪽으로 넘길 때 쓸 버튼을 한 번 눌러 주세요.\n뒤로·홈·전원 버튼은 쓸 수 없습니다.</string>
     <string name="key_volume_up">음량 위</string>
@@ -258,7 +277,7 @@
     <string name="palette_color">컬러</string>
     <string name="books_this_week">이번 주 읽은 책</string>
     <string name="reading_empty">이번 주에 읽은 기록이 아직 없습니다</string>
-    <string name="reading_no_access">설정에서 오늘 읽은 시간을 켜고 사용 기록 액세스에서 Pebble Desk를 허용하면 기록이 보입니다.</string>
+    <string name="reading_no_access">설정에서 오늘 읽은 시간을 켜고 사용 기록 액세스에서 BookLauncher를 허용하면 기록이 보입니다.</string>
     <string name="daily_goal">하루 목표</string>
     <string name="dur_m">%1$d분</string>
     <string name="custom_goal">직접 입력</string>
@@ -271,18 +290,18 @@
     <string name="reading_settings">독서</string>
     <string name="auto_books">읽는 책 자동 추가</string>
     <string name="auto_books_short">자동 추가</string>
-    <string name="auto_books_desc">이북 앱에서 책을 펴면 그 책을 읽고 있는 책 맨 위에 넣습니다. 서재·검색 화면의 책 제목·저자·진행률·반납일과 표지, 읽는 화면의 책 제목·진행률만 읽고 본문과 다른 앱 화면은 보지 않습니다. 안드로이드 접근성에서 Pebble Desk 를 켜 주세요.</string>
+    <string name="auto_books_desc">이북 앱에서 책을 펴면 그 책을 읽고 있는 책 맨 위에 넣습니다. 서재·검색 화면의 책 제목·저자·진행률·반납일과 표지, 읽는 화면의 책 제목·진행률만 읽고 본문과 다른 앱 화면은 보지 않습니다. 안드로이드 접근성에서 BookLauncher 를 켜 주세요.</string>
     <string name="open_accessibility">접근성 설정 열기</string>
     <string name="auto_off_title">읽는 책 자동 추가가 꺼져 있습니다</string>
     <string name="auto_stalled_title">읽는 책 자동 추가가 멈춰 있습니다</string>
-    <string name="auto_stalled_desc">접근성 화면에 Pebble Desk 가 켜짐(또는 \'작동하지 않음\')으로 보여도 지금은 동작하지 않습니다. 이대로 읽으면 편 책이 읽고 있는 책에 들어오지 않고, 읽은 시간도 어느 책인지 모른 채 남습니다.</string>
-    <string name="auto_stalled_fix">접근성에서 Pebble Desk 스위치를 껐다가 다시 켜야 다시 동작합니다.</string>
-    <string name="auto_stalled_boox">BOOX 가 Pebble Desk 를 얼렸다가 풀면 이렇게 멈춥니다. BOOX 설정 › 앱 및 알림 › 설정 잠금에서 Pebble Desk 의 얼리기(freeze)를 끄고, 접근성에서 Pebble Desk 스위치를 껐다가 다시 켜 주세요.</string>
-    <string name="auto_off_desc">이대로 읽으면 이북 앱에서 편 책이 읽고 있는 책에 들어오지 않고, 읽은 시간도 어느 책인지 모른 채 남습니다. 접근성에서 Pebble Desk 를 켜 주세요.</string>
+    <string name="auto_stalled_desc">접근성 화면에 BookLauncher 가 켜짐(또는 \'작동하지 않음\')으로 보여도 지금은 동작하지 않습니다. 이대로 읽으면 편 책이 읽고 있는 책에 들어오지 않고, 읽은 시간도 어느 책인지 모른 채 남습니다.</string>
+    <string name="auto_stalled_fix">접근성에서 BookLauncher 스위치를 껐다가 다시 켜야 다시 동작합니다.</string>
+    <string name="auto_stalled_boox">BOOX 가 BookLauncher 를 얼렸다가 풀면 이렇게 멈춥니다. BOOX 설정 › 앱 및 알림 › 설정 잠금에서 BookLauncher 의 얼리기(freeze)를 끄고, 접근성에서 BookLauncher 스위치를 껐다가 다시 켜 주세요.</string>
+    <string name="auto_off_desc">이대로 읽으면 이북 앱에서 편 책이 읽고 있는 책에 들어오지 않고, 읽은 시간도 어느 책인지 모른 채 남습니다. 접근성에서 BookLauncher 를 켜 주세요.</string>
     <string name="dont_show_again">다시 보지 않기</string>
     <string name="density_changed_title">화면이 크게 보입니다</string>
-    <string name="density_changed_desc">Pebble Desk 의 화면 DPI 가 %1$d 로 바뀐 것을 감지했습니다. 이대로면 화면이 크게 보이고 홈의 일부가 보이지 않습니다.\n\n고치는 방법: 기기 설정에서 Pebble Desk 의 DPI 를 %2$d 로 바꿔 주세요.</string>
-    <string name="density_changed_desc_boox">Pebble Desk 의 화면 DPI 가 %1$d 로 바뀐 것을 감지했습니다. 이대로면 화면이 크게 보이고 홈의 일부가 보이지 않습니다.\n\n고치는 방법: 앱 목록에서 Pebble Desk 아이콘을 길게 눌러 최적화를 열고, DPI 를 %2$d 로 바꾸거나 최적화를 꺼 주세요.</string>
+    <string name="density_changed_desc">BookLauncher 의 화면 DPI 가 %1$d 로 바뀐 것을 감지했습니다. 이대로면 화면이 크게 보이고 홈의 일부가 보이지 않습니다.\n\n고치는 방법: 기기 설정에서 BookLauncher 의 DPI 를 %2$d 로 바꿔 주세요.</string>
+    <string name="density_changed_desc_boox">BookLauncher 의 화면 DPI 가 %1$d 로 바뀐 것을 감지했습니다. 이대로면 화면이 크게 보이고 홈의 일부가 보이지 않습니다.\n\n고치는 방법: 앱 목록에서 BookLauncher 아이콘을 길게 눌러 최적화를 열고, DPI 를 %2$d 로 바꾸거나 최적화를 꺼 주세요.</string>
     <string name="progress_pct">%1$d%% 읽음</string>
     <string name="due_days">반납 %1$d일 남음</string>
     <string name="due_today">오늘 반납</string>
@@ -324,6 +343,7 @@
     <string name="guide_kotatsu">Kotatsu</string>
     <string name="guide_librera">Librera</string>
     <string name="guide_librera_pro">Librera Pro</string>
+    <string name="guide_acoustext">AcousText</string>
     <string name="guide_permissions">필요한 권한</string>
     <string name="guide_todo">앱에서 할 것</string>
     <string name="guide_todo_none">따로 바꿀 것은 없습니다.</string>
@@ -445,11 +465,11 @@
     <string name="add_author">저자 입력</string>
     <string name="edit_author">저자 고치기</string>
     <string name="save">저장</string>
-    <string name="reader_watch_desc">이북 앱에서 책 정보(제목·진행률·표지 등)만 읽어 읽는 책 목록을 채웁니다. 책 내용과 다른 앱은 보지 않고, 기기 밖으로 보내지 않습니다. 지원 앱: Pebble Desk 설정 › 독서 › 자동 추가 안내</string>
+    <string name="reader_watch_desc">이북 앱에서 책 정보(제목·진행률·표지 등)만 읽어 읽는 책 목록을 채웁니다. 책 내용과 다른 앱은 보지 않고, 기기 밖으로 보내지 않습니다. 지원 앱: BookLauncher 설정 › 독서 › 자동 추가 안내</string>
     <string name="open_app_info">앱 정보 열기</string>
     <string name="allow_hint">허용(allow)이 보이지 않으면 아래 단축키·바로가기(shortcut) 스위치를 켜세요.</string>
-    <string name="restricted_hint">접근성에서 Pebble Desk 가 흐리게 막혀 있으면(제한된 설정) 먼저 그것을 한 번 눌러 안내 창을 닫은 뒤, 앱 정보 › 오른쪽 위 ⋮ › 제한된 설정 허용을 하고 다시 켜 주세요.</string>
-    <string name="onboarding_title">Pebble Desk 시작하기</string>
+    <string name="restricted_hint">접근성에서 BookLauncher 가 흐리게 막혀 있으면(제한된 설정) 먼저 그것을 한 번 눌러 안내 창을 닫은 뒤, 앱 정보 › 오른쪽 위 ⋮ › 제한된 설정 허용을 하고 다시 켜 주세요.</string>
+    <string name="onboarding_title">BookLauncher 시작하기</string>
     <string name="onboarding_intro">책을 펴기만 하면 홈이 알아서 채워집니다. 두 가지만 켜 주세요.</string>
     <string name="onboarding_on">켜짐 ✓</string>
     <string name="onboarding_start">시작하기  ›</string>
@@ -469,20 +489,20 @@
     <string name="onboarding_open_app_info">앱 정보 열기  ›</string>
     <string name="onboarding_open">열기  ›</string>
     <string name="onboarding_open_freeze">얼리기 설정 열기  ›</string>
-    <string name="onboarding_books_boox">먼저 BOOX 설정 › 앱 및 알림 › 설정 잠금에서 Pebble Desk 의 얼리기(freeze)를 끕니다. 켜 두면 자동 추가가 멈춥니다.</string>
-    <string name="onboarding_books_r1">접근성 화면에서 Pebble Desk 를 누릅니다. 바로 켜지면 끝입니다.</string>
+    <string name="onboarding_books_boox">먼저 BOOX 설정 › 앱 및 알림 › 설정 잠금에서 BookLauncher 의 얼리기(freeze)를 끕니다. 켜 두면 자동 추가가 멈춥니다.</string>
+    <string name="onboarding_books_r1">접근성 화면에서 BookLauncher 를 누릅니다. 바로 켜지면 끝입니다.</string>
     <string name="onboarding_books_r2">\'제한된 설정\' 창이 뜨면 확인을 눌러 닫습니다. 안드로이드가 파일로 깐 앱을 막은 것입니다.</string>
     <string name="onboarding_books_r3">앱 정보에서 오른쪽 위 ⋮ › 제한된 설정 허용을 누릅니다.</string>
-    <string name="onboarding_books_r4">다시 접근성 화면에서 Pebble Desk › 사용을 켭니다.</string>
+    <string name="onboarding_books_r4">다시 접근성 화면에서 BookLauncher › 사용을 켭니다.</string>
     <string name="onboarding_books_s1">접근성 화면을 엽니다.</string>
-    <string name="onboarding_books_s2">Pebble Desk 를 눌러 사용을 켜고 돌아옵니다.</string>
+    <string name="onboarding_books_s2">BookLauncher 를 눌러 사용을 켜고 돌아옵니다.</string>
     <string name="onboarding_time_s1">사용 기록 액세스 화면을 엽니다.</string>
-    <string name="onboarding_time_s2">Pebble Desk 의 허용을 켜고 돌아옵니다.</string>
+    <string name="onboarding_time_s2">BookLauncher 의 허용을 켜고 돌아옵니다.</string>
     <string name="onboarding_intro3">책을 펴기만 하면 홈이 알아서 채워집니다. 세 가지만 켜 주세요.</string>
     <string name="onboarding_files_desc">%s 책 정보를 가져오는 데 필요합니다.</string>
     <string name="onboarding_files_note">책 파일에서는 제목·저자·표지·진행률만 꺼내고, 기기 밖으로 보내지 않습니다.</string>
     <string name="onboarding_files_s1">모든 파일에 액세스 화면을 엽니다.</string>
-    <string name="onboarding_files_s2">Pebble Desk 의 모든 파일 관리 허용을 켜고 돌아옵니다.</string>
+    <string name="onboarding_files_s2">BookLauncher 의 모든 파일 관리 허용을 켜고 돌아옵니다.</string>
     <string name="onboarding_files_old_s1">저장소 권한 창을 엽니다.</string>
     <string name="onboarding_files_old_s2">허용을 누르고 돌아옵니다.</string>
     <string name="year_books_count">%1$d권</string>

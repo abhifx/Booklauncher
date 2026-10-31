@@ -4,7 +4,7 @@
 # 홈의 책 앱 이름이 보이려면 이북 앱(이름만 있는 빈 앱이라도)이 깔려 있어야 한다.
 set -e
 case "$ANDROID_SERIAL" in emulator-*) ;; *) echo "ANDROID_SERIAL=emulator-… 로 에뮬을 지정하세요(실기기 금지)" >&2; exit 1 ;; esac
-P=com.woody.pebbledesk
+P=com.woody.booklauncher
 D=/data/user_de/0/$P
 adb shell rm -rf /data/local/tmp/mock </dev/null
 adb push "$1" /data/local/tmp/mock </dev/null >/dev/null

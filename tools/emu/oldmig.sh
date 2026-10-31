@@ -8,7 +8,7 @@ set -e
 # 앱을 지우거나 기록을 덮으니 에뮬에서만(실기기의 기록을 지우지 않게 ANDROID_SERIAL 로 에뮬을 꼭 지정)
 case "$ANDROID_SERIAL" in emulator-*) ;; *) echo "ANDROID_SERIAL=emulator-… 로 에뮬을 지정하세요(실기기 금지)" >&2; exit 1 ;; esac
 KIND=$1; OLD=$2; NEW=$3; OUT=$4; MID=$5
-P=com.woody.pebbledesk
+P=com.woody.booklauncher
 DD=/data/user_de/0/$P
 HERE=$(cd "$(dirname "$0")" && pwd)
 mkdir -p "$OUT/data"

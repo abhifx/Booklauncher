@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "PebbleDesk"
+rootProject.name = "BookLauncher"
 include(":app")

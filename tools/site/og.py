@@ -2,10 +2,10 @@
 """홈페이지 공유 미리보기 그림(site/img/og-ko.png·og-en.png, 1200×630), README 그림(첫 그림 docs/screenshots/hero-ko.png·hero-en.png(흑백),
 지원 앱 아이콘 docs/screenshots/app-icons/(site/img/apps/ 를 96px 로))과 아이콘(site/img/icon-*.png)을 만든다.
 
-    python3 tools/site/og.py <Pebble Desk 아이콘 512px PNG>
+    python3 tools/site/og.py <BookLauncher 아이콘 512px PNG>
 
 기기 그림은 페이지와 같다: 기기 틀(frame-*.webp) 화면 자리에 캡처를 곱하기로 얹는다(자리는 site/index.html 의 .shot 과 같다).
-아이콘은 에뮬에서 IconDump 로 com.woody.pebbledesk 를 그린 것.
+아이콘은 에뮬에서 IconDump 로 com.woody.booklauncher 를 그린 것.
 """
 import os
 import sys
@@ -44,7 +44,7 @@ def og(lang):
     im = Image.new("RGB", (1200, 630), BG)
     d = ImageDraw.Draw(im)
     x = 72
-    d.text((x, 92), "Pebble Desk", font=ImageFont.truetype(SANS, 30, index=6), fill=INK)
+    d.text((x, 92), "BookLauncher", font=ImageFont.truetype(SANS, 30, index=6), fill=INK)
     d.text((x, 146), kicker, font=ImageFont.truetype(SANS, 22, index=2), fill=SUB)
     big = ImageFont.truetype(SANS, 60 if lang == "ko" else 48, index=6)
     y = 230

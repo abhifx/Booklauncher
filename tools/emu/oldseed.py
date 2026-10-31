@@ -6,7 +6,7 @@
     python3 tools/emu/oldseed.py v2   OUT_DIR   # 1.5.0~1.5.3: databases/pebble.db (버전 2, review) + 표지
     python3 tools/emu/oldseed.py check KIND DB  # 이 브랜치가 옮긴 DB(버전 5)를 기대와 대조
 
-OUT_DIR 아래를 앱 데이터 폴더(/data/user_de/0/com.woody.pebbledesk/)에 그대로 덮는다(루트 에뮬, tools/emu/oldmig.sh).
+OUT_DIR 아래를 앱 데이터 폴더(/data/user_de/0/com.woody.booklauncher/)에 그대로 덮는다(루트 에뮬, tools/emu/oldmig.sh).
 날짜는 2026-10-16 을 오늘로 고정한다(에뮬 날짜가 같아야 기대가 맞는다).
 """
 import datetime as dt

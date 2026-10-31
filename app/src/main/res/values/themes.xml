@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- 전자잉크용: 흰 바탕 검정 글자, 화면 전환 애니메이션 없음 -->
-    <style name="Theme.PebbleDesk" parent="android:Theme.Material.Light.NoActionBar">
+    <style name="Theme.BookLauncher" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowBackground">@android:color/white</item>
         <item name="android:colorPrimary">#000000</item>
         <item name="android:colorPrimaryDark">#000000</item>

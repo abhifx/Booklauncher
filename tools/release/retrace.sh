@@ -1,11 +1,11 @@
 #!/bin/bash
 # 기기 정보 › 마지막 앱 오류의 자리(R8 이 바꾼 이름)를 원래 이름으로 되찾는다.
 #   tools/release/retrace.sh 1.6.2 'h4.b:41 ← bg.c:88'
-# 판의 mapping 은 release-mappings/PebbleDesk-<판>-mapping.txt.gz(tools/release/save-mapping.sh 가 남긴다).
+# 판의 mapping 은 release-mappings/BookLauncher-<판>-mapping.txt.gz(tools/release/save-mapping.sh 가 남긴다).
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 version=$1; frames=$2
-map=release-mappings/PebbleDesk-$version-mapping.txt.gz
+map=release-mappings/BookLauncher-$version-mapping.txt.gz
 [ -f "$map" ] || { echo "그 판의 mapping 이 없다: $map" >&2; exit 1; }
 export JAVA_HOME=${JAVA_HOME:-"/Applications/Android Studio.app/Contents/jbr/Contents/Home"}
 retrace=$(ls "${ANDROID_HOME:-$HOME/Library/Android/sdk}"/cmdline-tools/*/bin/retrace | head -1)

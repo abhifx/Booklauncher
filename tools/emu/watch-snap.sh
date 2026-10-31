@@ -6,7 +6,7 @@
 set -e
 OUT=$1
 [ -n "$OUT" ] || { echo "결과 폴더를 주세요" >&2; exit 1; }
-P=com.woody.pebbledesk
+P=com.woody.booklauncher
 DD=/data/user_de/0/$P
 mkdir -p "$OUT"
 a() { adb "$@" </dev/null; }

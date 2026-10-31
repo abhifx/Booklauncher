@@ -1,6 +1,6 @@
 # Kobo Books(게스트): My Books 둘째 칸(최근 활동 순) → 메뉴(진행률) → 돌아와 맨 위 칸으로 앎 → 홈. 책 상세 길은 `kobo2`.
 # 에뮬에는 게스트로 미리보기 두 권(The Hollow·Pride and Prejudice)을 Save Preview 로 넣어 두었다.
-# Kobo 는 떠 있던 화면(읽는 화면·상세)을 이어 보여 주므로 Kobo 만 강제 종료해 홈 탭에서 시작한다(Pebble Desk 는 강제 종료하지 않는다).
+# Kobo 는 떠 있던 화면(읽는 화면·상세)을 이어 보여 주므로 Kobo 만 강제 종료해 홈 탭에서 시작한다(BookLauncher 는 강제 종료하지 않는다).
 P=com.kobobooks.android
 a shell am force-stop $P
 launch $P 8

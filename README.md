@@ -1,29 +1,41 @@
-# Pebble Desk
+# BookLauncher
 
-**An E Ink launcher for Android e-readers.** Books you open in Kindle, Libby, KOReader and other reading apps appear on your home screen, and reading time is kept for every book. → [pebbledesk.github.io](https://pebbledesk.github.io/en/)
+**An E Ink launcher for Android e-readers.** The book you're reading stays on Home, your shelf is a cover grid, and reading time, stats, widgets and apps are one tap away.
 
-[한국어](README.ko.md)
+BookLauncher is a fork of [Pebble Desk](https://github.com/hissinger/pebble-desk), rebuilt around a lower, more visual home screen: one row of favorites, a 3-column `Also reading` grid, and a bottom bar with **All apps · Stats · Widgets · Settings**.
 
-<p align="center"><img src="docs/screenshots/hero-en.png" width="720" alt="Pebble Desk home screen on a Crema Pebble and a BOOX Palma: the book being read, three more books under Also reading, favorite apps, and Today 38 min · day 15"></p>
+<p align="center"><img src="docs/screenshots/v1-home.png" width="340" alt="BookLauncher home on HiBreak: the current book, a 3-column Also reading grid, one row of favorite apps, and the bottom icon bar"></p>
+
+## What's in version 1
+
+- **The current book, on Home** — large cover, title, author, reading progress and the reading app. Tap anywhere on it to open the book.
+- **Also reading as a cover grid** — 3 columns, with the book title and app name below each cover. One page holds up to 9 books; swipe or use the page keys for more.
+- **One row of favorites** — 5 apps per page, in your own order. List or grid view. Long-press to rename, change the icon or remove.
+- **Bottom bar** — All apps, reading Stats, Widgets and Settings, with a little breathing room above the device edge.
+- **Widgets** — a large E Ink media-control pad for audiobooks and TTS, plus Android widgets added from a paged picker. One widget per page, long-press to remove.
+- **Reading stats** — today's ring, streak, four-week calendar or graph, daily goal, and weekly/monthly/yearly totals.
+- **Made for E Ink** — no animation, pages instead of scrolling, monochrome first, optional color on color E Ink.
+
+## Screenshots
+
+| Home | Reading log | Widgets |
+|---|---|---|
+| <img src="docs/screenshots/v1-home.png" width="220"> | <img src="docs/screenshots/v1-reading.png" width="220"> | <img src="docs/screenshots/v1-widgets.png" width="220"> |
+| **All apps** | **Settings** | |
+| <img src="docs/screenshots/v1-apps.png" width="220"> | <img src="docs/screenshots/v1-settings.png" width="220"> | |
+
+All screenshots were taken on a HiBreak.
 
 ## Features
 
-- **The book you're reading, on Home**: cover, title, author, progress and due date, big. More books sit under `Also reading`. Tap a book to open its app.
-- **Auto-add books**: open a book in a [supported app](#supported-apps) and it's added to Home with its cover. Books from other apps can be added by hand, with cover search.
-- **Reading time for every book**: counts only the time the reading screen is up. Today's time and your streak on Home; a reading log with a four-week calendar or graph, a daily goal and weekly totals.
-- **Finish a book**: rate it in half stars and write a few words. Read it again and each round keeps its own record.
-- **Books this year**: every book you read or finished, as a list or a cover grid, for any year.
-- **Favorites and All apps**: your own order and names, list or grid. All apps by page with a letter index. Hide apps you don't use.
-- **Made for E Ink**: black and white, no animation, pages instead of scrolling, and only what changed is redrawn. To turn pages with hardware buttons (volume keys, page buttons), press the buttons you want in Settings.
-- **Display**: text size 70–150% and line spacing 80–150%, an optional color theme for color E Ink, icon packs (such as Arcticons) with per-app icons, landscape and tall (bar-shaped) screens.
-- **Devices**: designed for the Crema Pebble; other Android E Ink devices (BOOX, Meebook and others) are scaled to the same width.
-- **Stays on the device**: your log is never sent anywhere. Updates install from inside the app.
-
-| Home | Reading log | Reading log (graph) | Books this year |
-|---|---|---|---|
-| <img src="docs/screenshots/home.png" width="180"> | <img src="docs/screenshots/reading.png" width="180"> | <img src="docs/screenshots/reading-graph.png" width="180"> | <img src="docs/screenshots/year.png" width="180"> |
-| **Book details** | **All apps** | **Hidden apps** | **Settings** |
-| <img src="docs/screenshots/book-detail.png" width="180"> | <img src="docs/screenshots/apps.png" width="180"> | <img src="docs/screenshots/hidden.png" width="180"> | <img src="docs/screenshots/settings.png" width="180"> |
+- **Auto-add books** — open a book in a [supported app](#supported-apps) and it appears on Home with its cover. Books from unsupported apps can be added by hand with cover search.
+- **Reading time for every book** — only the time the reading screen is actually up is counted. Usage access is needed once.
+- **Finish a book** — half-star rating and a short note. Read it again and every round keeps its own record.
+- **Books this year** — every book you read or finished, as a list or cover grid, for any year.
+- **All apps** — paged, with a letter index. Hide the apps you never use.
+- **Icon packs** — Arcticons and other Android icon packs, with per-app overrides.
+- **Display** — text size 70–150%, line spacing 80–150%, optional color theme, landscape and tall screens.
+- **Your data stays on the device** — the reading log is never sent anywhere.
 
 ## Supported apps
 
@@ -36,47 +48,56 @@ What each app provides (cover, title, author, progress, due date) is shown in Se
 <tr><td align="center" width="96"><img src="docs/screenshots/app-icons/yes24-ebook.png" width="48"><br><sub>YES24 eBook</sub></td><td align="center" width="96"><img src="docs/screenshots/app-icons/futon.png" width="48"><br><sub>Futon</sub></td><td align="center" width="96"><img src="docs/screenshots/app-icons/kotatsu.png" width="48"><br><sub>Kotatsu</sub></td><td align="center" width="96"><img src="docs/screenshots/app-icons/librera.png" width="48"><br><sub>Librera</sub></td></tr>
 </table>
 
-NeoReader (BOOX) is supported too.
+NeoReader (BOOX) and AcousText are supported too. AcousText books can be controlled from the media pad in Widgets.
 
 ## Install
 
-1. Download `PebbleDesk-<version>-release.apk` from [Releases](https://github.com/hissinger/pebble-desk/releases) and tap it in a file manager on the device. Later versions install from Settings › About › `Update`.
-2. Choose Pebble Desk in Settings › Apps › `Default home app`.
-3. On first run, `Getting started` turns on the two core features: **Auto-add books** (Android Accessibility) and **Reading time** (Usage access). On Android 13 and later, an app installed from a file may need **Allow restricted settings** in its app info first.
+1. Download `BookLauncher-1.0.0-release.apk` from [Releases](https://github.com/abhifx/Booklauncher/releases) and open it in a file manager on the device.
+2. Choose BookLauncher in Settings › Apps › `Default home app`.
+3. On first run, `Getting started` turns on the two core features: **Auto-add books** (Android Accessibility) and **Reading time** (Usage access). On Android 13+, an app installed from a file may need **Allow restricted settings** in its app info first.
 
 If something goes wrong, see [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) (Korean), or send a photo of Settings › `Device info`.
+
+### HiBreak note
+
+BookLauncher scales itself to the same 572dp layout used on the Crema Pebble. HiBreak reports a higher density, so it uses a compact variant with the same home layout. If you prefer the full-size layout, set BookLauncher's app DPI to **201** in the device's app optimization settings (if available). The update check points at this repository's releases.
 
 ## Permissions
 
 | Permission | Used for |
 |---|---|
 | Accessibility service (optional) | Auto-add books. Only supported e-book apps are watched, and only book info (title, author, progress, due date, cover), never the book's text |
-| Usage access (optional) | Reading time |
+| Usage access (optional) | Reading time and the Stats screen |
 | All files access (optional) | `Read book files`: KOReader's records, covers from book files, Readest data. Read only |
 | Internet | Cover search, update check, and downloading the comic cover unpacking tool (libarchive) |
+| Bind app widget | Show Android widgets on the Widgets screen |
 
 ## Build
 
-Build with Android Studio's JDK (minSdk 28, targetSdk 34).
+Build with Android Studio's JDK (minSdk 28, targetSdk 34, Java 17).
 
 ```bash
 export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 ./gradlew assembleRelease
-adb install -r app/build/outputs/apk/release/PebbleDesk-<version>-release.apk
+adb install -r app/build/outputs/apk/release/BookLauncher-1.0.0-release.apk
 ```
+
+On Windows use `gradlew.bat`. Release builds use the debug key by default for this fork; replace it with your own release signing config before distributing widely.
 
 Design and behavior are specified in [DESIGN.md](DESIGN.md); device notes are in [docs/DEVICES.md](docs/DEVICES.md) (both Korean).
 
 ## License
 
+BookLauncher is a fork of Pebble Desk and keeps its license and `Required Notice`. Changes in this fork: the BookLauncher name and package, the one-row Favorites section, the 3-column `Also reading` grid, the bottom icon bar, the compact top bar, and the Widgets screen.
+
 [PolyForm Noncommercial 1.0.0](LICENSE). Individuals (hobby, study, research) and noncommercial organizations (schools, public institutions, charities, etc.) may use, modify and share it freely. When sharing, pass on this license and the `Required Notice` line.
 
-Commercial use (selling it, including it in a paid product or service, using it for a company's for-profit work, etc.) is not allowed. If you need it, ask through [GitHub issues](https://github.com/hissinger/pebble-desk/issues).
+Commercial use (selling it, including it in a paid product or service, using it for a company's for-profit work, etc.) is not allowed. If you need it, ask through [GitHub issues](https://github.com/abhifx/Booklauncher/issues).
 
-The screen images in `docs/screenshots/` show book covers and other apps' icons, and the device frames in `hero-*.png` are product photos of the Crema Pebble (YES24) and the BOOX Palma (Onyx BOOX). These are not under the license above and belong to their owners.
+The screenshots show book covers and other apps' icons. These are not under the license above and belong to their owners.
 
 The completed stamp (`app/src/main/res/drawable-nodpi/stamp_completed.png`) is not under the license above. It is a modified version of [TheDigitalArtist's 'Approved Stamp'](https://pixabay.com/illustrations/approved-stamp-approval-business-5254258/) on Pixabay ([Pixabay Content License](https://pixabay.com/service/license-summary/)) (center text changed to `COMPLETED`, black and white, `tools/stamp_completed.py`).
 
-The Java part of libarchive for unpacking comic covers (`app/src/main/java/me/zhanghai/android/libarchive/`) is taken from [libarchive-android](https://github.com/zhanghai/libarchive-android) (Apache-2.0) with one line changed where it loads the native library. The native library `libarchive-jni.so` is not bundled; users download it in Settings (this repository's release [`libarchive-1.1.7`](https://github.com/hissinger/pebble-desk/releases/tag/libarchive-1.1.7); licenses for libarchive, bzip2, xz, lz4, zstd, Mbed TLS and zlib are in that release's `NOTICE.txt`; built with `tools/libarchive/make-assets.sh`).
+The Java part of libarchive for unpacking comic covers (`app/src/main/java/me/zhanghai/android/libarchive/`) is taken from [libarchive-android](https://github.com/zhanghai/libarchive-android) (Apache-2.0) with one line changed where it loads the native library. The native library `libarchive-jni.so` is not bundled; users download it from the upstream Pebble Desk release [`libarchive-1.1.7`](https://github.com/hissinger/pebble-desk/releases/tag/libarchive-1.1.7). Licenses for libarchive, bzip2, xz, lz4, zstd, Mbed TLS and zlib are in that release's `NOTICE.txt`; it is built with `tools/libarchive/make-assets.sh`.
 
 The sample book cover on the Getting started screens (`app/src/main/res/drawable-nodpi/sample_cover.jpg`) is the first-edition cover of Yun Dong-ju's *Sky, Wind, Stars and Poems* (Jeongeumsa, 1948), a black-and-white reduction of the [public domain file](https://commons.wikimedia.org/wiki/File:%EC%9C%A4%EB%8F%99%EC%A3%BC_%ED%95%98%EB%8A%98%EA%B3%BC_%EB%B0%94%EB%9E%8C%EA%B3%BC_%EB%B3%84%EA%B3%BC_%EC%8B%9C_(%EC%B4%88%ED%8C%90%EB%B3%B8,_1948).pdf) on Wikimedia Commons, scanned by the National Hangeul Museum archive (`tools/sample_cover.py`).

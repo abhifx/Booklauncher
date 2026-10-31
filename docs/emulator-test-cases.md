@@ -7,14 +7,14 @@
 
 | 기호 | 방법 |
 |---|---|
-| **S** (시드) | 디버그 빌드를 깔고 시험 DB 를 넣는다: `python3 tools/emu/seed.py main x.db` 로 만들고 `tools/emu/swapdb.sh x.db`(올리고, 앱을 끄고 DB 를 바꿔 홈을 띄움). 따로 적지 않은 S 는 `main`, **S:이름** 은 그 이름의 시드(`b2`·`week`·`streak`·`gone`·`unknown`·`empty`·`books12`). 표의 S·V2 케이스가 모두 시드에 있는지는 `python3 tools/emu/seed.py check docs/emulator-test-cases.md`(케이스 ID 를 시드 주석과 대조하고, 핵심 케이스는 만든 DB 의 상태를 SQL 로 확인). **U `이름`** 은 그 단위 테스트가 덮는 것. 오늘 줄은 에뮬에서 이북 앱을 열지 않은 동안만 그대로다. 확인은 `adb exec-out run-as com.woody.pebbledesk cat …/databases/pebble.db > y.db` 후 `sqlite3`. |
+| **S** (시드) | 디버그 빌드를 깔고 시험 DB 를 넣는다: `python3 tools/emu/seed.py main x.db` 로 만들고 `tools/emu/swapdb.sh x.db`(올리고, 앱을 끄고 DB 를 바꿔 홈을 띄움). 따로 적지 않은 S 는 `main`, **S:이름** 은 그 이름의 시드(`b2`·`week`·`streak`·`gone`·`unknown`·`empty`·`books12`). 표의 S·V2 케이스가 모두 시드에 있는지는 `python3 tools/emu/seed.py check docs/emulator-test-cases.md`(케이스 ID 를 시드 주석과 대조하고, 핵심 케이스는 만든 DB 의 상태를 SQL 로 확인). **U `이름`** 은 그 단위 테스트가 덮는 것. 오늘 줄은 에뮬에서 이북 앱을 열지 않은 동안만 그대로다. 확인은 `adb exec-out run-as com.woody.booklauncher cat …/databases/pebble.db > y.db` 후 `sqlite3`. |
 | **V2** | `python3 tools/emu/seed.py v2 x.db` 로 1.5.3 꼴(DB 버전 2) DB 를 만들어 넣어 마이그레이션을 거치게 한다(`PRAGMA user_version=2`, `reading_day(day, key, ms)`, `book_open(at, pkg, title)`, `finish(book_id, day)`, `review`). |
 | **L** (실제 읽기) | 에뮬에 깐 이북 앱(CremaPebble_A11 에는 킨들)에서 책을 펴고 읽는다. 사용 기록·접근성 알림이 실제로 오는 경우만 확인할 수 있다. 킨들에 읽을 책(무료 샘플)이 있어야 한다. |
 | **F** (글자) | `shared_prefs/home.xml` 에 `text_scale`·`row_scale` 을 넣고 앱을 다시 띄운다(150% 확인용, 끝나면 되돌린다). |
 
 - 그날 에뮬에서 이북 앱을 이미 열었으면 시드의 오늘 줄이 사용 기록으로 다시 세어 덮인다(B2·B4~B11 등). 에뮬 날짜를 다음 날로 옮기고 `SEED_TODAY=그날` 로 시드한다.
 - 에뮬레이터: `CremaPebble_A11`(1072×1456, 300dpi, API 30, 페블과 같게)과 좁은 화면(720×1440) 하나. 날짜는 시험하는 날 기준으로 시드한다.
-- 설치하면 홈 고르기가 뜨면 `cmd package set-home-activity com.woody.pebbledesk/.HomeActivity`.
+- 설치하면 홈 고르기가 뜨면 `cmd package set-home-activity com.woody.booklauncher/.HomeActivity`.
 - 자동 추가(접근성)를 끄고 켜는 것은 시험하는 사람이 설정에서 한다(adb 로 켜지 않는다). 강제 종료 시험(J5)만 에뮬에서 `am force-stop` 을 쓴다(실기기에서는 하지 않는다).
 
 ---
@@ -166,7 +166,7 @@
 | J2 | J1 | `닫기` → 설정 → 홈 | 다시 뜸(꺼져 있는 동안 홈에 올 때마다) | 화면 |
 | J3 | J1 | 자동 추가 켬 → 홈 | 안 뜸 | 화면 |
 | J4 | 켜진 채 책 A 를 편 기록 있음 → 설정에서 끔 | `book_open` | 앱마다 제목 없는 줄 하나(`onUnbind`, 그 순간 설정이 꺼짐으로 보여야 함 — 아니면 홈에서 셀 때 적힘) | DB |
-| J5 | 켜진 채 책 A 편 기록 → `am force-stop com.woody.pebbledesk`(에뮬만) → (L) 이북 앱에서 읽음 → 홈 | `book_open`, `reading_day` | 홈에서 셀 때 제목 없는 줄이 강제 종료 전 마지막 알림(그 뒤 편 책을 적었으면 그 때) 때로 적힘. 그 뒤 읽은 시간은 제목 없이(A 로 가지 않음) | DB |
+| J5 | 켜진 채 책 A 편 기록 → `am force-stop com.woody.booklauncher`(에뮬만) → (L) 이북 앱에서 읽음 → 홈 | `book_open`, `reading_day` | 홈에서 셀 때 제목 없는 줄이 강제 종료 전 마지막 알림(그 뒤 편 책을 적었으면 그 때) 때로 적힘. 그 뒤 읽은 시간은 제목 없이(A 로 가지 않음) | DB |
 | J6 | 꺼진 채 (L) 읽음 | 홈 → 독서 기록 | 합계·연속일에는 들어가고 `이번 주 읽은 책`·책 상세에는 안 들어감 | 화면 |
 | J7 | 꺼짐 → 다시 켬 → (L) 서재에서 책을 폄 | 홈 | 그 뒤 시간은 그 책으로 | DB |
 | J8 | (L) 켜짐, 서재에서 제목을 못 읽는 칸을 눌러 들어감 | `book_open` | 그 앱만 제목 없는 줄. 메뉴를 띄워 제목을 읽으면 같은 때로 그 책 줄이 이어지고 그 읽기는 그 책으로 | DB |

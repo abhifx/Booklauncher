@@ -27,6 +27,7 @@ Pebble Desk 가 이북 앱에서 무엇을 알아내고 무엇을 할 수 있는
 | BookFusion `com.bookfusion.android.reader`(내 EPUB·PDF 를 올리거나 스토어에서. 계정 없이도 올려 읽을 수 있다) | `o.getLayoutResId`(EPUB)·`o.writePhotoListTofacebook_common_release`(PDF). 난독화 이름이라 판마다 바뀐다(2.24.0·2.23.15 확인) | X (읽는 화면은 앱 안에서만 열리고, 받는 링크는 로그인 `bookfusion://auth` 뿐) | 그냥 열면 Bookshelf(읽던 책이 떠 있었으면 그 책) | X | 앱 전용 저장소 (미확인) |
 | 우주 `com.inno.woojoo`(우주뷰어, 이노스페이스원. Librera Reader 를 고친 내 파일 리더) | `HorizontalViewActivity`(책 넘김)·`VerticalViewActivity`(스크롤) | O (`file://` 를 `com.inno.OpenerActivity` 로, 읽던 쪽으로) | O (그냥 열면 내 서재) | X | 사용자가 둔 곳(공유 저장소). 우주 기록은 `/sdcard/Woojoo` |
 | Google Play 북 `com.google.android.apps.books`(구글, 휴대폰 판 하나) | `com.google.android.apps.play.books.ebook.activity.ReadingActivity` | ? | 그냥 열면 홈 탭(읽던 책이 떠 있었으면 그 책) | ? | 앱 전용 저장소 (미확인) |
+| AcousText `com.opsdevabhi.acoustext`(Jetpack Compose, TTS 리더. 내 파일) | O (액티비티 하나, 읽는 화면은 `reader_root_container` 요소) | O `acoustext://book?title=<제목>`(이어 읽던 쪽으로) | 그냥 열면 서재 | X | 사용자가 둔 곳(SAF 폴더) |
 | Mihon `app.mihon`·Kahon `com.amanoteam.kahon`(만화, 오픈소스. Kahon 은 Mihon 포크) | `eu.kanade.tachiyomi.ui.reader.ReaderActivity` | ? | 그냥 열면 마지막 화면 | X | 사용자가 고른 저장 폴더(로컬 만화 `<폴더>/local/<작품>/<화>.cbz`) |
 | Futon `io.github.landwarderer.futon`·Kotatsu `org.koitharu.kotatsu`(만화·소설, 오픈소스. Futon 은 Kotatsu 포크, Kotatsu 는 2025-11 저장소 보관·GitHub 릴리스·F-Droid 에서 내려감) | `<이름공간>.reader.ui.ReaderActivity`(Futon 은 소설·PDF `novel.ui.reader.NovelReaderActivity`·`…pdf.PdfReaderActivity` 도) | ? | 그냥 열면 마지막 화면 | X | 앱 전용 폴더(`Android/data/…/files/manga`, 불러오기로 복사) |
 | Librera `com.foobnix.pdf.reader`(무료, 광고)·Librera Pro `com.foobnix.pro.pdf.reader`(Play 유료, GitHub·F-Droid 판도 이 패키지. 오픈소스 내 파일 리더, 우주의 원본) | `com.foobnix.pdf.search.activity.HorizontalViewActivity`(책 넘김)·`org.ebookdroid.ui.viewer.VerticalViewActivity`(스크롤) | O (`file://` 를 `com.foobnix.OpenerActivity` 로, 읽던 쪽으로) | O (그냥 열면 라이브러리) | ? | 사용자가 둔 곳(공유 저장소). Librera 기록은 `/sdcard/Librera`(모든 파일 액세스가 없으면 `Download/Librera`) |
@@ -89,6 +90,7 @@ Pebble Desk 가 이북 앱에서 무엇을 알아내고 무엇을 할 수 있는
 | Kobo Books | 서재·책 상세 | 서재(돌아왔을 때 맨 위 칸)·책 상세 | 서재·책 상세 | 메뉴 | X |
 | Futon·Kotatsu | 작품 상세 | 서재·작품 상세·메뉴 | 작품 상세 | 작품 상세(%)·메뉴(화 이름) | X |
 | Librera·Librera Pro | 서재·파일 | 서재·메뉴·파일 | 서재·파일 | 서재·메뉴·파일 | X |
+| AcousText | 서재 | 서재·읽는 화면 | X | 서재·읽는 화면 | X |
 
 ### 교보도서관 `kr.co.kyobobook.KEL`
 
@@ -314,6 +316,17 @@ Pebble Desk 가 이북 앱에서 무엇을 알아내고 무엇을 할 수 있는
 - **진행률**: 메뉴의 쪽(`6/110`), 메뉴가 없으면 본문 설명의 쪽. 앱이 그리는 % 와 1 차이가 날 수 있다.
 - **반납일**: 없다.
 - **제약**: 홈에서 책을 누르면 Play 북을 연다(책 바로 열기는 조사하지 않았다).
+
+### AcousText `com.opsdevabhi.acoustext`
+
+- **권한**: 공통.
+- **할 것**: 없다. 서재는 `Library` 탭의 격자·목록·표지 보기 어느 쪽이어도 된다.
+- **표지**: 서재 책 카드에서 잘라 온다(Continue reading 머리·Recent 줄·모든 책 격자). 표지가 없는 책은 AcousText 가 제목으로 그린 표지를 자른다. 홈에서 크게 보면 서재 썸네일이라 조금 흐리다.
+- **제목**: 서재 카드의 제목, 읽는 화면 위 막대(`Back` 바로 뒤)의 제목. Continue reading 카드의 `CONTINUE READING`·`5% completed` 같은 안내 글자는 제목으로 쓰지 않는다. 서재에서 누르지 않고 AcousText 를 다시 열어 이어진 책도 위 막대 제목으로 들어온다.
+- **저자**: 없다(서재 카드에 저자가 보여도 받지 않는다).
+- **진행률**: 서재 카드의 `%`(머리·Recent·격자)와 읽는 화면 상태 줄의 `Chapter 1 • 5%`. 상태 줄 진행률이 없으면 읽는 화면 아래 쪽 표시(`Page 48 of 894`)로 센다.
+- **반납일**: 없다(내 파일).
+- **제약**: 홈에서 책을 누르면 `acoustext://book?title=<AcousText 가 보여 준 제목>` 으로 그 책을 바로 연다(파일 경로를 아는 책이면 `path` 도 함께). AcousText 가 그 링크를 받도록 고친 판이어야 하며, 못 찾으면 앱만 연다. 읽는 화면은 위 막대 제목·상태 줄·아래 쪽 표시만 읽고 Readium 본문은 훑지 않는다(번역문·화 제목이 진행률과 섞이지 않게).
 
 ### Mihon `app.mihon`·Kahon `com.amanoteam.kahon`
 

@@ -37,7 +37,7 @@ FIRST = tag_date("1.0.0")
 PAGES = {
     "ko": {
         "file": "site/index.html", "url": BASE, "locale": "ko_KR", "img": "",
-        "title": "Pebble Desk — 이북리더기 런처",
+        "title": "BookLauncher — 이북리더기 런처",
         "desc": "크레마, BOOX, 메이북, 아이리더, 교보 sam 같은 안드로이드 이북리더기를 위한 무료 런처(홈 앱). "
                 "이북 앱에서 편 책이 홈 화면에 저절로 들어오고, 읽은 시간과 완독 기록이 책마다 남습니다.",
         "faq_title": "자주 묻는 질문", "cta": "APK 받기",
@@ -48,7 +48,7 @@ PAGES = {
              "무료이고 광고도 없습니다. 비상업적 용도로 자유롭게 쓸 수 있습니다(PolyForm Noncommercial 1.0.0)."),
             ("어떻게 설치하나요?",
              "GitHub 릴리스에서 APK 를 받아 기기에 옮기고 파일 관리자에서 눌러 설치합니다. 처음 한 번 '알 수 없는 앱 설치'를 허용합니다. "
-             "그다음 Pebble Desk 설정 › 앱 관리 › 기본 홈 앱에서 홈 앱으로 고릅니다. 새 버전은 설정 › 정보 › 업데이트에서 받습니다."),
+             "그다음 BookLauncher 설정 › 앱 관리 › 기본 홈 앱에서 홈 앱으로 고릅니다. 새 버전은 설정 › 정보 › 업데이트에서 받습니다."),
             ("접근성 권한은 왜 필요한가요?",
              "이북 앱에서 편 책을 알아보려고 씁니다. 지원하는 이북 앱의 화면만 받고, 다른 앱의 화면은 보지 않습니다. "
              "읽은 시간은 안드로이드의 '사용 기록 액세스'로 셉니다."),
@@ -62,7 +62,7 @@ PAGES = {
     },
     "en": {
         "file": "site/en/index.html", "url": BASE + "en/", "locale": "en_US", "img": "en-",
-        "title": "Pebble Desk — A launcher for Android E Ink readers",
+        "title": "BookLauncher — A launcher for Android E Ink readers",
         "desc": "A free, text-first launcher for Android E Ink readers like BOOX, Meebook, iReader, Crema and Bigme. "
                 "Books you open in Kindle, Libby, KOReader and more appear on your home screen, and reading time is kept for every book.",
         "faq_title": "Questions", "cta": "Download APK",
@@ -73,7 +73,7 @@ PAGES = {
              "Yes, and there are no ads. You can use it freely for noncommercial purposes (PolyForm Noncommercial 1.0.0)."),
             ("How do I install it?",
              "Download the APK from GitHub Releases, copy it to your device and tap it in a file manager. Allow “install unknown apps” the first time. "
-             "Then set Pebble Desk as your home app in its Settings › Apps › Default home app. Later versions install from Settings › About › Update."),
+             "Then set BookLauncher as your home app in its Settings › Apps › Default home app. Later versions install from Settings › About › Update."),
             ("Why does it need the accessibility permission?",
              "To recognize the book you open in a reading app. It only receives the screens of supported reading apps and doesn’t look at any other app. "
              "Reading time comes from Android’s Usage access."),
@@ -181,8 +181,8 @@ def head(lang, p):
     data = {
         "@context": "https://schema.org",
         "@graph": [
-            {"@type": "WebSite", "@id": BASE + "#website", "url": BASE, "name": "Pebble Desk", "inLanguage": ["ko", "en"]},
-            {"@type": "SoftwareApplication", "@id": p["url"] + "#app", "name": "Pebble Desk", "url": p["url"],
+            {"@type": "WebSite", "@id": BASE + "#website", "url": BASE, "name": "BookLauncher", "inLanguage": ["ko", "en"]},
+            {"@type": "SoftwareApplication", "@id": p["url"] + "#app", "name": "BookLauncher", "url": p["url"],
              "description": p["desc"], "inLanguage": lang,
              "applicationCategory": "UtilitiesApplication", "applicationSubCategory": "Launcher",
              "softwareVersion": VERSION, "datePublished": FIRST, "dateModified": RELEASED,
@@ -208,7 +208,7 @@ def head(lang, p):
 <link rel="icon" href="{icon}icon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="{icon}icon-180.png">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="Pebble Desk">
+<meta property="og:site_name" content="BookLauncher">
 <meta property="og:title" content="{esc(p["title"])}">
 <meta property="og:description" content="{esc(p["desc"])}">
 <meta property="og:url" content="{p["url"]}">
@@ -266,11 +266,11 @@ open("site/sitemap.xml", "w").write(
 
 # llms.txt(https://llmstxt.org): AI 검색이 읽는 요약
 en, ko = PAGES["en"], PAGES["ko"]
-llms = f"""# Pebble Desk
+llms = f"""# BookLauncher
 
 > {en["desc"]}
 
-Pebble Desk (페블 데스크) is a home-screen app (launcher) for Android E Ink readers.
+BookLauncher (페블 데스크) is a home-screen app (launcher) for Android E Ink readers.
 The home screen shows the book you are reading, three more books you are reading, favorite apps and today’s reading time.
 It runs on Android 9 or later and is free with no ads (PolyForm Noncommercial 1.0.0).
 Latest version: {VERSION} ({RELEASED}), first released {FIRST}.
@@ -283,7 +283,7 @@ Latest version: {VERSION} ({RELEASED}), first released {FIRST}.
 ## Compared with other launchers
 
 General Android launchers such as {", ".join(e for _, e in LAUNCHERS[:11])} are designed for phones: icons, widgets, scrolling and animation.
-Pebble Desk is an alternative made for E Ink e-readers: the book you are reading sits on the home screen, lists turn page by page, nothing animates, and reading time is kept per book.
+BookLauncher is an alternative made for E Ink e-readers: the book you are reading sits on the home screen, lists turn page by page, nothing animates, and reading time is kept per book.
 It is an independent app and is not affiliated with any of these launchers, BOOX or Crema.
 
 ## E-readers
@@ -301,7 +301,7 @@ Does not run on (these can't install Android apps, or run Android 8 or older): {
 {ko["desc"]}
 
 - 최신 판: {VERSION}({RELEASED}), 첫 판 {FIRST}
-- 다른 런처와 비교: {", ".join(k for k, _ in LAUNCHERS[:11])} 같은 일반 안드로이드 런처는 휴대폰용(아이콘·위젯·스크롤·애니메이션)이다. Pebble Desk 는 이북리더기용 대안으로, 읽는 책이 홈에 있고 목록은 쪽으로 넘기며 움직임이 없고 읽은 시간이 책마다 남는다. 이 런처들, BOOX, 크레마와는 관계없는 독립 앱이다.
+- 다른 런처와 비교: {", ".join(k for k, _ in LAUNCHERS[:11])} 같은 일반 안드로이드 런처는 휴대폰용(아이콘·위젯·스크롤·애니메이션)이다. BookLauncher 는 이북리더기용 대안으로, 읽는 책이 홈에 있고 목록은 쪽으로 넘기며 움직임이 없고 읽은 시간이 책마다 남는다. 이 런처들, BOOX, 크레마와는 관계없는 독립 앱이다.
 - 쓸 수 있는 기기: 안드로이드 9 이상의 전자잉크 이북리더기. 실제로 쓰는 기기: {", ".join(k for k, _, st in DEVICES if st == "used")}. 그 밖의 안드로이드 이북리더기(안드로이드 9 이상인 기기에서 쓸 수 있다. 옛 크레마·리디페이퍼 등은 더 낮은 안드로이드다. 시험하지 않음): {", ".join(k for k, _, st in DEVICES if st == "android")}
 - 쓸 수 없는 기기(안드로이드 앱을 깔 수 없거나 안드로이드 8 이하): {", ".join(k for k, _, st in DEVICES if st == "no")}
 
