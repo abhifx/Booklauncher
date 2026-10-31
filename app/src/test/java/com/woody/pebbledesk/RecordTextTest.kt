@@ -84,4 +84,11 @@ class RecordTextTest {
         val read = BookRecord(book, State.PAST, false, listOf(fin(1, "2026-09-05")), mapOf(d("2026-09-01") to min(30)))
         assertEquals("2026.09.01 – 2026.10.15 사이", c.finishDayRangeText(read, read.rounds[0], today))
     }
+
+    @Test fun `읽기 시작한 날 범위 글자 - 첫 회차는 까지, 앞 회차가 있으면 사이`() {
+        val first = BookRecord(book, State.READING, false, emptyList(), mapOf(d("2026-10-08") to min(30)))
+        assertEquals("2026.10.08 까지", c.startDayRangeText(first, first.rounds[0], today, null))
+        val second = BookRecord(book, State.READING, false, listOf(fin(1, "2025-05-10")), mapOf(d("2026-10-08") to min(30)))
+        assertEquals("2025.05.10 – 2026.10.08 사이", c.startDayRangeText(second, second.rounds[1], today, null))
+    }
 }

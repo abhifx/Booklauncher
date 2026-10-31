@@ -28,12 +28,15 @@
 | A3 | V2: 다시 읽는 중인 책(읽고 있는 책인데 완독한 적 있음) | 앱을 띄움 | `round_start` 에 날짜 없이 한 줄, 상세 기록 칸에 진행 중 회차(시작일 모름은 줄 없음) | DB, 상세 |
 | A4 | V2: 고친 제목 C『헤세의 소설』(seen_title `싯다르타`), `pkg/싯다르타` 시간 | 앱을 띄움 | 그 시간이 C 의 id 로 | DB |
 | A5 | 1.2.1 JSON(`reading.json`·`books/books.json`) 만 있는 새 설치 | 앱을 띄움 | JSON 이 들어가고 `.migrated` 로 이름이 바뀜, 읽은 시간은 앱만 아는 줄 | 파일·DB |
-| A6 | 아무 데이터 없는 새 설치 | 앱을 띄움 | DB 버전 5 의 새 표(`reading_day` 다섯 칸, `book_open.book_id`, `finish`·`round_start`·`review`·`viewer_mark`·`book_file`, `shelf.chapter`), 오류 없음 | `PRAGMA table_info` |
-| A7 | **옛 판 그대로**(루트 에뮬): 태그 v1.5.3 으로 빌드한 1.5.3 을 깔고, `tools/emu/oldseed.py v2` 의 자료(읽고 있는 책 6·나간 책 5(완독·뺌·지움·두 번 완독, 옛 판이 끊겨 읽고 있는 책에도 남은 책)·완독 4·감상 4·책별/앱별 읽은 시간 12(앱만 아는 칸과 겹치는 빈 제목 칸 `pkg/` 포함)·메타·편 책 기록·표지)를 덮음 | 1.5.3 으로 띄워 자료가 보이는지 → 이 판을 덮어 깔기(`tools/emu/oldmig.sh v2 …`) | `oldseed.py check v2` 가 모두 맞음: 버전 5·칸(빈 `shelf.chapter`), 책·나간 책 그대로, 완독에 uid(누른 때는 모름)·마지막 완독에 감상, 완독한 적 없는 책의 감상만 `review` 에, 다시 읽는 책에 시작일 모르는 `round_start`, 읽은 시간이 나간 날·지운 날·고친 제목·`/` 든 제목대로 책 id 로, 앱만 아는 시간·목록에 없던 책은 빈 id, 편 책 기록에 빈 책 id. 깔리지 않은 앱 키는 지워진 앱 정리로 비워짐(기대값은 『데미안』의 앱 문리더 Pro 가 깔린 에뮬 기준. 없는 에뮬에서는 그 앱 칸이 비어 `읽고 있는 책` 한 줄만 다르다, A8·A9 도 같다) | DB |
+| A6 | 아무 데이터 없는 새 설치 | 앱을 띄움 | DB 버전 6 의 새 표(`reading_day` 다섯 칸, `book_open.book_id`, `finish`(`began` 포함)·`round_start`·`round_began`·`review`·`viewer_mark`·`book_file`, `shelf.chapter`), 오류 없음 | `PRAGMA table_info` |
+| A7 | **옛 판 그대로**(루트 에뮬): 태그 v1.5.3 으로 빌드한 1.5.3 을 깔고, `tools/emu/oldseed.py v2` 의 자료(읽고 있는 책 6·나간 책 5(완독·뺌·지움·두 번 완독, 옛 판이 끊겨 읽고 있는 책에도 남은 책)·완독 4·감상 4·책별/앱별 읽은 시간 12(앱만 아는 칸과 겹치는 빈 제목 칸 `pkg/` 포함)·메타·편 책 기록·표지)를 덮음 | 1.5.3 으로 띄워 자료가 보이는지 → 이 판을 덮어 깔기(`tools/emu/oldmig.sh v2 …`) | `oldseed.py check v2` 가 모두 맞음: 버전 6·칸(빈 `shelf.chapter`, 빈 `finish.began`·`round_began`), 책·나간 책 그대로, 완독에 uid(누른 때는 모름)·마지막 완독에 감상, 완독한 적 없는 책의 감상만 `review` 에, 다시 읽는 책에 시작일 모르는 `round_start`, 읽은 시간이 나간 날·지운 날·고친 제목·`/` 든 제목대로 책 id 로, 앱만 아는 시간·목록에 없던 책은 빈 id, 편 책 기록에 빈 책 id. 깔리지 않은 앱 키는 지워진 앱 정리로 비워짐(기대값은 『데미안』의 앱 문리더 Pro 가 깔린 에뮬 기준. 없는 에뮬에서는 그 앱 칸이 비어 `읽고 있는 책` 한 줄만 다르다, A8·A9 도 같다) | DB |
 | A8 | A7 과 같되 1.4.2(DB 버전 1, 감상 없음) | `oldmig.sh v1 …` | `check v1` 이 모두 맞음(감상 빼고 A7 과 같음) | DB |
-| A8b | A7 과 같되 1.5.3 다음에 1.5.4(DB 버전 3)를 거쳐 이 판으로 | `oldmig.sh v2 <1.5.3> <새 판> <폴더> <1.5.4>`(1.5.4 로 띄운 화면은 `mid.png`) | `check v2` 가 모두 맞음(버전 5, 빈 `book_file`) | DB |
-| A8c | A7 과 같되 1.5.3 다음에 1.6.0(DB 버전 4)을 거쳐 이 판으로 | `oldmig.sh v2 <1.5.3> <새 판> <폴더> <1.6.0>` | `check v2` 가 모두 맞음(버전 5, 빈 `shelf.chapter`) | DB |
+| A8b | A7 과 같되 1.5.3 다음에 1.5.4(DB 버전 3)를 거쳐 이 판으로 | `oldmig.sh v2 <1.5.3> <새 판> <폴더> <1.5.4>`(1.5.4 로 띄운 화면은 `mid.png`) | `check v2` 가 모두 맞음(버전 6, 빈 `book_file`) | DB |
+| A8c | A7 과 같되 1.5.3 다음에 1.6.0(DB 버전 4)을 거쳐 이 판으로 | `oldmig.sh v2 <1.5.3> <새 판> <폴더> <1.6.0>` | `check v2` 가 모두 맞음(버전 6, 빈 `shelf.chapter`) | DB |
+| A8d | A7 과 같되 1.5.3 다음에 1.7.2(DB 버전 5)를 거쳐 이 판으로 | `oldmig.sh v2 <1.5.3> <새 판> <폴더> <1.7.2>` | `check v2` 가 모두 맞음(버전 6, 빈 `finish.began`·`round_began`) | DB |
 | A9 | 1.2.1(JSON): `reading.json`(앱별 하루 합계·through·since)·`books.json`(YES24 번호·`auto-`·`legacy` id, 진행률·반납일·앱)·표지·편 책 prefs | `oldmig.sh json …` | `check json` 이 모두 맞음: 읽고 있는 책이 `b-` id 로(표지 파일도 새 이름), `auto-` 책은 앱이 보여 준 제목을 기억, 읽은 시간은 앱별(제목·책 id 빈칸), 메타 그대로, JSON 은 `.migrated` | DB·파일 |
+
+A6~A9 는 2026-11-01 DB 버전 6 으로 모두 통과(`CremaPebble_A11_Millie`, 문리더 Pro 가 없어 `읽고 있는 책` 한 줄만 다름).
 
 ## B. 홈 하단 · 독서 기록 화면 (⑫)
 
@@ -252,6 +255,11 @@
 |---|---|---|---|
 | L4-1 | 같은 날 두 번 완독한 책 | 1회차 완독한 날을 2회차 완독일과 같은 날로 | 받음(같은 날 두 회차), 순서 유지 |
 | L4-2 | 완독 2회 | 1회차 완독한 날을 2회차 시작일(다시 읽기한 날) 뒤로 | 거절, 범위 안내 |
+| L4-2a | 처음 읽는 책(회차 하나, 10월 8일부터) | 상세 기록 칸 `›` → `읽기 시작한 날` → `2026.9.20` → `저장` | 상세 `9월 20일부터`, 읽은 시간 그대로, DB `round_began`. 완독하면 `finish.began` 으로 옮김 |
+| L4-2b | 같은 책 | 읽기 시작한 날을 기록된 첫날 뒤로(`2026.10.9`) | 거절, `2026.10.08 까지` 안내 |
+| L4-2c | 완독 2회 | 2회차 읽기 시작한 날을 1회차 완독일 앞으로 | 거절, `… 사이` 안내. 1회차 완독일과 같은 날은 받음 |
+| L4-2d | 완독한 회차 | 회차 메뉴에서 시작한 날을 앞으로 + 완독한 날을 그보다 앞으로 함께 고쳐 `저장` | 완독한 날만 받고 시작한 날은 닫힌 뒤 `읽기 시작한 날` 안내 |
+| L4-2e | 5분 미만으로 읽은 책(별점 칸 흐림, 2분) | 상세 기록 칸 `›` → `읽기 시작한 날` → `2026.10.1` → `저장` | 별점·감상 없이 날짜 줄과 `저장` / `취소` 만 뜬다. 상세 `10월 1일부터`, 시간 2분 그대로, 별점 칸은 흐린 채(`review` 줄 안 생김) (2026-11-01 에뮬 확인, 페블에서 기록 칸이 안 눌려 고침) |
 | L4-3 | 완독 1회 | 오늘 / 내일로 | 오늘은 받음, 내일은 거절 |
 | L4-4 | 기록 켜기 전 완독 | `1900.01.01` / `1899.12.31` | 앞은 받음, 뒤는 거절 |
 | L4-5 | 완독 1회 | `2026.2.30`·`2026.13.1`·`26.10.14`·`2026.10.14.`·빈칸 | 모두 거절(빈칸은 저장 안 함) |
@@ -379,7 +387,7 @@ U = 단위 테스트(`app/src/test`), 나머지는 위 케이스 ID. 단위 테�
 
 | 코드 | 덮는 곳 |
 |---|---|
-| `Db.create`·`upgrade`·`moveReadingDays`·`importFiles`(DB 에 이미 있음·깨진 books.json·빈 메타·같은 칸) | A1~A9, L8, U(DbMigrationTest·DbOpenTest 열다섯) |
+| `Db.create`·`upgrade`·`moveReadingDays`·`importFiles`(DB 에 이미 있음·깨진 books.json·빈 메타·같은 칸) | A1~A9, L8, U(DbMigrationTest·DbOpenTest 열일곱) |
 | `BookShelf.migrateIds`(옛 id → 다섯 표) | L3-6, U(ReadingBookIdTest) |
 | `bookFor`·`hasTitle`·`sameTitle`·`leftOn`·`firstReadDays` | H1~H3, L3, L2-5, U(BookForTest) |
 | `ReadingLog.days`·`count`(끝난 날 저장 조건·날짜 역행)·`since` | B·J·L1. U `기기 날짜가 저장한 마지막 날 이전으로…`·`저장한 마지막 날이 오늘이어도…`(사용 기록 이벤트를 넣어 count 를 직접, 날짜 역행 중 `since` 가 오늘을 넘지 않음도). 그 밖의 저장 조건은 에뮬만 |
@@ -389,15 +397,15 @@ U = 단위 테스트(`app/src/test`), 나머지는 위 케이스 ID. 단위 테�
 | `ReadingLog.adopt` | E9, E10, G2, L2-7, U(ReadingBookIdTest) |
 | `keepOpens` 실패(메모리 사본 안 남김) | U `편 책 기록 저장이 실패하면…` |
 | `ReadingLog.save` 실패 시 사본 비우기 | U 없음(사용 기록 권한이 있어야 지나가는 경로) — 받아들인 공백 |
-| `BookRecord.rounds`·`span`·`finishDayRange`·`canFinishOn`·`readYears`·`reopenStartsRound` | D·E4·E5·F·L4, C3, C8, I6, U(BookRecordRoundsTest) |
+| `BookRecord.rounds`·`span`(고친 읽기 시작한 날)·`finishDayRange`·`canFinishOn`·`startDayRange`·`canStartOn`·`readYears`·`reopenStartsRound` | D·E4·E5·F·L4, C3, C8, I6, U(BookRecordRoundsTest) |
 | `BookRecord.all`·`of`·`empty` | B5, C1, C2, D9, U(BookRecordAllTest) |
 | `BookRecord.reloadIn`(목록에 없던 책→읽고 있는 책·나간 책, 빈 기록, 없음) | L5-4, U `목록에 없던 책이 그사이…`, `다시 띄울 때 - …` |
-| `BookShelf.finish`·`restore`·`forget`·`claim`·`keep`·`remove`·`setFinish`·`setReview`·`addFinish`·`startRound` | E1~E11, F3, L4-1, L5, U(BookShelfStoreTest, 실패 시 되돌리기 셋 포함) |
+| `BookShelf.finish`·`restore`·`forget`·`claim`·`keep`·`remove`·`setFinish`·`setBegan`·`setReview`·`addFinish`·`startRound` | E1~E11, F3, L4-1, L4-2a, L5, U(BookShelfStoreTest, 실패 시 되돌리기 셋 포함) |
 | `BookShelf.add`·`addOpened`(`at`·`startsRoundOnReturn`·`chapter`) | G1, G2, L6, I1, I2, I6, I7, U `책 추가는 늘 새 책…`, `완독한 책도 펴면…`, `자정을 넘겨 알아본…`, `읽는 화는 보이면 새 값…` |
 | `BookShelf.replace`·`edit`(표지 다시 찾기·제목·저자) | E12~E14, U `표지 다시 찾기는 없는 책이면…` |
 | `BookShelf.migrateIds`(실패 뒤 다시) | U `옛 id 바꾸기가 실패하면…` |
 | `showBookDetail`·`detailSheet`·`bookSheet`·`bookId`·`reviewLocked` | D1~D9, E, L5 |
-| `editRound`·`finishDayRow`·`parseDay`·`finishDayRangeText`·`saveRoundReview` | E4, E5, L4, U(ParseDayTest·RecordTextTest) |
+| `editRound`·`saveRound`·`dayRow`·`parseDay`·`finishDayRangeText`·`startDayRangeText`·`saveRoundReview` | E4, E5, L4, U(ParseDayTest·RecordTextTest) |
 | `showHistory`·`paginate`·`Timeline` | D3, D8, D10, L4-14, L9-2 |
 | `recordView`·`recordPeriod`·`roundTime`·`finishSummary`·`recordMore`·`historyRest`·`roundDetail`·`period` | D1~D3, D10, L1-12, L4-6, L4-7, A3, U(RecordTextTest) |
 | `Sheet.height`·`layout`·`centered`·`dateInput`·초점 막기 | D5, D8, J1, E5, K4 |

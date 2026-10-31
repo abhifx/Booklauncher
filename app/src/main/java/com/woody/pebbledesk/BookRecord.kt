@@ -5,7 +5,7 @@ import java.time.LocalDate
 
 /**
  * 책 한 권의 읽은 기록: 책(목록에 없던 책은 제목만 든 임시 책), 상태, 완독 모두(오래된 순, 그 회차의 별점·감상과 함께 [finishList]),
- * 날마다 읽은 시간(남은 기록 전체), 진행 중인 마지막 회차의 별점·감상([openReview])과 `다시 읽기`한 날([openStart]).
+ * 날마다 읽은 시간(남은 기록 전체), 진행 중인 마지막 회차의 별점·감상([openReview])과 `다시 읽기`한 날([openStart])·고친 읽기 시작한 날([openBegan]).
  * 홈과 올해 읽은 책에서 같은 책 상세([showBookDetail])로 보인다.
  */
 class BookRecord(
@@ -13,6 +13,7 @@ class BookRecord(
     private val openReview: Review? = null, private val openStart: LocalDate? = null,
     /** 진행 중인 회차가 있다는 표시(`round_start` 줄. 시작한 날 [openStart] 를 몰라도) */
     private val openRound: Boolean = openStart != null,
+    private val openBegan: LocalDate? = null,
 ) {
     enum class State {
         /** 읽고 있는 책 목록에 있다(완독했던 책이면 다시 읽는 중) */
@@ -69,11 +70,12 @@ class BookRecord(
      * 한 회차(읽기 시작해 완독까지). 상태는 완독([finished])과 진행 중 둘뿐이다(뺀 책도 다시 읽으면 이어지니 진행 중).
      * 번호(회차가 둘 이상일 때만), 시작 날(모르면 null), 끝 날(완독한 날, 진행 중이면 null), 그 동안 읽은 시간, 그 회차의 별점·감상,
      * 완독한 회차면 그 완독 줄 id(완독한 날·별점·감상을 고칠 때), 그 회차에 마지막으로 읽은 날(완독한 날을 이보다 앞으로 고치지 못하게),
-     * 회차가 시작된 경계(`다시 읽기`로 시작했으면 그날, 아니면 [from]. 앞뒤 회차의 완독한 날을 이 너머로 고치지 못하게).
+     * 회차가 시작된 경계(`다시 읽기`로 시작했으면 그날, 아니면 기록된 시작 날. 앞뒤 회차의 완독한 날을 이 너머로 고치지 못하게),
+     * 기록된 시작 날(사용자가 읽기 시작한 날을 고쳤으면 [from] 은 그날이고 이것은 기록으로 센 날. 시작한 날은 이보다 앞으로만 고친다).
      */
     class Round(
         val nth: Int?, val from: LocalDate?, val to: LocalDate?, val ms: Long, val finished: Boolean, val review: Review?,
-        val finishId: Long? = null, val lastRead: LocalDate? = null, val begin: LocalDate? = from,
+        val finishId: Long? = null, val lastRead: LocalDate? = null, val begin: LocalDate? = from, val recordedFrom: LocalDate? = from,
     )
 
     /**
@@ -83,47 +85,72 @@ class BookRecord(
      * 진행 중인 회차가 하나 더 있다(완독한 책을 잠깐 열어 확인한 것은 회차가 아니다). 완독한 적이 없는 책은 그것 하나.
      * `다시 읽기`로 시작한 회차([BookShelf.Finish.started]·[openStart])는 그 전에 합쳐 [ReadingLog.MIN_DAY_MS] 미만으로 잠깐 연 시간을 빼고
      * 그날부터 센다(그 전에 그만큼 읽었으면 이미 시작한 회차라 그대로). 시작 날은 잠깐이라도 읽은 날, 아직 안 읽었으면 `다시 읽기`한 날.
+     * 사용자가 읽기 시작한 날을 고쳤으면([BookShelf.Finish.began]·[openBegan]) 시작 날은 그날(기간 글자만, 읽은 시간은 그대로). 그날이 그 회차의
+     * 범위(앞 완독한 날 ~ 기록된 시작 날 앞)를 벗어났으면(그 뒤 완독한 날을 고쳐 회차가 바뀜) 기록된 시작 날.
      */
     val rounds: List<Round> by lazy {
         val days = dayMs.filterValues { it > 0 }.keys.sorted()
-        // [after] 다음 날부터 [upTo] 까지인 회차(`다시 읽기`한 날 [start])의 시작 날·시간·마지막으로 읽은 날·시작 경계.
-        fun span(after: LocalDate?, start: LocalDate?, upTo: LocalDate?, make: (LocalDate?, Long, LocalDate?, LocalDate?) -> Round): Round {
+        // [after] 다음 날부터 [upTo] 까지인 회차(`다시 읽기`한 날 [start], 고친 읽기 시작한 날 [began])의 시작 날·시간·마지막으로 읽은 날·시작 경계·기록된 시작 날.
+        fun span(after: LocalDate?, start: LocalDate?, began: LocalDate?, upTo: LocalDate?, make: (LocalDate?, Long, LocalDate?, LocalDate?, LocalDate?) -> Round): Round {
             val before = start?.minusDays(1)
             val fromStart = before != null && spent(after, before) < ReadingLog.MIN_DAY_MS
             val bound = if (fromStart) listOfNotNull(after, before).max() else after
             val read = days.filter { (bound == null || it > bound) && (upTo == null || it <= upTo) }
-            val from = read.firstOrNull() ?: start
-            return make(from, spent(bound, upTo), read.lastOrNull(), if (fromStart) start else from)
+            val recorded = read.firstOrNull() ?: start
+            val from = began?.takeIf { b -> (after == null || b >= after) && (upTo == null || b <= upTo) && (recorded == null || b < recorded) } ?: recorded
+            return make(from, spent(bound, upTo), read.lastOrNull(), if (fromStart) start else recorded, recorded)
         }
         val out = mutableListOf<Round>()
         var prev: LocalDate? = null
         for (f in finishList) {
-            out += span(prev, f.started, f.day) { from, ms, lastRead, begin -> Round(null, from, f.day, ms, true, f.review, f.id, lastRead, begin) }
+            out += span(prev, f.started, f.began, f.day) { from, ms, lastRead, begin, recorded ->
+                Round(null, from, f.day, ms, true, f.review, f.id, lastRead, begin, recorded)
+            }
             prev = f.day
         }
         val last = prev
         if (last == null || state == State.READING || openRound || openReview != null || spent(last, null) >= ReadingLog.MIN_DAY_MS) {
-            out += span(last, openStart, null) { from, ms, lastRead, begin -> Round(null, from, null, ms, false, openReview, null, lastRead, begin) }
+            out += span(last, openStart, openBegan, null) { from, ms, lastRead, begin, recorded ->
+                Round(null, from, null, ms, false, openReview, null, lastRead, begin, recorded)
+            }
         }
         if (out.size < 2) out
-        else out.mapIndexed { i, r -> Round(i + 1, r.from, r.to, r.ms, r.finished, r.review, r.finishId, r.lastRead, r.begin) }
+        else out.mapIndexed { i, r -> Round(i + 1, r.from, r.to, r.ms, r.finished, r.review, r.finishId, r.lastRead, r.begin, r.recordedFrom) }
     }
 
     /**
-     * 완독한 회차 [round] 의 완독한 날을 고칠 수 있는 범위: 가장 이른 날(앞 회차 완독일·그 회차 시작 경계·그 회차에 마지막으로 읽은 날 중 가장
-     * 늦은 날. 첫 회차에 읽은 날도 없으면 null = 아래 제한은 [EARLIEST_DAY] 만) ~ 가장 늦은 날(다음 회차 시작 경계(다시 읽기한 날, 없으면
-     * 처음 읽은 날), 마지막 회차면 [today]. 둘 다 [today] 를 넘지 않는다). 그 밖으로 옮기면 읽은 시간이 엉뚱한 회차로 가거나 회차 순서가 바뀐다.
+     * 완독한 회차 [round] 의 완독한 날을 고칠 수 있는 범위: 가장 이른 날(앞 회차 완독일·그 회차 시작 경계·그 회차에 마지막으로 읽은 날·
+     * 고친 읽기 시작한 날 중 가장 늦은 날. 첫 회차에 읽은 날도 없으면 null = 아래 제한은 [EARLIEST_DAY] 만) ~ 가장 늦은 날(다음 회차 시작 경계
+     * (다시 읽기한 날, 없으면 처음 읽은 날)와 고친 읽기 시작한 날 중 이른 날, 마지막 회차면 [today]. 둘 다 [today] 를 넘지 않는다). 그 밖으로 옮기면 읽은 시간이 엉뚱한 회차로 가거나 회차 순서가 바뀐다.
      */
     fun finishDayRange(round: Round, today: LocalDate): Pair<LocalDate?, LocalDate> {
         val i = rounds.indexOf(round)
-        val earliest = listOfNotNull(rounds.getOrNull(i - 1)?.to, round.begin, round.lastRead).maxOrNull()
+        // 고친 읽기 시작한 날([Round.from])보다 앞으로도 옮기지 못한다(읽은 기록이 없는 회차)
+        val earliest = listOfNotNull(rounds.getOrNull(i - 1)?.to, round.begin, round.lastRead, round.from).maxOrNull()
         val next = rounds.getOrNull(i + 1)
-        return earliest to minOf(next?.begin ?: next?.from ?: next?.to ?: today, today)
+        val nextStart = next?.let { listOfNotNull(it.begin, it.from).minOrNull() ?: it.to }
+        return earliest to minOf(nextStart ?: today, today)
     }
 
     /** 완독한 회차 [round] 의 완독한 날을 [day] 로 고칠 수 있는가([finishDayRange] 안, [EARLIEST_DAY] 이후. 오타 `0206.1.1` 같은 날은 막는다) */
     fun canFinishOn(round: Round, day: LocalDate, today: LocalDate): Boolean {
         val (earliest, latest) = finishDayRange(round, today)
+        return day >= (earliest ?: EARLIEST_DAY) && day >= EARLIEST_DAY && day <= latest
+    }
+
+    /**
+     * 회차 [round] 의 읽기 시작한 날을 고칠 수 있는 범위: 가장 이른 날(앞 회차의 완독한 날, 첫 회차면 null = [EARLIEST_DAY] 만) ~ 가장 늦은 날
+     * (기록된 시작 날([Round.recordedFrom]), 끝 날 [to](완독한 날, 회차 메뉴에서 함께 고치는 중이면 고른 날), [today] 중 가장 이른 날).
+     * 기록된 첫날보다 앞으로만 옮긴다(기록을 켜기 전·다른 기기에서 먼저 읽은 날). 뒤로 옮기면 기간 밖에 읽은 시간이 남는다.
+     */
+    fun startDayRange(round: Round, today: LocalDate, to: LocalDate? = round.to): Pair<LocalDate?, LocalDate> {
+        val i = rounds.indexOf(round)
+        return rounds.getOrNull(i - 1)?.to to listOfNotNull(round.recordedFrom, to, today).min()
+    }
+
+    /** 회차 [round] 의 읽기 시작한 날을 [day] 로 고칠 수 있는가([startDayRange] 안, [EARLIEST_DAY] 이후) */
+    fun canStartOn(round: Round, day: LocalDate, today: LocalDate, to: LocalDate? = round.to): Boolean {
+        val (earliest, latest) = startDayRange(round, today, to)
         return day >= (earliest ?: EARLIEST_DAY) && day >= EARLIEST_DAY && day <= latest
     }
 
@@ -213,8 +240,12 @@ class BookRecord(
             }
             val openReviews = BookShelf.reviews(context)
             val starts = BookShelf.roundStarts(context)
+            val began = BookShelf.roundBegans(context)
             return acc.values.map {
-                BookRecord(it.book, it.state, it.hidden, finishes[it.book.id].orEmpty(), it.dayMs, openReviews[it.book.id], starts[it.book.id], it.book.id in starts)
+                BookRecord(
+                    it.book, it.state, it.hidden, finishes[it.book.id].orEmpty(), it.dayMs, openReviews[it.book.id], starts[it.book.id],
+                    it.book.id in starts, began[it.book.id],
+                )
             }
         }
 
@@ -227,7 +258,7 @@ class BookRecord(
             val starts = BookShelf.roundStarts(context)
             return BookRecord(
                 book, state, hidden, BookShelf.finishList(context)[book.id].orEmpty(), emptyMap(),
-                BookShelf.reviews(context)[book.id], starts[book.id], book.id in starts,
+                BookShelf.reviews(context)[book.id], starts[book.id], book.id in starts, BookShelf.roundBegans(context)[book.id],
             )
         }
     }

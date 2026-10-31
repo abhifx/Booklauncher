@@ -34,7 +34,7 @@ zip 하나.
 | 경로 | 내용 |
 |---|---|
 | `manifest.json` | `format`(1), `exportId`(UUID), `exportedAt`, `appVersion`, `dbVersion`, 기기 모델 |
-| `data.json` | 표마다 행 배열: `shelf`·`past`·`finish`(줄 id 는 빼고 `uid` 로)·`review`·`round_start`·읽은 시간(`days`) · `since` · 하루 목표 이력 |
+| `data.json` | 표마다 행 배열: `shelf`·`past`·`finish`(줄 id 는 빼고 `uid` 로)·`review`·`round_start`·`round_began`·읽은 시간(`days`) · `since` · 하루 목표 이력 |
 | `settings.json` | `home.xml` 중 옮길 값(아래 `설정`) |
 | `covers/<id>.jpg` | 책 표지 원본만(`files/books/<id>.jpg`). 줄인 표지(`<id>_…t….png`)는 받는 기기에서 다시 만든다 |
 
@@ -50,6 +50,7 @@ zip 하나.
 | `shelf`·`past` | 표를 통째로 다시 쓰지만 책은 사라지지 않는다 | 읽고 있는 책 ↔ 나간 책으로 옮겨 다님. 올해 읽은 책에서 지우기는 `hidden = 1`(표지 파일만 지움) |
 | `finish` | 지우지 않음(키는 기기마다 따로 매긴 줄 `id`, 같은 날 두 번 완독도 따로. 회차의 시작한 날·별점·감상은 고칠 수 있다) | 더하기만. 같은 완독은 `uid` 로만 알아본다(아래 `완독한 날`) |
 | `round_start` | 완독하면 지움(그 완독 줄의 `started` 로 옮김) | 아래 `다시 읽기한 날` |
+| `round_began` | 완독하면 지움(그 완독 줄의 `began` 으로 옮김), 새 회차가 시작하면 지움 | `round_start` 와 같게 |
 | `review` | 별점·감상을 둘 다 비우면 행을 지움. 완독하면 그 회차(`finish`)로 옮기고 지움(완독하지 않은 마지막 회차의 것만 남는다) | "비웠다"와 "없었다"를 구별할 수 없다 |
 | `reading_day` | 날마다 통째로 다시 씀 | 어제까지(`through`)는 고정, 그 뒤 날은 사용 기록으로 다시 세어 **덮어쓴다** |
 | `book_open` | 10일쯤 지난 것은 지움(앱마다 마지막 한 권은 남김) | 그 기기의 읽은 시간 나누기에만 쓰는 값 |

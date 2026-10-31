@@ -179,6 +179,9 @@
     <string name="finish_count">완독 %1$d회</string>
     <string name="in_progress">진행 중</string>
     <string name="finish_day">완독한 날</string>
+    <string name="start_day">읽기 시작한 날</string>
+    <string name="day_unknown">모름</string>
+    <string name="date_until">%1$s 까지</string>
     <string name="date_range">%1$s – %2$s 사이</string>
     <string name="date_hint">%1$s (연.월.일)</string>
     <string name="date_invalid">날짜를 확인해 주세요 · %1$s</string>

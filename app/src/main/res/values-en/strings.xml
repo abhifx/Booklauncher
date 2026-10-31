@@ -175,6 +175,9 @@
     <string name="finish_count">Finished %1$d×</string>
     <string name="in_progress">in progress</string>
     <string name="finish_day">Finished on</string>
+    <string name="start_day">Started on</string>
+    <string name="day_unknown">Unknown</string>
+    <string name="date_until">on or before %1$s</string>
     <string name="date_range">between %1$s and %2$s</string>
     <string name="date_hint">%1$s (YYYY.MM.DD)</string>
     <string name="date_invalid">Check the date · %1$s</string>
