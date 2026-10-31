@@ -199,10 +199,9 @@ class BookRecordRoundsTest {
         assertFalse(rec(days = mapOf("10-01" to 6)).reopenStartsRound)
     }
 
-    @Test fun `고친 읽기 시작한 날 - 기간만 그날부터, 읽은 시간·기록된 시작 날은 그대로`() {
+    @Test fun `고친 읽기 시작한 날 - 기간만 그날부터, 읽은 시간·시작 경계는 그대로`() {
         val open = rec(State.READING, days = mapOf("10-08" to 10, "10-09" to 20), began = "09-20").rounds.single()
         assertEquals(d("09-20"), open.from)
-        assertEquals(d("10-08"), open.recordedFrom)
         assertEquals(d("10-08"), open.begin)
         assertEquals(minutes(30), open.ms)
         val done = rec(finishes = listOf(fin(1, "10-10", began = "09-01")), days = mapOf("10-08" to 10)).rounds.single()
@@ -210,11 +209,20 @@ class BookRecordRoundsTest {
         assertEquals(d("10-10"), done.to)
     }
 
-    @Test fun `고친 읽기 시작한 날이 그 회차 범위 밖이면(앞 완독보다 앞, 기록된 시작 뒤) 기록된 날`() {
+    @Test fun `고친 읽기 시작한 날을 처음 읽은 날 뒤로 - 그날부터, 그 전에 읽은 시간도 이 회차`() {
+        val open = rec(State.READING, days = mapOf("10-31" to 2), began = "11-01").rounds.single()
+        assertEquals(d("11-01"), open.from)
+        assertEquals(minutes(2), open.ms)
+        assertEquals(d("10-31"), open.lastRead)
+        // 처음 읽은 날로 되돌리면 고치기 전과 같다
+        assertEquals(d("10-31"), rec(State.READING, days = mapOf("10-31" to 2), began = "10-31").rounds.single().from)
+    }
+
+    @Test fun `고친 읽기 시작한 날이 그 회차 범위 밖이면(앞 완독보다 앞, 끝 날 뒤) 앱이 센 날`() {
         // 앞 회차 완독(09-05)보다 앞
         assertEquals(d("10-01"), rec(State.READING, listOf(fin(1, "09-05")), mapOf("09-01" to 10, "10-01" to 10), began = "09-01").rounds[1].from)
-        // 기록된 시작 날보다 뒤
-        assertEquals(d("10-01"), rec(State.READING, days = mapOf("10-01" to 10), began = "10-05").rounds.single().from)
+        // 완독한 날(10-10)보다 뒤(그 뒤 완독한 날을 앞으로 고친 경우)
+        assertEquals(d("10-01"), rec(finishes = listOf(fin(1, "10-10", began = "10-12")), days = mapOf("10-01" to 10)).rounds.single().from)
         // 앞 완독한 날과 같은 날은 받는다
         assertEquals(d("09-05"), rec(State.READING, listOf(fin(1, "09-05")), mapOf("09-01" to 10, "10-01" to 10), began = "09-05").rounds[1].from)
     }
@@ -222,16 +230,16 @@ class BookRecordRoundsTest {
     @Test fun `고친 읽기 시작한 날 - 읽은 기록이 없는 회차도 그날부터`() {
         val r = rec(State.READING, listOf(fin(1, "09-05")), mapOf("09-01" to 10), start = "10-01", began = "09-20").rounds[1]
         assertEquals(d("09-20"), r.from)
-        assertEquals(d("10-01"), r.recordedFrom)
+        assertEquals(d("10-01"), r.begin)
     }
 
-    @Test fun `읽기 시작한 날 범위 - 앞 회차 완독한 날부터 기록된 시작 날까지(첫 회차는 아래 제한 없음)`() {
+    @Test fun `읽기 시작한 날 범위 - 앞 회차 완독한 날부터 완독한 날·오늘까지(첫 회차는 아래 제한 없음)`() {
         val r = rec(State.READING, listOf(fin(1, "09-05")), mapOf("09-01" to 10, "10-01" to 10))
-        assertEquals(null to d("09-01"), r.startDayRange(r.rounds[0], d("10-15")))
-        assertEquals(d("09-05") to d("10-01"), r.startDayRange(r.rounds[1], d("10-15")))
-        // 고친 뒤에도 범위는 기록된 시작 날까지(더 앞으로도, 다시 뒤로도 고칠 수 있게)
-        val moved = rec(State.READING, listOf(fin(1, "09-05")), mapOf("09-01" to 10, "10-01" to 10), began = "09-10")
-        assertEquals(d("09-05") to d("10-01"), moved.startDayRange(moved.rounds[1], d("10-15")))
+        assertEquals(null to d("09-05"), r.startDayRange(r.rounds[0], d("10-15")))
+        assertEquals(d("09-05") to d("10-15"), r.startDayRange(r.rounds[1], d("10-15")))
+        // 고친 뒤에도 범위는 같다(다시 앞으로도, 처음 읽은 날로도 되돌릴 수 있게)
+        val moved = rec(State.READING, listOf(fin(1, "09-05")), mapOf("09-01" to 10, "10-01" to 10), began = "10-10")
+        assertEquals(d("09-05") to d("10-15"), moved.startDayRange(moved.rounds[1], d("10-15")))
     }
 
     @Test fun `읽기 시작한 날 범위 - 읽은 기록이 없으면 완독한 날(함께 고르는 날)·오늘까지`() {
@@ -247,8 +255,9 @@ class BookRecordRoundsTest {
         val open = r.rounds[1]
         assertTrue(r.canStartOn(open, d("09-05"), d("10-15")))
         assertTrue(r.canStartOn(open, d("10-01"), d("10-15")))
+        assertTrue(r.canStartOn(open, d("10-15"), d("10-15")))
         assertFalse(r.canStartOn(open, d("09-04"), d("10-15")))
-        assertFalse(r.canStartOn(open, d("10-02"), d("10-15")))
+        assertFalse(r.canStartOn(open, d("10-16"), d("10-15")))
         assertFalse(rec(State.READING).let { it.canStartOn(it.rounds.single(), LocalDate.parse("0206-01-01"), d("10-15")) })
     }
 
@@ -257,5 +266,8 @@ class BookRecordRoundsTest {
         assertEquals(d("09-01") to d("09-20"), r.finishDayRange(r.rounds[0], d("10-15")))
         val none = rec(finishes = listOf(fin(1, "10-10", began = "09-01")))
         assertEquals(d("09-01") to d("10-15"), none.finishDayRange(none.rounds[0], d("10-15")))
+        // 마지막으로 읽은 날(10-01) 뒤로 고친 시작일(10-05)보다 앞으로도 못 간다
+        val later = rec(finishes = listOf(fin(1, "10-10", began = "10-05")), days = mapOf("10-01" to 10))
+        assertEquals(d("10-05") to d("10-15"), later.finishDayRange(later.rounds[0], d("10-15")))
     }
 }

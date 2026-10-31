@@ -340,7 +340,7 @@ internal fun Context.finishDayRangeText(r: BookRecord, round: BookRecord.Round, 
     return getString(R.string.date_range, (earliest ?: BookRecord.EARLIEST_DAY).format(DOTTED), latest.format(DOTTED))
 }
 
-/** 읽기 시작한 날을 고칠 수 있는 범위 글자(완독한 날 [to] 까지): 앞 회차가 있으면 `2025.05.10 – 2026.10.08 사이`, 첫 회차면 `2026.10.08 까지` */
+/** 읽기 시작한 날을 고칠 수 있는 범위 글자(완독한 날 [to] 까지): 앞 회차가 있으면 `2025.05.10 – 2026.11.01 사이`, 첫 회차면 `2026.11.01 까지` */
 internal fun Context.startDayRangeText(r: BookRecord, round: BookRecord.Round, today: LocalDate, to: LocalDate?): String {
     val (earliest, latest) = r.startDayRange(round, today, to)
     return if (earliest == null) getString(R.string.date_until, latest.format(DOTTED))
