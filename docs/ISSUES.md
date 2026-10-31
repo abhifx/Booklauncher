@@ -3,7 +3,7 @@
 배포 글 댓글로 들어온 **기기 문제**(그 기기에서만 안 되는 것)를 정리한다. 기기별로 자세한 사정(기기 정보 사진·원인 추정·우회 방법)은 **docs/DEVICES.md** 의 그 기기 절에 쓰고, 여기는 상태만 따라간다.
 이북 앱 지원(어느 앱이 자동 추가되는지)과 기능 요청은 적지 않는다. 새 댓글을 보면 표를 고치고, 사용자가 됐다고 하면 표에서 빼고 아래 **됐다고 한 기기**에 더한다. 다른 사용자도 쓸 해결·우회 방법이면 **docs/TROUBLESHOOTING.md**(사용자용)에도 더한다.
 
-마지막 확인: 2026-10-10 18:43 댓글까지(Moaan MIX7S 는 20:00 답글까지, BOOX Leaf2 는 2026-10-11 21:41 답글까지, iReader Neo 3 Ultra 는 2026-10-18 댓글, BOOX Palma 는 2026-10-20 14:28 답글, Viwoods AiPaper Reader C 는 2026-10-25 댓글, Musnap Ocean C 는 2026-10-26 댓글, Dapper-Researcher299 는 2026-10-29 댓글, Bigme HiBreak 는 2026-10-27 GitHub #6), 배포 판 **1.6.6**.
+마지막 확인: 2026-10-10 18:43 댓글까지(Moaan MIX7S 는 20:00 답글까지, BOOX Leaf2 는 2026-10-11 21:41 답글까지, iReader Neo 3 Ultra 는 2026-10-18 댓글, BOOX Palma 는 2026-10-20 14:28 답글, Viwoods AiPaper Reader C 는 2026-10-25 댓글, Musnap Ocean C 는 2026-10-26 댓글, Dapper-Researcher299 는 2026-10-29 댓글, Bigme HiBreak 는 2026-10-27 GitHub #6, BOOX Leaf3 는 2026-11-01 00:01 답글), 배포 판 **1.6.6**.
 
 ## 해결 안 됨
 
@@ -25,4 +25,4 @@
 
 ## 됐다고 한 기기
 
-Onyx BOOX Go 10.3 Lumi, Onyx BOOX Leaf2(수리향: 접근성 확인 창의 `Allow` 는 끝내 안 보였지만, 접근성 › Pebble Desk 의 아래 **shortcut 스위치**를 켜니 위 서비스도 같이 켜졌다(2026-10-11 21:41). 사용자용 문제 해결과 앱 안내 창(꺼져 있을 때)에 적었다), Onyx BOOX Poke6(읽는 책 자동 추가. 앱 얼리기 문제는 위 3), Meebook E6, iReader Ocean(카멜룽), Viwoods AiPaper Reader C(Fallen-Monolith, 2026-10-25 Reddit 댓글: KOReader 에서 책 두 권을 여니 둘 다 홈에 나온다. 접근성이 막히지 않았다. 판은 밝히지 않음. 같은 회사의 AiPaper Mini 는 위 2), Moaan MIX7S(콩세알: 오늘 읽은 시간은 기기 정보 › `이 앱 기록 ›` 에서 켜짐 — 1.4.1 부터 앱이 그 화면을 연다. 자동 추가는 기기 설정에서 백그라운드에서 꺼지지 않게 하니 괜찮음).
+Onyx BOOX Leaf3(나는난너는너: 설치 파일을 네이버 앱 안에서 열린 브라우저로 받으니 `APK 파일을 다운로드 할 수 없습니다`(2026-10-31). 기기에 깔린 NeoBrowser 에 주소를 붙여 받아 설치했다(2026-11-01 00:01). 서버 쪽은 정상. 사용자용 문제 해결에 적었다), Onyx BOOX Go 10.3 Lumi, Onyx BOOX Leaf2(수리향: 접근성 확인 창의 `Allow` 는 끝내 안 보였지만, 접근성 › Pebble Desk 의 아래 **shortcut 스위치**를 켜니 위 서비스도 같이 켜졌다(2026-10-11 21:41). 사용자용 문제 해결과 앱 안내 창(꺼져 있을 때)에 적었다), Onyx BOOX Poke6(읽는 책 자동 추가. 앱 얼리기 문제는 위 3), Meebook E6, iReader Ocean(카멜룽), Viwoods AiPaper Reader C(Fallen-Monolith, 2026-10-25 Reddit 댓글: KOReader 에서 책 두 권을 여니 둘 다 홈에 나온다. 접근성이 막히지 않았다. 판은 밝히지 않음. 같은 회사의 AiPaper Mini 는 위 2), Moaan MIX7S(콩세알: 오늘 읽은 시간은 기기 정보 › `이 앱 기록 ›` 에서 켜짐 — 1.4.1 부터 앱이 그 화면을 연다. 자동 추가는 기기 설정에서 백그라운드에서 꺼지지 않게 하니 괜찮음).
