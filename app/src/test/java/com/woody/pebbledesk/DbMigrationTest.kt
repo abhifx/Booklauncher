@@ -27,7 +27,7 @@ class DbMigrationTest {
         rows("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name != 'android_metadata' ORDER BY name") { it.getString(0) }
             .associateWith { columns(it) }
 
-    @Test fun `v1~v4 에서 올린 표가 새로 설치한 표와 같다(Libby 읽는 화면 viewer_mark, 네오리더 책 파일 book_file, 읽는 화 chapter 포함)`() {
+    @Test fun `v1~v5 에서 올린 표가 새로 설치한 표와 같다(Libby 읽는 화면 viewer_mark, 네오리더 책 파일 book_file, 읽는 화 chapter, 고친 시작일 began 포함)`() {
         val fresh = SQLiteDatabase.create(null).apply { Db.create(this) }.schema()
         assertEquals(listOf("at", "pkg", "shown"), fresh["viewer_mark"])
         assertEquals("chapter", fresh["shelf"]?.last())
@@ -35,6 +35,21 @@ class DbMigrationTest {
         assertEquals(fresh, v2().apply { Db.upgrade(this, 2) }.schema())
         assertEquals(fresh, SQLiteDatabase.create(null).apply { OldSchemas.v3(this); Db.upgrade(this, 3) }.schema())
         assertEquals(fresh, SQLiteDatabase.create(null).apply { OldSchemas.v4(this); Db.upgrade(this, 4) }.schema())
+        assertEquals(fresh, SQLiteDatabase.create(null).apply { OldSchemas.v5(this); Db.upgrade(this, 5) }.schema())
+        assertEquals("began", fresh["finish"]?.last())
+        assertEquals(listOf("book_id", "day"), fresh["round_began"])
+    }
+
+    @Test fun `v5 에서 올리면 완독은 그대로이고 고친 시작일은 비어 있다`() {
+        val db = SQLiteDatabase.create(null).apply {
+            OldSchemas.v5(this)
+            execSQL("INSERT INTO finish (uid, book_id, day, at, started, stars, text) VALUES ('u1', 'b-1', 100, 5, 90, 8, '좋았다')")
+            Db.upgrade(this, 5)
+        }
+        assertEquals(listOf("u1|100|90|8|null"), db.rows("SELECT uid, day, started, stars, began FROM finish") {
+            "${it.getString(0)}|${it.getLong(1)}|${it.getLong(2)}|${it.getInt(3)}|${if (it.isNull(4)) null else it.getLong(4)}"
+        })
+        assertEquals(0L, db.count("SELECT COUNT(*) FROM round_began"))
     }
 
     @Test fun `v4 에서 올리면 읽고 있는 책은 그대로이고 읽는 화는 비어 있다`() {
@@ -55,7 +70,7 @@ class DbMigrationTest {
         }
         Db.upgrade(db, 2)
 
-        assertEquals(listOf("id", "uid", "book_id", "day", "at", "started", "stars", "text"), db.columns("finish"))
+        assertEquals(listOf("id", "uid", "book_id", "day", "at", "started", "stars", "text", "began"), db.columns("finish"))
         assertEquals(3L, db.count("SELECT COUNT(*) FROM finish"))
         assertEquals(3L, db.count("SELECT COUNT(DISTINCT uid) FROM finish WHERE length(uid) = 32"))
         // 마지막 완독(200)에만 옮겼다

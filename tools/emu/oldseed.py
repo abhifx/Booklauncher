@@ -4,7 +4,7 @@
     python3 tools/emu/oldseed.py json OUT_DIR   # 1.2.1 까지: files/reading.json, files/books/books.json·표지, shared_prefs/reader_watch.xml
     python3 tools/emu/oldseed.py v1   OUT_DIR   # 1.3.0~1.4.2: databases/pebble.db (버전 1) + 표지
     python3 tools/emu/oldseed.py v2   OUT_DIR   # 1.5.0~1.5.3: databases/pebble.db (버전 2, review) + 표지
-    python3 tools/emu/oldseed.py check KIND DB  # 이 브랜치가 옮긴 DB(버전 5)를 기대와 대조
+    python3 tools/emu/oldseed.py check KIND DB  # 이 브랜치가 옮긴 DB(버전 6)를 기대와 대조
 
 OUT_DIR 아래를 앱 데이터 폴더(/data/user_de/0/com.woody.pebbledesk/)에 그대로 덮는다(루트 에뮬, tools/emu/oldmig.sh).
 날짜는 2026-10-16 을 오늘로 고정한다(에뮬 날짜가 같아야 기대가 맞는다).
@@ -166,7 +166,7 @@ def expect(name, got, want):
 def check(kind, path):
     db = sqlite3.connect(path)
     q = lambda s, *a: db.execute(s, a).fetchall()
-    expect("버전", q("PRAGMA user_version")[0][0], 5)
+    expect("버전", q("PRAGMA user_version")[0][0], 6)
     cols = lambda t: [r[1] for r in q(f"PRAGMA table_info({t})")]
     # 버전 5: 읽고 있는 책의 읽는 화(옛 판에서 온 책은 모두 빈 값)
     # 칸이 없으면(올리기가 안 된 DB) 대조가 멈추지 않고 어긋남으로 적히게 센다
@@ -174,7 +174,12 @@ def check(kind, path):
     expect("읽는 화 칸 shelf.chapter(빈 채)", (cols("shelf")[-1:], filled), (["chapter"], 0))
     expect("reading_day 칸", cols("reading_day"), ["day", "pkg", "title", "book_id", "ms"])
     expect("book_open 칸", cols("book_open"), ["at", "pkg", "title", "book_id"])
-    expect("finish 칸", cols("finish"), ["id", "uid", "book_id", "day", "at", "started", "stars", "text"])
+    expect("finish 칸", cols("finish"), ["id", "uid", "book_id", "day", "at", "started", "stars", "text", "began"])
+    # 버전 6: 고친 읽기 시작한 날(옛 판에서 온 완독·진행 중 회차는 모두 빈 값)
+    began = q("SELECT count(*) FROM finish WHERE began IS NOT NULL")[0][0] if "began" in cols("finish") else None
+    expect("고친 시작일 finish.began(빈 채)", began, 0)
+    rb = cols("round_began")
+    expect("고친 시작일 표 round_began(빈 채)", (rb, q("SELECT count(*) FROM round_began")[0][0] if rb else None), (["book_id", "day"], 0))
     expect("round_start 칸", cols("round_start"), ["book_id", "day"])
     expect("책 파일 표 book_file(빈 채)", (cols("book_file"), q("SELECT count(*) FROM book_file")[0][0]), (["book_id", "path"], 0))
     if kind == "json":
