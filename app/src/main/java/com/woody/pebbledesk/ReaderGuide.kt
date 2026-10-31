@@ -9,7 +9,6 @@ import com.woody.pebbledesk.readers.Bookers2
 import com.woody.pebbledesk.readers.CherieViewer
 import com.woody.pebbledesk.readers.EasyView
 import com.woody.pebbledesk.readers.EasyViewFree
-import com.woody.pebbledesk.readers.IReader
 import com.woody.pebbledesk.readers.Futon
 import com.woody.pebbledesk.readers.Kahon
 import com.woody.pebbledesk.readers.KOReader
@@ -214,11 +213,6 @@ internal object ReaderGuide {
             cover = YES, title = YES, author = YES, progress = READING_MENU, due = OWN_FILE,
             bookFiles = R.string.guide_files_librera, note = R.string.guide_note_librera,
             coverBefore11 = Field(R.string.guide_added_book_files, R.string.guide_n_librera_cover_files),
-        )),
-        App(listOf(R.string.guide_ireader), listOf(IReader), Info(
-            emptyList(),
-            cover = no(R.string.guide_r_ireader), title = no(R.string.guide_r_ireader), author = no(R.string.guide_r_ireader),
-            progress = no(R.string.guide_r_ireader), due = no(R.string.guide_r_ireader), note = R.string.guide_note_ireader,
         )),
     )
 }
