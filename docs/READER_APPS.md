@@ -90,21 +90,18 @@ Pebble Desk 가 이북 앱에서 무엇을 알아내고 무엇을 할 수 있는
 | Kobo Books | 서재·책 상세 | 서재(돌아왔을 때 맨 위 칸)·책 상세 | 서재·책 상세 | 메뉴 | X |
 | Futon·Kotatsu | 작품 상세 | 서재·작품 상세·메뉴 | 작품 상세 | 작품 상세(%)·메뉴(화 이름) | X |
 | Librera·Librera Pro | 서재·파일 | 서재·메뉴·파일 | 서재·파일 | 서재·메뉴·파일 | X |
-| 아이리더 기본 리더 | X | X | X | X | X |
 
 #### 아이리더 기본 리더 `com.zhangyue.iReader.Eink`
 
-- **권한**: 오늘 읽은 시간(사용 기록 액세스)만 쓴다.
-- **책 정보**: 들어오지 않는다. 시스템 앱이라 APK·펌웨어를 구할 수 없어(docs/DEVICES.md › iReader Ocean 5 Pro › 시스템) 서재·읽는 화면의 요소 이름을 모른다.
-- **읽은 시간**: 읽는 화면 `ActivityRead` 가 앞에 있던 동안을 책 없이 앱으로 센다(오늘 읽은 시간·연속일·달력에 들어가고 이번 주 읽은 책·올해 읽은 책에는 없다). 다른 화면(`RecentTaskListActivity` 등)은 세지 않는다.
+- **지원**: 하지 않는다(2026-10-31). 자동 추가도 오늘 읽은 시간도 없다(정해 둔 이북 앱 목록에 없어 읽은 시간을 세지 않는다).
+- **읽은 시간만이라면**: 읽는 화면 `ActivityRead`(마지막 이름으로) 가 앞에 있던 동안을 책 없이 앱으로 셀 수 있다(오늘 읽은 시간·연속일·달력에만 들어가고 읽은 책 목록에는 없다). 만들어 보았으나 넣지 않았다.
 - **근거**: 사용자 두 사람의 기기 정보 사진(2026-10-31, Tango `PM06A-CKD` 시스템 4.1.0.215.0 · Ocean 5C `SM07A-CKDC` 4.1.0.214.0, Pebble Desk 1.7.1)의 `최근에 뜬 다른 화면` 에 `com.zhangyue.iReader.Eink / ActivityRead` 가 있었다(기기 정보는 클래스의 마지막 이름만 보여 마지막 이름으로 가린다). iReader 홈은 `com.szzy.ireader.ink.launcher / LauncherActivity`.
 - **APK**(2026-10-31): 같은 패키지의 화웨이 MatePad Paper 용 `掌阅墨水屏版`(InkReaderEink) 1.8.3(versionCode 100901123, targetSdk 30, 3673.com 파일 `zsInkReaderEink_v1.8.3_3673.com.apk`, 사용자가 받음)을 보았다. 읽는 화면은 `com.zhangyue.iReader.Eink.Activity.ActivityRead`(기기 사진과 같은 이름), 서재는 `Eink.home.ActivityHome`. SmartOS 4.1 의 기본 리더와 같은 판인지는 **(미확인)**. 네이티브 라이브러리가 32비트 ARM(`armeabi-v7a`)뿐이라 Mac 의 64비트 전용 에뮬레이터에는 깔리지 않아(`INSTALL_FAILED_NO_MATCHING_ABIS`) jadx 로 레이아웃·코드만 보았다.
   - 서재: `Id_bookshelf_grid` 등이 `BookShelfView`(`View` 하나에 모든 책을 `drawText`·그림으로 직접 그림)라 접근성에 책 칸·제목이 없다. 목록 보기의 `bookshelf_bookitem_type_list`(`book_name`·`book_read_percent`)도 같은 뷰가 그린다.
   - 읽는 화면: 본문은 `BookView`(`HWSurfaceView`, 엔진 `libUiControl.so`). 메뉴 위 줄(`window_read_menu_title`)은 단추뿐이고 제목 칸이 없다. EPUB 목차(`book_chap_list_item`)도 장 이름뿐이다(제목은 PDF·오피스 목차 `tv_chap_list_title_name` 에만). 이 앱 코드에 `setContentDescription` 이 하나도 없다.
   - 데이터: 책·표지·기록 폴더가 `getExternalFilesDir(DOCUMENTS)/iReader/…`(= `Android/data/com.zhangyue.iReader.Eink/…`)라 모든 파일 액세스로도 읽을 수 없다(안드로이드 11+). DB `ireader2.db` 는 앱 전용.
-  - 그래서 이 판 기준으로는 화면으로도 파일로도 어떤 책인지 알 길이 없어 읽은 시간만 센다. 비슷한 이름의 `com.zhangyue.read.iReader.eink`(掌阅精选墨水屏版, 20.2.0 을 보니 휴대폰판 코드: 읽는 화면 `com.zhangyue.iReader.read.ui.Activity_BookBrowser_TXT`·서재 `bookshelf.ui.ActivityBookShelf`, `ActivityRead` 없음, 네이티브는 `armeabi` 뿐)·`com.zhangyue.read.ireadercn`(휴대폰판)·einkcn 의 옛 iReader(`com.chaozh.iReaderFree`)는 다른 앱이다.
+  - 그래서 이 판 기준으로는 화면으로도 파일로도 어떤 책인지 알 길이 없다. 비슷한 이름의 `com.zhangyue.read.iReader.eink`(掌阅精选墨水屏版, 20.2.0 을 보니 휴대폰판 코드: 읽는 화면 `com.zhangyue.iReader.read.ui.Activity_BookBrowser_TXT`·서재 `bookshelf.ui.ActivityBookShelf`, `ActivityRead` 없음, 네이티브는 `armeabi` 뿐)·`com.zhangyue.read.ireadercn`(휴대폰판)·einkcn 의 옛 iReader(`com.chaozh.iReaderFree`)는 다른 앱이다.
 - **기기 판 APK**: 인터넷에서 구하지 못했다(2026-10-31). 구하면 볼 것: 판(versionName), 32비트 전용인지(에뮬에서 돌릴 수 있는지), 서재가 뷰 하나에 그리는 `BookShelfView` 그대로인지, 읽는 화면 메뉴·목차에 제목 칸이 생겼는지, 기록 폴더가 여전히 `Android/data` 인지(시스템 앱이라 저장소 `iReader/` 에 둘 수도 있다).
-- **다음**: 자동 추가 서비스가 이 앱 화면을 받게 해 두었으니, 사용자가 책을 열고 닫은 뒤 기기 정보 › `기록 보기` 사진을 받으면 이 앱의 화면 이름(서재 등)을 안다. 서재가 홈 앱(`com.szzy.ireader.ink.launcher`)에 있는지도 그때 본다.
 
 ## 교보도서관 `kr.co.kyobobook.KEL`
 

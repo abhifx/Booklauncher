@@ -320,7 +320,6 @@
     <string name="guide_kotatsu">Kotatsu</string>
     <string name="guide_librera">Librera</string>
     <string name="guide_librera_pro">Librera Pro</string>
-    <string name="guide_ireader">iReader built-in reader</string>
     <string name="guide_permissions">Permissions</string>
     <string name="guide_todo">In the app</string>
     <string name="guide_todo_none">Nothing to change.</string>
@@ -364,7 +363,6 @@
     <string name="guide_r_subscription">Subscription books have no due date</string>
     <string name="guide_r_own_file">Your own files have no due date</string>
     <string name="guide_r_android11">Available from Android 11</string>
-    <string name="guide_r_ireader">Not recognized yet</string>
     <string name="guide_n_moon_cover_before11">Added when you open the menu while reading (EPUB only)</string>
     <string name="guide_n_ez_files">EPUB, CBZ and image folders only</string>
     <string name="guide_added_readest_data">Added once you move the data</string>
@@ -420,7 +418,6 @@
     <string name="guide_n_librera_cover_files">EPUB, comics and PDF only</string>
     <string name="guide_files_librera">opened book, covers, progress</string>
     <string name="guide_note_librera">The free version from the Play Store adds only books opened from the Library or with the menu open.</string>
-    <string name="guide_note_ireader">Only reading time is counted. The book is unknown, so the time goes into today\'s total and your streak but not into your list of books.</string>
     <string name="book_files">Read book files</string>
     <string name="book_files_desc">Needed to get book info.</string>
     <string name="open_file_access">Open All files access</string>
