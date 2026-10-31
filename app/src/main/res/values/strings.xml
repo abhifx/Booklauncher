@@ -324,6 +324,7 @@
     <string name="guide_kotatsu">Kotatsu</string>
     <string name="guide_librera">Librera</string>
     <string name="guide_librera_pro">Librera Pro</string>
+    <string name="guide_ireader">아이리더 기본 리더</string>
     <string name="guide_permissions">필요한 권한</string>
     <string name="guide_todo">앱에서 할 것</string>
     <string name="guide_todo_none">따로 바꿀 것은 없습니다.</string>
@@ -367,6 +368,7 @@
     <string name="guide_r_subscription">구독이라 반납일이 없습니다</string>
     <string name="guide_r_own_file">내 파일이라 반납일이 없습니다</string>
     <string name="guide_r_android11">안드로이드 11 부터 됩니다</string>
+    <string name="guide_r_ireader">아직 알아보지 못합니다</string>
     <string name="guide_n_moon_cover_before11">읽다가 메뉴를 띄우면 들어옵니다(EPUB 만)</string>
     <string name="guide_n_ez_files">EPUB·CBZ·그림 폴더만 들어옵니다</string>
     <string name="guide_added_readest_data">데이터를 옮기면 들어옵니다</string>
@@ -423,6 +425,7 @@
     <string name="guide_n_librera_cover_files">EPUB·만화·PDF 만 들어옵니다</string>
     <string name="guide_files_librera">연 책·표지·진행률</string>
     <string name="guide_note_librera">Play 스토어 무료판은 라이브러리에서 연 책과 메뉴를 띄운 책만 들어옵니다.</string>
+    <string name="guide_note_ireader">읽은 시간만 셉니다. 어떤 책인지 몰라 오늘 읽은 시간·연속일에만 들어가고, 읽은 책 목록에는 없습니다.</string>
     <string name="book_files">책 파일 읽기</string>
     <string name="book_files_desc">책 정보를 가져오는 데 필요합니다.</string>
     <string name="open_file_access">모든 파일에 액세스 열기</string>

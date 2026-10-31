@@ -237,7 +237,7 @@ Pebble Desk(1.2.x)를 기본 홈으로 쓰는 홈 화면. 책 1권(밀리의서�
 
 - iReader 는 중국판에서 다른 앱 설치·adb 를 막아 왔다. Ocean 2 는 iReader 앱을 죽여 안드로이드 설정으로 들어가 USB 디버깅을 켜는 방법이 공개됐다(GitHub `akhan23wgu/iReader-Zhangyue-USBDebug`, MobileRead). Ocean 4 Turbo 이후(SmartOS 2.2~)는 앱 장터와 APK 설치를 공식으로 허용한다. adb 가 되는지는 **(미확인)**.
 - 국내 사용기에서 Musnap Ocean 은 Onyx Go 7 과 거의 같고 "플레이스토어를 선택적으로 켤 수 있다" 고 했다(DC 전자책 갤러리).
-- 펌웨어 파일은 찾지 않았다. OTA 는 기기 설정 › 시스템 및 업데이트.
+- 펌웨어 파일: 찾아봤지만 공개된 곳이 없다(2026-10-31, 기본 리더 앱 이름을 알려고). OTA 는 기기 설정 › 시스템 및 업데이트뿐이고 받는 주소·파일 이름은 알려져 있지 않다. 다른 앱 설치를 뚫던 글(Smart XS Pro 2021 블로그, Ocean 2 의 `akhan23wgu/iReader-Zhangyue-USBDebug`·MobileRead)은 앱 장터 응답을 프록시로 바꾸는 방식이라 펌웨어 주소가 없고, 시스템 10.7(2022)부터 HTTPS 라 막혔다. 그래서 기본 리더(시스템 앱)의 패키지·화면 이름은 기기에서 직접 봐야 한다(기기 정보의 `최근에 뜬 다른 화면`). 다른 기기(inkpalm 5) adb 안내에 `com.zhangyue.read.iReader.eink` 가 보이나 Ocean 계열인지는 **(미확인)**.
 
 ### 실기기 사진에서 본 것 (2026-10-10 00:16, Pebble Desk 1.3.0)
 
@@ -268,6 +268,14 @@ Pebble Desk(1.2.x)를 기본 홈으로 쓰는 홈 화면. 책 1권(밀리의서�
 
 - 킨들 표지 문제(Kindle Unlimited·보낸 문서 표지가 안 나온다는 댓글)가 같다며 킨들 서재와 `기록 보기` 사진 두 장을 보냈다(imgur, 아직 보지 않음). 사진을 찍고 나니 킨들 책 하나가 홈에 표지 없이 들어왔고, 다른 책을 열었는데 그 책은 들어오지 않았다고 한다.
 - 홈에 `화면이 크게 보입니다`(DPI 가 354 여야 한다) 창이 뜬다. 사용자는 바꾼 것이 없고 화면도 괜찮아 보인다고 한다. Ocean 5 Pro 는 354 가 그대로 먹혔으니(위 기기 정보) 이 기기에서만 무언가가 앱 밀도를 덮어쓴다. 앱별 표시 최적화에는 DPI 가 없다는 리뷰라 원인은 **(미확인)**. 기기 정보(화면 줄의 `App uses …dpi` 와 `intended 354dpi not applied`) 사진을 부탁했다.
+
+### 기본 리더 읽은 시간 (2026-10-31, Tango·Ocean 5C 기기 정보 사진, Pebble Desk 1.7.1)
+
+- 댓글(캐슈넛파이): 서드 앱은 다 되는데 기본 리더로 읽은 EPUB 은 독서 기록에 남지 않는다. 기본 리더가 정해 둔 이북 앱 목록에 없어 읽은 시간을 세지 않았다.
+- 사진 두 장: **Tango** `PM06A-CKD`(`ro.build.versionCode=4.1.0.215.0`, 화면 824×1648 · **320dpi** · 412×824dp → 앱 기준 230dpi. 2026-10-13 사진은 400dpi 였다) · **Ocean 5C** `SM07A-CKDC`(`4.1.0.214.0`, 1264×1680 · 320dpi → 354dpi, `persist.eink.idisplay.cfa.wbmode=0`·`persist.sys.eink.brightness=0`, `EinkLightStep=31`). 둘 다 안드로이드 14 `UP1A.231005.007`, 자동 추가 켜짐·오늘 읽은 시간 켜짐·기본 홈 꺼짐.
+- `최근에 뜬 다른 화면`: 기본 리더 `com.zhangyue.iReader.Eink / ActivityRead`(읽는 화면), 같은 패키지의 `RecentTaskListActivity`(Tango, 최근 작업), iReader 홈 `com.szzy.ireader.ink.launcher / LauncherActivity`.
+- 고침: 기본 리더를 읽은 시간만 세는 앱으로 넣었다(`readers/IReader.kt`, docs/READER_APPS.md › 아이리더 기본 리더). 책은 모른다.
+- 기본 리더 APK 는 인터넷에서 구하지 못했다(화웨이용 같은 앱 1.8.3 만 보았다, docs/READER_APPS.md › 아이리더 기본 리더).
 
 ### 다음에 받을 것
 
