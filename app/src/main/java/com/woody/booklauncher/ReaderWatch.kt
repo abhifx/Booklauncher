@@ -109,7 +109,9 @@ class ReaderWatchService : AccessibilityService(), WatchHost {
                 shot?.let(done)
             }
 
-            override fun onFailure(errorCode: Int) {}
+            override fun onFailure(errorCode: Int) {
+                WatchLog.add(context, WatchLog.Kind.ERROR, "screenshot", "code $errorCode")
+            }
         })
     }
 

@@ -190,6 +190,19 @@ class AcoustextTest {
         assertNull(info.title)
     }
 
+    @Test fun `읽는 화면 제목이 쪽 표시뿐이면 책으로 적지 않는다`() {
+        val reader = seal(node(
+            "android.widget.FrameLayout", 0, 0, 720, 1440, "reader_root_container", null,
+            view(
+                0, 0, 720, 1440,
+                view(42, 48, 83, 89, desc = "Back"),
+                text(111, 42, 278, 95, "Page 1 of ~1"),
+                text(42, 1290, 228, 1326, "3% • I The Lovers"),
+            ),
+        ))
+        assertNull(Acoustext.readViewer(AppWindows(reader, listOf(reader))).title)
+    }
+
     @Test fun `배터리 퍼센트는 진행률로 읽지 않는다`() {
         val reader = seal(node(
             "android.widget.FrameLayout", 0, 0, 1404, 1872, "reader_root_container", null,

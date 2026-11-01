@@ -142,7 +142,7 @@ open class ScreenReader(val app: ReaderApp) : ReaderAdapter {
             val need = if (book == null) !ctx.recorder.hasPendingTitle(s.title)
                 else !lookup.hasCover(book.id) && !ShelfRecorder.coverFromFile(ctx.context, lookup.filePath(book.id), app.fileCovers)
             if (need && tryCover(s.title)) CoverSpot(s.title, thumb) else null
-        }, retry = false)
+        }, retry = true)
     }
 
     /**
@@ -156,7 +156,7 @@ open class ScreenReader(val app: ReaderApp) : ReaderAdapter {
         ctx.log(WatchLog.Kind.SHELF, "${seen.size}")
         val spots = mutableListOf<CoverSpot>()
         shelfStatuses(ctx, seen, spots)
-        if (!app.secure) ctx.capture(spots)
+        if (!app.secure) ctx.capture(spots, retry = true)
     }
 
     /** 서재에 보이는 책 칸들(읽은 것은 [lastShelf] 에 남긴다). 서재 편집 중이면 읽지 않는다(고르기 표시가 표지에 찍힌다). */

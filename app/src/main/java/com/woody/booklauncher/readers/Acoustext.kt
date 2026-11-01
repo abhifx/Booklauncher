@@ -166,6 +166,7 @@ object Acoustext : ReaderApp(
         val t = text.trim()
         return t.isNotEmpty() &&
             !PROGRESS_BADGE.matches(t) &&
+            !PAGE_LABEL.matches(t) &&
             t.uppercase() !in FILE_TYPES &&
             t.lowercase() !in LABELS &&
             !t.all { it.isDigit() }
@@ -218,7 +219,7 @@ object Acoustext : ReaderApp(
                 afterBack = true
             } else if (afterBack && n.className?.endsWith("TextView") == true) {
                 val t = n.text?.let(::plain).orEmpty()
-                if (t.isNotEmpty() && t.lowercase() !in LABELS && !t.contains('%') && !CLOCK.matches(t)) title = t
+                if (t.isNotEmpty() && t.lowercase() !in LABELS && !t.contains('%') && !CLOCK.matches(t) && !PAGE_LABEL.matches(t)) title = t
             }
             if (depth < DEEP_WALK_DEPTH) for (i in 0 until n.childCount) n.getChild(i)?.let { walk(it, depth + 1) }
         }
@@ -264,6 +265,9 @@ object Acoustext : ReaderApp(
 
     /** 읽는 화면 아래 쪽 표시(`Page 48 of 894`) */
     private val PAGE_OF = Regex("""\bPage\s+(\d+)\s+of\s+(\d+)\b""", RegexOption.IGNORE_CASE)
+
+    /** 쪽 표시(`Page 1 of ~1`·`Page 3 / 81`). 책 제목으로 쓰지 않는다 */
+    private val PAGE_LABEL = Regex("""^(Page|페이지)\s*\d+(\s*(of|/|~)\s*~?\d+)?$""", RegexOption.IGNORE_CASE)
 
     private val FILE_TYPES = setOf("EPUB", "PDF", "MOBI", "AZW", "AZW3", "TXT", "CBZ", "CBR", "CB7", "FB2", "ZIP", "RAR", "MP3", "M4A", "M4B", "AAC", "OGG")
     private val LABELS = setOf(
