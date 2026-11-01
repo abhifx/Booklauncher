@@ -71,13 +71,26 @@ class AcoustextTest {
         click = true,
     )
 
+    /**
+     * AcousText 의 서재(Library) 탭: 위 탭 줄(`Library`·`Get Books`·`Discover`·`Audio`)이 있고
+     * `Library` 칸의 묶음이 `isSelected` 다(3.x 기기 덤프와 같다).
+     */
+    private fun library(vararg kids: AccessibilityNodeInfo) = view(
+        0, 0, 720, 1440,
+        view(0, 0, 180, 120, text(50, 20, 130, 60, "Library")).apply { isSelected = true },
+        view(180, 0, 360, 120, text(210, 20, 330, 60, "Get Books"), click = true),
+        view(360, 0, 540, 120, text(390, 20, 500, 60, "Discover"), click = true),
+        view(540, 0, 720, 120, text(570, 20, 680, 60, "Audio"), click = true),
+        *kids,
+    )
+
     @Test fun `AcousText 패키지 이름 및 매핑`() {
         assertEquals("com.opsdevabhi.acoustext", Acoustext.pkg)
         assertEquals(Acoustext, ReaderApps.ALL.first { it.pkg == "com.opsdevabhi.acoustext" })
     }
 
     @Test fun `Continue reading 머리는 안내 글자가 아니라 책 제목·표지·진행률`() {
-        val root = seal(view(0, 0, 1404, 1771, heroCard()))
+        val root = seal(library(heroCard()))
         val cells = Acoustext.shelfCells(root)
         assertEquals(listOf("Bhagavad-gita As It Is"), cells.map { it.title })
         assertEquals(5, cells[0].progress)
@@ -85,7 +98,7 @@ class AcoustextTest {
     }
 
     @Test fun `Recent 줄의 카드도 제목·진행률·표지를 읽는다`() {
-        val root = seal(view(0, 0, 1404, 1771, recentCard()))
+        val root = seal(library(recentCard()))
         val cells = Acoustext.shelfCells(root)
         assertEquals(listOf("Children of Time"), cells.map { it.title })
         assertEquals(23, cells[0].progress)
@@ -100,9 +113,38 @@ class AcoustextTest {
             text(413, 1624, 459, 1667, "12%"),
             click = true,
         )
-        val cells = Acoustext.shelfCells(seal(view(0, 0, 1404, 1771, card)))
+        val cells = Acoustext.shelfCells(seal(library(card)))
         assertEquals("100% Clean Code", cells.single().title)
         assertEquals(12, cells.single().progress)
+    }
+
+    @Test fun `Library 탭이 아닌 Notes 화면은 책으로 읽지 않는다`() {
+        val note = view(
+            70, 200, 300, 500,
+            view(70, 200, 300, 400),
+            text(70, 410, 300, 450, "Meeting notes"),
+            click = true,
+        )
+        val root = seal(view(0, 0, 720, 1440, text(50, 20, 210, 60, "Notes"), note))
+        assertTrue(Acoustext.shelfCells(root).isEmpty())
+    }
+
+    @Test fun `Audio 탭은 책으로 읽지 않는다`() {
+        val audio = view(
+            70, 200, 300, 500,
+            view(70, 200, 300, 400),
+            text(70, 410, 300, 450, "An audiobook"),
+            click = true,
+        )
+        val root = seal(view(
+            0, 0, 720, 1440,
+            view(0, 0, 180, 120, text(50, 20, 130, 60, "Library"), click = true),
+            view(180, 0, 360, 120, text(210, 20, 330, 60, "Get Books"), click = true),
+            view(360, 0, 540, 120, text(390, 20, 500, 60, "Discover"), click = true),
+            view(540, 0, 720, 120, text(570, 20, 680, 60, "Audio")).apply { isSelected = true },
+            audio,
+        ))
+        assertTrue(Acoustext.shelfCells(root).isEmpty())
     }
 
     @Test fun `같은 책이 머리와 Recent 에 있어도 그중 하나라도 그 자리면 표지를 자른다`() {
@@ -133,6 +175,21 @@ class AcoustextTest {
         assertEquals("Bhagavad-gita As It Is", info.title)
     }
 
+    @Test fun `읽는 화면 제목이 아직 Reader 이면 책으로 적지 않는다`() {
+        val reader = seal(node(
+            "android.widget.FrameLayout", 0, 0, 720, 1440, "reader_root_container", null,
+            view(
+                0, 0, 720, 1440,
+                view(42, 48, 83, 89, desc = "Back"),
+                text(111, 42, 278, 95, "Reader"),
+                text(42, 1290, 228, 1326, "3% • I The Lovers"),
+            ),
+        ))
+        val info = Acoustext.readViewer(AppWindows(reader, listOf(reader)))
+        assertEquals(3, info.progress)
+        assertNull(info.title)
+    }
+
     @Test fun `배터리 퍼센트는 진행률로 읽지 않는다`() {
         val reader = seal(node(
             "android.widget.FrameLayout", 0, 0, 1404, 1872, "reader_root_container", null,
@@ -143,6 +200,16 @@ class AcoustextTest {
         val info = Acoustext.readViewer(AppWindows(reader, listOf(reader)))
         assertEquals(41, info.progress)
         assertEquals("Chapter 2", info.chapter)
+    }
+
+    @Test fun `퍼센트가 앞에 오는 상태 줄도 진행률과 화를 읽는다`() {
+        val reader = seal(node(
+            "android.widget.FrameLayout", 0, 0, 720, 1440, "reader_root_container", null,
+            view(0, 0, 720, 1440, text(42, 1290, 228, 1326, "3% • I The Lovers")),
+        ))
+        val info = Acoustext.readViewer(AppWindows(reader, listOf(reader)))
+        assertEquals(3, info.progress)
+        assertEquals("I The Lovers", info.chapter)
     }
 
     @Test fun `상태 줄 진행률이 없으면 읽는 화면 아래 쪽 표시로 센다`() {
@@ -157,7 +224,7 @@ class AcoustextTest {
 
     @Test fun `홈에서 책을 누르면 AcousText 가 보여 준 제목으로 그 책을 연다`() {
         val context = RuntimeEnvironment.getApplication()
-        val component = ComponentName(pkg, "com.example.acoustext.MainActivity")
+        val component = ComponentName(pkg, "com.opsdevabhi.acoustext.MainActivity")
         val book = ShelfBook("b-1", "내가 고친 제목", "", pkg, 0, seenTitle = "Bhagavad-gita As It Is")
         val result = Acoustext.open(HomeContext(context, component), book)
         val start = result as OpenResult.Start

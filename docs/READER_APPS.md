@@ -334,13 +334,13 @@ Pebble Desk 가 이북 앱에서 무엇을 알아내고 무엇을 할 수 있는
 ### AcousText `com.opsdevabhi.acoustext`
 
 - **권한**: 공통.
-- **할 것**: 없다. 서재는 `Library` 탭의 격자·목록·표지 보기 어느 쪽이어도 된다.
+- **할 것**: 없다. 서재는 `Library` 탭의 격자·목록·표지 보기 어느 쪽이어도 된다. 같은 `MainActivity` 의 Notes·Notebook·Planner·Audio·Get Books·Discover 화면은 책으로 읽지 않는다(Library 탭이 골라져 있을 때만 읽는다).
 - **표지**: 서재 책 카드에서 잘라 온다(Continue reading 머리·Recent 줄·모든 책 격자). 표지가 없는 책은 AcousText 가 제목으로 그린 표지를 자른다. 홈에서 크게 보면 서재 썸네일이라 조금 흐리다.
-- **제목**: 서재 카드의 제목, 읽는 화면 위 막대(`Back` 바로 뒤)의 제목. Continue reading 카드의 `CONTINUE READING`·`5% completed` 같은 안내 글자는 제목으로 쓰지 않는다. 서재에서 누르지 않고 AcousText 를 다시 열어 이어진 책도 위 막대 제목으로 들어온다.
+- **제목**: 서재 카드의 제목, 읽는 화면 위 막대(`Back` 바로 뒤)의 제목. Continue reading 카드의 `CONTINUE READING`·`5% completed` 같은 안내 글자는 제목으로 쓰지 않는다. 책을 불러오는 동안 위 막대가 `Reader` 이면 임시 제목이라 쓰지 않는다. 서재에서 누르지 않고 AcousText 를 다시 열어 이어진 책도 위 막대 제목으로 들어온다.
 - **저자**: 없다(서재 카드에 저자가 보여도 받지 않는다).
-- **진행률**: 서재 카드의 `%`(머리·Recent·격자)와 읽는 화면 상태 줄의 `Chapter 1 • 5%`. 상태 줄 진행률이 없으면 읽는 화면 아래 쪽 표시(`Page 48 of 894`)로 센다.
+- **진행률**: 서재 카드의 `%`(머리·Recent·격자)와 읽는 화면 상태 줄의 진행률. 상태 줄은 `Chapter 1 • 5%` 처럼 퍼센트가 뒤에 오거나 `5% • Chapter 1` 처럼 앞에 온다(사용자가 상태 줄 칸을 바꿀 수 있다). 상태 줄 진행률이 없으면 읽는 화면 아래 쪽 표시(`Page 48 of 894`)로 센다.
 - **반납일**: 없다(내 파일).
-- **제약**: 홈에서 책을 누르면 `acoustext://book?title=<AcousText 가 보여 준 제목>` 으로 그 책을 바로 연다(파일 경로를 아는 책이면 `path` 도 함께). AcousText 가 그 링크를 받도록 고친 판이어야 하며, 못 찾으면 앱만 연다. 읽는 화면은 위 막대 제목·상태 줄·아래 쪽 표시만 읽고 Readium 본문은 훑지 않는다(번역문·화 제목이 진행률과 섞이지 않게).
+- **제약**: 액티비티는 `com.opsdevabhi.acoustext.MainActivity` 다(1.0.0 RC 부터 `com.example.acoustext` 에서 바뀌었다). 홈에서 책을 누르면 `acoustext://book?title=<AcousText 가 보여 준 제목>` 으로 그 책을 바로 연다(파일 경로를 아는 책이면 `path` 도 함께). AcousText 가 그 링크를 받도록 고친 판이어야 하며, 못 찾으면 앱만 연다. 읽는 화면은 위 막대 제목·상태 줄·아래 쪽 표시만 읽고 Readium 본문은 훑지 않는다(번역문·화 제목이 진행률과 섞이지 않게).
 
 ### Mihon `app.mihon`·Kahon `com.amanoteam.kahon`
 
