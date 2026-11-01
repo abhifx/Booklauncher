@@ -28,6 +28,7 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.woody.booklauncher.readers.BookFiles
+import com.woody.booklauncher.readers.ReaderApps
 import java.time.LocalDate
 
 /** ① 홈: 맨 위 두 줄 · 지금 읽는 책과 읽고 있는 앱 · 자주 쓰는 앱 · 하단 줄 */
@@ -258,8 +259,10 @@ class HomeActivity : EinkActivity() {
         val pkg = wanted.first()
         prefs.fileNoticeWanted = wanted - pkg
         if (pkg in prefs.fileNoticeSkip) return
+        // 그 사이 업데이트로 책 파일 읽기를 쓰지 않게 된 앱(1.7.2 까지의 문리더)은 묻지 않는다
+        if (ReaderApps.forPackage(this, pkg)?.needsBookFiles != true) return
         val name = AppStore.readerLabel(this, pkg) ?: return
-        // 앱 이름이 길면(Moon+ Reader Pro) 낱말 가운데서 줄이 나뉘어('가 / 져오려면') 띄어쓴 곳에서만 나누게
+        // 앱 이름이 길면(1.7.2 까지 묻던 Moon+ Reader Pro) 낱말 가운데서 줄이 나뉘어('가 / 져오려면') 띄어쓴 곳에서만 나누게
         fileDialog = Sheet(this).header(keepWords(getString(R.string.file_notice_title, name)), getString(R.string.file_notice_desc)).centered().keepOnChange()
             .item(getString(R.string.open_file_access), bold = true) { BookFiles.request(this) }
             .item(getString(R.string.dont_show_again)) { prefs.fileNoticeSkip = prefs.fileNoticeSkip + pkg }

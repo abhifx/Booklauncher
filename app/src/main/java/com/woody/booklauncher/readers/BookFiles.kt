@@ -16,7 +16,6 @@ import android.os.ParcelFileDescriptor
 import android.provider.Settings
 import android.util.Xml
 import com.woody.booklauncher.Storage
-import com.woody.booklauncher.sameTitle
 import org.xmlpull.v1.XmlPullParser
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -67,28 +66,6 @@ object BookFiles {
     fun epub(path: String): Epub? {
         if (!path.endsWith(".epub", ignoreCase = true)) return null
         return runCatching { ZipFile(path).use { zip -> readEpub(zip) } }.getOrNull()
-    }
-
-    /**
-     * 저장소에서 책 정보의 제목이 [title] 인 EPUB 의 경로(연 파일을 내놓지 않는 리더, 문리더). 얕은 폴더부터 [SEARCH_ENTRIES] 개까지 보고
-     * 숨긴 폴더(`.`)·`Android` 는 들어가지 않는다. 제목·저자가 그대로 같은 것, 없으면 제목이 그대로 같은 책 하나, 없으면 같은 제목([sameTitle])이고
-     * 한쪽에 부제가 없는 책 하나(같은 책의 복사본은 한 권으로 센다. 부제가 둘 다 있고 다르면 다른 권이다). 애매하면 짐작하지 않고 null.
-     * 한 번 읽은 파일의 제목·저자는 기억해 두어 다음 찾기에서 다시 열지 않는다. 화면 스레드에서 부르지 않는다.
-     */
-    fun findEpub(title: String, author: String): String? {
-        val near = mutableListOf<Triple<String, String, String>>()
-        for (f in storageFiles()) {
-            if (!f.name.endsWith(".epub", ignoreCase = true)) continue
-            val (t, a) = epubNames.getOrPut(fileKey(f)) { epub(f.path)?.let { it.title to it.author } ?: ("" to "") }
-            if (t.isEmpty() || !sameTitle(t, title)) continue
-            if (t == title && a == author) return f.path
-            near += Triple(f.path, t, a)
-        }
-        // 그대로 같은 것이 없으면 짐작하지 않는다: 같은 제목(저자만 다름)이 하나, 없으면 정리한 제목이 같고 한쪽에 부제가 없는 것이 하나뿐일 때만
-        // (`반지의 제왕: 두 개의 탑` 을 찾는데 저장소에 `반지의 제왕: 반지 원정대` 만 있어도 붙이지 않게)
-        fun one(list: List<Triple<String, String, String>>) = list.distinctBy { it.second to it.third }.singleOrNull()?.let { list.first().first }
-        fun subtitle(s: String) = s.substringAfter(':', "").trim()
-        return one(near.filter { it.second == title }) ?: one(near.filter { subtitle(it.second).isEmpty() || subtitle(title).isEmpty() })
     }
 
     /**
@@ -215,43 +192,11 @@ object BookFiles {
         scaledJpeg { zip.getInputStream(e) }
     }
 
-    /**
-     * 저장소에서 파일 이름(확장자 뗌, 대소문자 무시)이 [stems] 중 하나인 첫 책 파일의 경로(파일로만 여는 이북 앱의 책인데 그 파일을 모를 때, 네오리더).
-     * 찾는 범위는 [findEpub] 과 같다. 못 찾으면 null. 화면 스레드에서 부르지 않는다.
-     */
-    fun findByName(stems: Collection<String>): String? =
-        storageFiles().firstOrNull { f -> isBookFile(f.name) && stems.any { sameFileName(it, f.name) } }?.path
-
-    /** 저장소의 파일들: 얕은 폴더부터 [SEARCH_ENTRIES] 개까지(폴더 포함), [SEARCH_DEPTH] 단계까지, 숨긴 폴더(`.`)·`Android` 는 들어가지 않는다 */
-    private fun storageFiles(): Sequence<File> = sequence {
-        val root = storageRoot
-        val skip = File(root, "Android")
-        val dirs = ArrayDeque<Pair<File, Int>>().apply { add(root to 0) }
-        var entries = 0
-        while (dirs.isNotEmpty() && entries < SEARCH_ENTRIES) {
-            val (dir, depth) = dirs.removeFirst()
-            for (f in dir.listFiles().orEmpty().sortedBy { it.name }) {
-                if (++entries > SEARCH_ENTRIES) break
-                if (f.name.startsWith('.')) continue
-                if (f.isDirectory) {
-                    if (depth < SEARCH_DEPTH && f != skip) dirs += f to depth + 1
-                    continue
-                }
-                yield(f)
-            }
-        }
-    }
-
     /** 파일을 기억하는 열쇠(경로·고친 때·길이. 고친 때를 두고 덮어쓴 파일도 다시 읽게) */
     private fun fileKey(f: File) = "${f.path}@${f.lastModified()}@${f.length()}"
 
-    /** 찾기에서 읽은 EPUB(경로·고친 때·길이)의 제목·저자([findEpub]. 못 읽은 파일은 빈 제목) */
-    private val epubNames = ConcurrentHashMap<String, Pair<String, String>>()
     /** 파일(`경로@고친 때`)마다 표지가 있는지 */
     private val fileCovers = ConcurrentHashMap<String, Boolean>()
-
-    private const val SEARCH_ENTRIES = 5000
-    private const val SEARCH_DEPTH = 6
 
     /** ZIP 으로 묶은 만화(CBZ·ZIP. KOReader·이지뷰어는 ZIP 도 만화로 연다)인가: 안드로이드 기본으로 푼다 */
     private fun isZipComic(path: String) = ZIP_COMIC.containsMatchIn(path)

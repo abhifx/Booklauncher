@@ -74,6 +74,42 @@ class BookShelfStoreTest {
         assertCacheMatchesDb()
     }
 
+    @Test fun `진행 중 회차의 고친 읽기 시작한 날은 완독하면 그 완독 줄로 옮긴다`() {
+        val began = today.minusDays(30)
+        BookShelf.setBegan(app, "b-1", null, began)
+        assertEquals(began, BookShelf.roundBegans(app)["b-1"])
+        // 기록(상세·올해 읽은 책)의 진행 중 회차가 그날부터
+        assertEquals(began, BookRecord.of(app, BookShelf.list(app).single()).lastRound.from)
+        BookShelf.finish(app, "b-1", Review())
+        assertEquals(listOf(began), BookShelf.finishList(app)["b-1"].orEmpty().map { it.began })
+        assertNull(BookShelf.roundBegans(app)["b-1"])
+        BookShelf.clearCaches()
+        assertEquals(listOf(began), BookShelf.finishList(app)["b-1"].orEmpty().map { it.began })
+        assertTrue(BookShelf.roundBegans(app).isEmpty())
+    }
+
+    @Test fun `완독한 회차의 읽기 시작한 날을 고치면 그 완독 줄에만, 다른 책의 줄은 못 고친다`() {
+        BookShelf.finish(app, "b-1", Review(8))
+        val id = BookShelf.finishList(app)["b-1"]!!.single().id
+        val began = today.minusDays(10)
+        BookShelf.setBegan(app, "b-1", id, began)
+        assertEquals(began to 8, BookShelf.finishList(app)["b-1"]!!.single().let { it.began to it.review?.halves })
+        BookShelf.clearCaches()
+        assertEquals(began, BookShelf.finishList(app)["b-1"]!!.single().began)
+        assertTrue(runCatching { BookShelf.setBegan(app, "b-2", id, began) }.isFailure)
+    }
+
+    @Test fun `새 회차가 시작하면 앞에서 남은 고친 읽기 시작한 날을 버린다`() {
+        BookShelf.finish(app, "b-1", Review())
+        // 진행 중 회차 없이 남은 줄(그 회차가 없어진 경우)
+        db.execSQL("INSERT INTO round_began VALUES ('b-1', ${today.minusDays(3).toEpochDay()})")
+        BookShelf.clearCaches()
+        BookShelf.restore(app, "b-1", newRound = true)
+        assertNull(BookShelf.roundBegans(app)["b-1"])
+        BookShelf.clearCaches()
+        assertNull(BookShelf.roundBegans(app)["b-1"])
+    }
+
     @Test fun `같은 날 두 번 완독은 누른 순서대로`() {
         BookShelf.finish(app, "b-1", Review(2))
         BookShelf.restore(app, "b-1", newRound = true)

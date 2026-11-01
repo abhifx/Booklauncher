@@ -224,16 +224,15 @@ object AppStore {
     }
 
     /**
-     * 파일로만 여는 이북 앱 [app] 의 책 [book] 인데 그 파일을 모를 때 다시 찾는다: 그 앱 데이터([com.woody.booklauncher.readers.ReaderApp.bookFiles]),
-     * 없으면 저장소에서 같은 파일 이름(확장자 뗌)의 첫 책 파일([BookFiles.findByName], 책 파일 읽기가 켜져 있을 때만). 찾을 이름은 제목과
-     * 이북 앱이 보여 준 제목(파일 이름이거나 파일 안의 제목). 그 앱 데이터에 같은 이름의 파일이 여럿이면(파일 안의 제목이 같은 PDF 등) 다른 책으로
-     * 넣지 않은 파일이 먼저. 못 찾으면 null. 다른 앱을 깨우고 저장소를 훑으므로 화면 스레드에서 부르지 않는다.
+     * 파일로만 여는 이북 앱 [app] 의 책 [book] 인데 그 파일을 모를 때 그 앱 데이터([com.woody.booklauncher.readers.ReaderApp.bookFiles])에서 다시 찾는다.
+     * 찾을 이름은 제목과 이북 앱이 보여 준 제목(파일 이름이거나 파일 안의 제목). 같은 이름의 파일이 여럿이면(파일 안의 제목이 같은 PDF 등) 다른 책으로
+     * 넣지 않은 파일이 먼저. 못 찾으면 null. 저장소 전체는 훑지 않는다(1.7.2 까지는 그다음 같은 파일 이름의 첫 책 파일을 찾았는데, 폴더마다 같은 이름이
+     * 있으면(만화 `01.cbz`) 다른 책이 열리고 SD 카드는 찾지 못해 뺐다). 다른 앱을 깨우므로 화면 스레드에서 부르지 않는다.
      */
     fun findBookFile(context: Context, book: ShelfBook, app: AppEntry): String? {
         val titles = listOf(book.title, book.seenTitle).filter { it.isNotEmpty() }.distinct()
         val found = ReaderApps.forPackage(context, app.pkg)?.bookFiles(context, titles).orEmpty()
         return found.firstOrNull { BookShelf.idByFile(context, it).let { id -> id == null || id == book.id } } ?: found.firstOrNull()
-            ?: titles.takeIf { BookFiles.canRead(context) }?.let(BookFiles::findByName)
     }
 
     /**

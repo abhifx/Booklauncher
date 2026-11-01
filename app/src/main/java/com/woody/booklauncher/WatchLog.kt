@@ -39,7 +39,7 @@ object WatchLog {
         PROGRESS,
         /** 읽고 돌아온 서재 아래 '최근 읽은 책'([Entry.arg])이 읽으러 가기 전 그대로라 바뀌기를 기다린다(그 책을 편 것으로 보지 않는다) */
         RECENT_WAIT,
-        /** 연 파일을 내놓지 않는 리더의 책([Entry.arg])을 저장소에서 찾았다. [Entry.detail] 은 그 파일 이름 */
+        /** 연 파일을 내놓지 않는 리더의 책([Entry.arg])을 저장소에서 찾았다. [Entry.detail] 은 그 파일 이름(1.7.2 까지의 문리더. 남은 기록을 읽으려고 둔다) */
         FILE,
         /** 이북 앱 알림을 처리하다 난 오류(그 알림만 건너뛴다). [Entry.arg] 는 오류 종류, [Entry.detail] 은 내용 */
         ERROR,

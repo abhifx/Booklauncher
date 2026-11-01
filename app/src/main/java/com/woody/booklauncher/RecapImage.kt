@@ -37,7 +37,34 @@ object RecapImage {
     /** 아래 올해 잔디가 시작하는 높이 */
     private const val YEAR_Y = 1084f
 
-    private class Colors(mono: Boolean) {
+    /**
+     * 그달 표지에서 색을 못 고를 때(표지가 없거나 흑백 표지뿐, 빈 달) 쓰는 달마다 위 카드 색(옅은 그라데이션 두 색)과 강조색. 계절에 맞춰 1월부터:
+     * 겨울 하늘 · 매화 · 새싹 · 벚꽃 · 신록 · 수국 · 바다 · 해바라기 · 가을 하늘 · 단풍 · 낙엽 · 겨울 붉은빛.
+     */
+    private val MONTHS = arrayOf(
+        intArrayOf(0xFFE3ECF7.toInt(), 0xFFC9DAF0.toInt(), 0xFF2F5D9A.toInt()),
+        intArrayOf(0xFFF6E4EA.toInt(), 0xFFEBC9D5.toInt(), 0xFFA33E66.toInt()),
+        intArrayOf(0xFFE9F3DF.toInt(), 0xFFCFE6BC.toInt(), 0xFF4E8A2E.toInt()),
+        intArrayOf(0xFFFBE6EE.toInt(), 0xFFF4CADB.toInt(), 0xFFC2477A.toInt()),
+        intArrayOf(0xFFDFF2E4.toInt(), 0xFFBFE3C8.toInt(), 0xFF2E7D4F.toInt()),
+        intArrayOf(0xFFE0EEF6.toInt(), 0xFFC4DDEE.toInt(), 0xFF2D6E9E.toInt()),
+        intArrayOf(0xFFDDF1F3.toInt(), 0xFFBBE2E8.toInt(), 0xFF1F7A86.toInt()),
+        intArrayOf(0xFFFFF1D6.toInt(), 0xFFFADFA6.toInt(), 0xFFB7791F.toInt()),
+        intArrayOf(0xFFECE6F6.toInt(), 0xFFD8CCEE.toInt(), 0xFF6A4FA3.toInt()),
+        intArrayOf(0xFFFBE7DA.toInt(), 0xFFF3CDB3.toInt(), 0xFFC2571A.toInt()),
+        intArrayOf(0xFFF1E7DA.toInt(), 0xFFE2D0B8.toInt(), 0xFF8A5A2B.toInt()),
+        intArrayOf(0xFFF8E4E4.toInt(), 0xFFEFC8C8.toInt(), 0xFFA83232.toInt()),
+    )
+
+    /** 표지 색으로 만든 카드 색: 색상 [hue](0~1), 채도 [sat] → 옅은 두 색과 진한 강조색 */
+    internal fun theme(hue: Float, sat: Float): IntArray {
+        val s = sat.coerceIn(0.25f, 0.65f)
+        fun hsv(sv: Float, v: Float) = Color.HSVToColor(floatArrayOf(hue * 360f, sv.coerceIn(0f, 1f), v))
+        return intArrayOf(hsv(s * 0.18f, 0.98f), hsv(s * 0.38f, 0.94f), hsv(maxOf(0.55f, s), 0.55f))
+    }
+
+    /** 위 카드 색과 강조색 [m](옅은 색 두 개·강조색) */
+    private class Colors(mono: Boolean, private val m: IntArray) {
         val ink = Color.BLACK
         val gray = Color.rgb(110, 110, 110)
         val dark = Color.rgb(55, 55, 55)
@@ -45,12 +72,12 @@ object RecapImage {
         val line = Color.rgb(234, 234, 234)
         val head = Color.rgb(200, 200, 200)
         val coverLine = Color.rgb(215, 215, 215)
-        val accent = if (mono) Color.BLACK else 0xFF1565C0.toInt()
+        val accent = if (mono) Color.BLACK else m[2]
         val done = if (mono) Color.rgb(85, 85, 85) else Palette.DONE
         val star = if (mono) Color.BLACK else Palette.STAR
         val starOff = Color.rgb(215, 215, 215)
         val band = if (mono) intArrayOf(Color.rgb(242, 242, 242), Color.rgb(228, 228, 228))
-            else intArrayOf(0xFFE4EFFB.toInt(), 0xFFCFE2F5.toInt())
+            else intArrayOf(m[0], m[1])
         val empty = if (mono) Color.rgb(236, 236, 236) else 0xFFEBEDF0.toInt()
         val future = if (mono) Color.rgb(246, 246, 246) else 0xFFF6F7F8.toInt()
         val levels = if (mono) intArrayOf(Color.rgb(200, 200, 200), Color.rgb(140, 140, 140), Color.rgb(80, 80, 80), Color.rgb(17, 17, 17))
@@ -73,7 +100,19 @@ object RecapImage {
 
     private class Painter(val ctx: Context, val c: Canvas, val m: Recap.Month, palette: Palette) {
         val mono = !palette.color
-        val k = Colors(mono)
+        /** 색: 컬러면 그달 읽은 책 표지에서 가장 많이 보인 색(읽은 시간만큼 센다), 못 고르면 그달 계절 색 */
+        val k by lazy {
+            Colors(mono, if (mono) MONTHS[0] else coverTheme() ?: MONTHS[m.month.monthValue - 1])
+        }
+
+        /** 표지의 색 있는 픽셀을 색상 칸에 나눠 읽은 시간만큼 센 가장 많은 칸([Recap.dominantHue])의 색 */
+        fun coverTheme(): IntArray? {
+            val samples = m.books.mapNotNull { b ->
+                if (b.ms <= 0) null else coverPixels(b.book) to b.ms
+            }
+            val (hue, sat) = Recap.dominantHue(samples) ?: return null
+            return theme(hue, sat)
+        }
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
         val locale = ctx.resources.configuration.locales[0]
         fun fmt(res: Int): DateTimeFormatter = DateTimeFormatter.ofPattern(ctx.getString(res), locale)
@@ -183,15 +222,20 @@ object RecapImage {
                 ?: BlankCover.draw(b.title, b.author, b.app?.let { AppStore.find(ctx, it)?.label }, w * 2)
         }
 
+        /** 표지 색을 볼 작은 그림(24×36)의 픽셀: 막대 색·카드 색 */
+        val pixels = HashMap<String, IntArray>()
+        fun coverPixels(b: ShelfBook): IntArray = pixels.getOrPut(b.id) {
+            val small = Bitmap.createScaledBitmap(coverBitmap(b, 60), 24, 36, true)
+            IntArray(small.width * small.height).also { small.getPixels(it, 0, small.width, 0, 0, small.width, small.height) }
+        }
+
         /** 막대 색(컬러만): 표지에서 채도 있는 픽셀의 평균(없으면 전체 평균), 너무 밝으면 어둡게 */
         val barColors = HashMap<String, Int>()
         fun barColor(b: ShelfBook): Int = barColors.getOrPut(b.id) {
-            val small = Bitmap.createScaledBitmap(coverBitmap(b, 60), 20, 30, true)
             var n = 0; var r = 0L; var g = 0L; var bl = 0L
             var an = 0; var ar = 0L; var ag = 0L; var ab = 0L
             val hsv = FloatArray(3)
-            for (y in 0 until small.height) for (x in 0 until small.width) {
-                val px = small.getPixel(x, y)
+            for (px in coverPixels(b)) {
                 ar += Color.red(px); ag += Color.green(px); ab += Color.blue(px); an++
                 Color.colorToHSV(px, hsv)
                 if (hsv[1] > 0.28f && hsv[2] in 0.18f..0.95f) { r += Color.red(px); g += Color.green(px); bl += Color.blue(px); n++ }

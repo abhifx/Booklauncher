@@ -175,6 +175,43 @@ object Recap {
         return Grid(c, minW, top, n - top.size)
     }
 
+    /** 색상 칸 수(30도씩) */
+    private const val HUE_BINS = 12
+
+    /**
+     * 표지 픽셀들([samples], 표지마다 픽셀(ARGB)과 그 책을 읽은 시간)에서 가장 많이 보인 색: 색 있는 픽셀(채도 0.3 넘고 너무 어둡거나 밝지 않은)을
+     * 색상 [HUE_BINS] 칸에 나눠 읽은 시간 × 선명함(채도·밝기)만큼 세고(어두운 남색 머리카락 같은 탁한 색은 덜 센다), 이웃 칸과 함께 본 가장 많은 자리
+     * (빨강·주황처럼 칸 경계에 걸친 색이 둘로 갈려 지지 않게)의 픽셀 평균 색상(0~1)과 평균 채도. 색 있는 픽셀이 없으면 null.
+     * 여러 표지를 섞으면(평균) 갈색으로 탁해지므로, 섞지 않고 눈에 띄는 색 하나를 고른다.
+     */
+    internal fun dominantHue(samples: List<Pair<IntArray, Long>>): Pair<Float, Float>? {
+        class Px(val hue: Float, val sat: Float, val w: Double)
+        val pixels = ArrayList<Px>()
+        val bins = DoubleArray(HUE_BINS)
+        val hsv = FloatArray(3)
+        for ((px, ms) in samples) for (c in px) {
+            android.graphics.Color.colorToHSV(c, hsv)
+            if (hsv[1] <= 0.3f || hsv[2] <= 0.2f || hsv[2] >= 0.95f) continue
+            val w = ms.toDouble() * hsv[1] * hsv[2]
+            pixels += Px(hsv[0] / 360f, hsv[1], w)
+            bins[(hsv[0] / 360f * HUE_BINS).toInt().coerceIn(0, HUE_BINS - 1)] += w
+        }
+        fun score(k: Int) = bins[k] + 0.5 * (bins[(k + HUE_BINS - 1) % HUE_BINS] + bins[(k + 1) % HUE_BINS])
+        val best = bins.indices.maxByOrNull { score(it) } ?: return null
+        if (score(best) <= 0) return null
+        // 그 자리(가운데 칸과 양옆 칸) 픽셀의 평균 색상(색상환이라 각도로 평균)·채도
+        val center = (best + 0.5) / HUE_BINS
+        var x = 0.0; var y = 0.0; var sat = 0.0; var sum = 0.0
+        for (p in pixels) {
+            var d = p.hue - center
+            if (d > 0.5) d -= 1.0 else if (d < -0.5) d += 1.0
+            if (kotlin.math.abs(d) > 1.5 / HUE_BINS) continue
+            x += p.w * kotlin.math.cos(2 * Math.PI * p.hue); y += p.w * kotlin.math.sin(2 * Math.PI * p.hue); sat += p.w * p.sat; sum += p.w
+        }
+        val hue = ((kotlin.math.atan2(y, x) / (2 * Math.PI)) + 1.0) % 1.0
+        return hue.toFloat() to (sat / sum).toFloat()
+    }
+
     /** 잔디 단계(0 안 읽음 ~ 4): 목표 미만 · 목표 이상 · 두 배 이상 · 네 배 이상 */
     internal fun level(ms: Long, goalMin: Int): Int {
         val m = ms / 60_000

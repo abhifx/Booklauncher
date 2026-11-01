@@ -206,7 +206,7 @@ Pebble Desk(1.2.x)를 기본 홈으로 쓰는 홈 화면. 책 1권(밀리의서�
 
 중국 掌阅(Zhangyue, 브랜드 iReader)의 7인치 전자잉크 리더. 국내 사용자는 `오션`, `아이리더 오션5` 로 부른다(해외 구매·오픈마켓). 2025-10 에 Ocean 5 · 5 Pro · 5 장기 배터리판 · 5C(컬러) 가 나왔다. 앞 세대 Ocean 4 Turbo 도 같은 모양이다. 모두 Kindle Oasis 처럼 한쪽 손잡이가 두껍고 거기에 페이지 버튼이 있다. **Musnap Ocean / Ocean C**(2025-12, 검은색, 영문판)는 같은 회사가 만든 같은 기기다(설명서의 만든 곳 Shenzhen Zhangyue Technology, SmartOS).
 
-사용자가 보낸 기기 정보로 **Ocean 5 Pro**(흰색, 오른쪽 손잡이에 버튼 두 개)를 확인했다(2026-10-10): `Build.MODEL=Ocean 5 Pro`, `Build.DEVICE=SM07A-CKDA`(모델 번호), `MANUFACTURER`·`BRAND` `iReader`, 안드로이드 14(API 34, 빌드 `UP1A.231005.007`), 화면 1264×1680 · 320dpi(632×840dp) → 앱 기준 354dpi · 571×759dp, `기기 종류` 기타. Musnap Ocean(`SM07A-AKDW`)과 모델 번호 앞부분이 같다. 다른 Ocean 모델(5 · 5C · 4 Turbo)은 기기 정보를 보지 못했다.
+사용자가 보낸 기기 정보로 **Ocean 5 Pro**(흰색, 오른쪽 손잡이에 버튼 두 개)를 확인했다(2026-10-10): `Build.MODEL=Ocean 5 Pro`, `Build.DEVICE=SM07A-CKDA`(모델 번호), `MANUFACTURER`·`BRAND` `iReader`, 안드로이드 14(API 34, 빌드 `UP1A.231005.007`), 화면 1264×1680 · 320dpi(632×840dp) → 앱 기준 354dpi · 571×759dp, `기기 종류` 기타. Musnap Ocean(`SM07A-AKDW`)과 모델 번호 앞부분이 같다. **Ocean 5C**(컬러판, `SM07A-CKDC`)는 2026-10-31 기기 정보 사진을 받았다(아래 [Tango·Ocean 5C 기기 정보 사진](#tangoocean-5c-기기-정보-사진-2026-10-31-pebble-desk-171)). 다른 Ocean 모델(5 · 4 Turbo)은 기기 정보를 보지 못했다.
 
 ### 사양 (IT之家·Musnap 설명서·리뷰)
 
@@ -237,7 +237,7 @@ Pebble Desk(1.2.x)를 기본 홈으로 쓰는 홈 화면. 책 1권(밀리의서�
 
 - iReader 는 중국판에서 다른 앱 설치·adb 를 막아 왔다. Ocean 2 는 iReader 앱을 죽여 안드로이드 설정으로 들어가 USB 디버깅을 켜는 방법이 공개됐다(GitHub `akhan23wgu/iReader-Zhangyue-USBDebug`, MobileRead). Ocean 4 Turbo 이후(SmartOS 2.2~)는 앱 장터와 APK 설치를 공식으로 허용한다. adb 가 되는지는 **(미확인)**.
 - 국내 사용기에서 Musnap Ocean 은 Onyx Go 7 과 거의 같고 "플레이스토어를 선택적으로 켤 수 있다" 고 했다(DC 전자책 갤러리).
-- 펌웨어 파일은 찾지 않았다. OTA 는 기기 설정 › 시스템 및 업데이트.
+- 펌웨어 파일: 찾아봤지만 공개된 곳이 없다(2026-10-31, 기본 리더 앱 이름을 알려고). OTA 는 기기 설정 › 시스템 및 업데이트뿐이고 받는 주소·파일 이름은 알려져 있지 않다. 다른 앱 설치를 뚫던 글(Smart XS Pro 2021 블로그, Ocean 2 의 `akhan23wgu/iReader-Zhangyue-USBDebug`·MobileRead)은 앱 장터 응답을 프록시로 바꾸는 방식이라 펌웨어 주소가 없고, 시스템 10.7(2022)부터 HTTPS 라 막혔다. 그래서 기본 리더(시스템 앱)의 패키지·화면 이름은 기기에서 직접 봐야 한다(기기 정보의 `최근에 뜬 다른 화면`). 다른 기기(inkpalm 5) adb 안내에 `com.zhangyue.read.iReader.eink` 가 보이나 Ocean 계열인지는 **(미확인)**.
 
 ### 실기기 사진에서 본 것 (2026-10-10 00:16, Pebble Desk 1.3.0)
 
@@ -268,6 +268,17 @@ Pebble Desk(1.2.x)를 기본 홈으로 쓰는 홈 화면. 책 1권(밀리의서�
 
 - 킨들 표지 문제(Kindle Unlimited·보낸 문서 표지가 안 나온다는 댓글)가 같다며 킨들 서재와 `기록 보기` 사진 두 장을 보냈다(imgur, 아직 보지 않음). 사진을 찍고 나니 킨들 책 하나가 홈에 표지 없이 들어왔고, 다른 책을 열었는데 그 책은 들어오지 않았다고 한다.
 - 홈에 `화면이 크게 보입니다`(DPI 가 354 여야 한다) 창이 뜬다. 사용자는 바꾼 것이 없고 화면도 괜찮아 보인다고 한다. Ocean 5 Pro 는 354 가 그대로 먹혔으니(위 기기 정보) 이 기기에서만 무언가가 앱 밀도를 덮어쓴다. 앱별 표시 최적화에는 DPI 가 없다는 리뷰라 원인은 **(미확인)**. 기기 정보(화면 줄의 `App uses …dpi` 와 `intended 354dpi not applied`) 사진을 부탁했다.
+
+### Tango·Ocean 5C 기기 정보 사진 (2026-10-31, Pebble Desk 1.7.1)
+
+- 댓글(캐슈넛파이, Tango 1세대·Ocean 5C 두 대): 서드 앱은 다 되는데 기본 리더로 읽은 EPUB 은 독서 기록에 남지 않는다. 기본 리더가 정해 둔 이북 앱 목록에 없어 읽은 시간을 세지 않는다. 지원하지 않기로 했다(읽은 시간만 세는 것도 넣지 않음). 조사한 것은 docs/READER_APPS.md › 아이리더 기본 리더. 기본 리더 APK 는 인터넷에서 구하지 못했다(화웨이용 같은 앱 1.8.3 만 보았다).
+- **Ocean 5C**: `Ocean 5C (SM07A-CKDC) · iReader · iReader · 안드로이드 14 (API 34) · 기타 · Pebble Desk 1.7.1 · 화면 1264×1680 · 320dpi · 632×840dp → 앱 기준 354dpi · 571×759dp · 1264×1680 로 셈 · UP1A.231005.007 release-keys`. Ocean 5 Pro 와 화면·밀도가 같고 앱 기준 354dpi 가 그대로 먹혔다(Musnap Ocean C 의 `화면이 크게 보입니다` 는 이 기기에서는 없음).
+  - 시스템 속성: `ro.build.versionCode=4.1.0.214.0` · `persist.eink.dither256.disable=1`(Ocean 5 Pro·Tango 는 0) · `persist.eink.idisplay.cfa.wbmode=0`(컬러 필터(CFA) 패널 값으로 보인다 **(추정)**) · `persist.sys.eink.brightness=0` · `persist.sys.…`(잘림).
+  - 설정 값: `screen_brightness=103` · `EinkLightStep=31`(조명 켜짐, 30단계 기기에서 31) · `clock_wallpaper_lock_screen_refresh_interval=300000` · `down_key_long_functio…`(잘림).
+  - 권한: `자동 추가 켜짐 · 오늘 읽은 시간 켜짐 · 기본 홈 꺼짐`. `와이파이 꺼짐 · 블루투스 켜짐 A2DP? HFP? HID?`.
+  - 자동 추가 서비스: `연결 10/31 02:02 · 끊김 - · 끊긴 횟수 0`, `앱 종료 10/31 02:02 PKG_UPDATED · 10/29 23:59 OTHER · 23:55 PKG_UPDATED`, 마지막 앱 오류 없음, `배터리 최적화 제외 꺼짐 · 대기 그룹 EXEMPTED · 백그라운드 제한 꺼짐`.
+  - 최근 화면: `com.szzy.ireader.ink.launcher / LauncherActivity`(iReader 홈), `com.zhangyue.iReader.Eink / ActivityRead`(기본 리더 읽는 화면). 기본 홈이 꺼져 있어 iReader 홈을 쓰며 Pebble Desk 는 앱으로 연다.
+- **Tango**(1세대): `PM06A-CKD`, `ro.build.versionCode=4.1.0.215.0`, 화면 824×1648 · **320dpi** · 412×824dp → 앱 기준 230dpi(2026-10-13 사진은 400dpi · 330×659dp 였다. 사용자가 화면 크기를 바꿨는지 펌웨어가 바뀐 것인지 **(미확인)**. 앱 기준 230dpi 는 그대로). `persist.eink.dither256.disable=0` · `persist.sys.eink.color.filter=10` · `persist.sys.eink.contrast=6` · `screen_brightness=103` · `EinkLightStep=20` · `down_key_long_function=7` · `eink_wallpaper_name=系统日历` · `ireader_systemui_shutdown_pending=0`. 권한 `자동 추가 켜짐 · 오늘 읽은 시간 켜짐 · 기본 홈 꺼짐`, `와이파이 켜짐·연결됨 · 블루투스 켜짐`. 서비스 `연결 10/31 01:29 · 끊긴 횟수 0`, `앱 종료 10/31 01:29 PKG_UPDATED · 10/30 01:13 PKG_UPDATED`. 최근 화면 `com.szzy.ireader.ink.launcher / LauncherActivity`, `com.zhangyue.iReader.Eink / RecentTaskListActivity`(최근 작업), `com.zhangyue.iReader.Eink / ActivityRead`.
 
 ### 다음에 받을 것
 
@@ -465,6 +476,8 @@ Pebble Desk(1.2.x)를 기본 홈으로 쓰는 홈 화면. 책 1권(밀리의서�
 
 - 기기 정보: `Tango (PM06A-CKD) · iReader · iReader · 안드로이드 14 (API 34) · 기타 · 화면 824×1648 · 400dpi · 330×659dp → 앱 기준 230dpi · 573×1146dp · 824×1648 로 셈 · UP1A.231005.007 release-keys`. 권한 `자동 추가 꺼짐 · 오늘 읽은 시간 켜짐 · 기본 홈 켜짐`. 최근 화면에 `kr.co.kyobobook.KEL / B2BViewerEpubMainActivity`(교보도서관 읽는 화면), `com.szzy.ireader.settings / ProxyActivity`, `com.szzy.ireader.ink.abupdate / MainActivity`.
 - 홈: 배치는 페블과 같고(폭 573dp), 함께 읽는 책 아래부터 자주 쓰는 앱 위까지 비어 있다. 사용자는 자주 쓰는 앱 크기는 적당하다고 했다.
+
+- 2026-10-31 기기 정보 사진(Pebble Desk 1.7.1)은 화면이 **320dpi** · 412×824dp 로 바뀌어 있었다(앱 기준 230dpi 그대로). 나머지는 [Tango·Ocean 5C 기기 정보 사진](#tangoocean-5c-기기-정보-사진-2026-10-31-pebble-desk-171).
 
 ### 에뮬레이터로 본 것 (`Tango_A14`: android-34 google_apis, 824×1648, 400dpi, 내비게이션 바 없음)
 

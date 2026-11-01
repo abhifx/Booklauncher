@@ -156,4 +156,19 @@ class RecapTest {
         assertEquals(1080 - 2 * 48, c.width)
         assertEquals(1350 - 16 - 20, c.height)
     }
+
+    @Test fun `표지에서 가장 많이 보인 색은 읽은 시간만큼 세고, 색이 없으면 null`() {
+        val red = IntArray(10) { android.graphics.Color.rgb(200, 40, 40) }
+        val blue = IntArray(10) { android.graphics.Color.rgb(40, 60, 200) }
+        val gray = IntArray(10) { android.graphics.Color.rgb(128, 128, 128) }
+        // 파랑 표지를 더 오래 읽었으면 파랑(색상 칸 가운데, 0.6~0.7)
+        val (hue, sat) = Recap.dominantHue(listOf(red to 10L, blue to 60L, gray to 600L))!!
+        assertTrue(hue in 0.58f..0.71f)
+        assertTrue(sat > 0.5f)
+        // 빨강을 더 오래 읽으면 빨강(첫 칸)
+        assertTrue(Recap.dominantHue(listOf(red to 60L, blue to 10L))!!.first < 0.1f)
+        // 흑백 표지뿐이면 고르지 못한다(계절 색으로)
+        assertNull(Recap.dominantHue(listOf(gray to 100L)))
+        assertNull(Recap.dominantHue(emptyList()))
+    }
 }

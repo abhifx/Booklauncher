@@ -28,12 +28,14 @@ import java.time.LocalDate
  *   ([ReadingLog.viewerShown]). 버전 3에서 더했다.
  * - `book_file`: 책(id)마다 이북 앱이 연 파일의 경로(네오리더처럼 파일로만 여는 앱, 홈에서 그 파일을 바로 연다. [BookShelf.filePath]). 버전 4에서 더했다.
  * - `shelf.chapter`: 이북 앱이 보여 준 읽는 화(Mihon 의 화 이름 `Ch. 12` 등, 모르면 ""). 버전 5에서 더했다. 나간 책에는 남기지 않는다(반납일처럼).
+ * - `finish.began`·`round_began`: 사용자가 고친 그 회차의 읽기 시작한 날(완독한 회차는 그 완독 줄에, 진행 중 회차는 책(id)마다 `round_began` 에.
+ *   완독하면 그 완독 줄로 옮긴다). 앞 회차 완독한 날부터 끝 날(진행 중이면 오늘)까지 고친다([BookRecord.startDayRange]). 버전 6에서 더했다.
  * 처음 열 때 1.2.1 까지의 JSON 파일을 옮기고 `<이름>.migrated` 로 바꿔 둔다([importFiles]).
  * 낮은 버전으로 되돌리기(새 판 DB 위에 옛 판을 까는 것)는 지원하지 않는다. 안드로이드가 낮은 판 덮어 설치를 막고, 억지로 깔면 DB 를 열지 못한다.
  */
 object Db {
     private const val NAME = "pebble.db"
-    private const val VERSION = 5
+    private const val VERSION = 6
 
     @Volatile private var db: SQLiteDatabase? = null
 
@@ -85,6 +87,7 @@ object Db {
         createRoundStart(db)
         createViewerMark(db)
         createBookFile(db)
+        addBegan(db)
     }
 
     /** [oldVersion] 의 DB 를 지금 버전으로(SQLiteOpenHelper 가 한 트랜잭션으로 돌린다. 마이그레이션 테스트도 쓴다) */
@@ -123,6 +126,17 @@ object Db {
         if (oldVersion < 4) createBookFile(db)
         // 읽고 있는 책의 읽는 화(진행률 % 대신 앱이 보여 준 글자, Mihon 의 화 이름)
         if (oldVersion < 5) db.execSQL("ALTER TABLE shelf ADD COLUMN chapter TEXT NOT NULL DEFAULT ''")
+        // 사용자가 고친 회차의 읽기 시작한 날
+        if (oldVersion < 6) addBegan(db)
+    }
+
+    /**
+     * 버전 6: 고친 읽기 시작한 날(완독한 회차는 `finish.began`, 진행 중 회차는 `round_began`). 새 설치도 이것으로 더한다
+     * (버전 3 전에서 올릴 때 [createFinish] 로 만든 표에 칸이 겹치지 않게).
+     */
+    private fun addBegan(db: SQLiteDatabase) {
+        db.execSQL("ALTER TABLE finish ADD COLUMN began INTEGER")
+        db.execSQL("CREATE TABLE round_began (book_id TEXT PRIMARY KEY, day INTEGER NOT NULL)")
     }
 
     /** 날마다 읽은 시간: 그날·앱·편 책 제목·붙은 책이 키(모르는 것은 "", 기본 키에 NULL 은 겹쳐도 막히지 않아 쓰지 않는다) */

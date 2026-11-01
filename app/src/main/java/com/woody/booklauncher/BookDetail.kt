@@ -146,27 +146,24 @@ fun Context.bookSubtitle(book: ShelfBook, reading: Boolean): String? {
 
 /**
  * 책 상세의 머리: 표지(완독 띠), 제목, [sub], 완독한 적이 있으면 오른쪽 위에 완독 도장. 그 아래 기록 칸([recordView], 보일 것이 없으면
- * 두지 않는다. 누르면 회차가 둘 이상이면 전체 기록 [showHistory], 완독한 회차 하나뿐이거나 별점 칸을 둘 자리가 없으면 그 회차 메뉴 [editRound]. 닫으면 상세를 다시
+ * 두지 않는다. 누르면 회차가 둘 이상이면 전체 기록 [showHistory], 회차 하나뿐이면 그 회차 메뉴 [editRound](별점·감상을 남길 수 없는 책은 읽기 시작한 날만). 닫으면 상세를 다시
  * 띄운다([reopen])), 그 아래 마지막 회차의
  * 별점·감상 칸([reviewBlock], 누르면 고친다. 5분 이상 읽지 않은 책은 흐리게, 누르면 안내), 그 아래에 부르는 쪽이 메뉴를 붙인다. 감상은 [lines] 줄까지(-1 이면 칸 없이, [showBookDetail] 이 화면에 맞춰 정한다). 컬러면 머리와 칸들을 책 상세 색면([Sheet.paper])에 둬 아래 메뉴와 나눈다.
  */
 private fun Context.bookSheet(r: BookRecord, sub: String?, lines: Int, onChange: () -> Unit, reopen: () -> Unit): Sheet {
     val sheet = headSheet(r, sub)
-    val record = recordView(r)
     val last = r.lastRound
     // 별점·감상은 올해 읽은 책에 보이는 책(5분 이상 읽었거나 완독)이나 이미 남긴 것이 있을 때만 남긴다. 아니면 칸을 흐리게 두고
     // 누르면 안내(남긴 것을 볼 곳이 없어서). 안내를 닫으면 상세로.
     val open = r.canReview
-    val history = when {
-        r.rounds.size >= 2 -> { { showHistory(r, sub, onChange, reopen) } }
-        // 완독한 회차 하나뿐이거나, 별점 칸을 둘 자리가 없는 진행 중 회차 하나(별점 칸을 누른 것과 같이: 그 회차 메뉴, 남길 수 없으면 안내)
-        last.finished || (lines < 0 && open) -> { { editRound(r, last, onChange, reopen) } }
-        lines < 0 -> { { reviewLocked(r, sub, onChange, reopen) } }
-        else -> null
-    }
+    // 회차 하나뿐이면 그 회차 메뉴(읽기 시작한 날·완독한 날·별점·감상. 별점·감상을 남길 수 없는 책도 읽기 시작한 날은 고친다)
+    val history = if (r.rounds.size >= 2) { { showHistory(r, sub, onChange, reopen) } } else { { editRound(r, last, onChange, reopen) } }
+    val record = recordView(r)
     record?.let { sheet.note(it, history) }
-    // 기록 칸도 없고(보일 기간·시간이 없음) 별점 칸도 둘 자리가 없으면, 별점·감상으로 가는 한 줄만 남긴다
-    if (record == null && lines < 0 && history != null) sheet.note(text("${getString(R.string.review_title)}  ›", 18f, color = Ui.GRAY), history)
+    // 기록 칸도 없고(보일 기간·시간이 없음) 별점 칸도 둘 자리가 없으면, 별점·감상으로 가는 한 줄만 남긴다(남길 수 없으면 그 안내)
+    if (record == null && lines < 0) {
+        sheet.note(text("${getString(R.string.review_title)}  ›", 18f, color = Ui.GRAY), if (open) history else { { reviewLocked(r, sub, onChange, reopen) } })
+    }
     if (lines >= 0) sheet.note(reviewBlock(last.review, lines, enabled = open)) {
         if (open) editLastReview(r, sub, onChange) else reviewLocked(r, sub, onChange, reopen)
     }
@@ -191,65 +188,145 @@ private fun Context.editLastReview(r: BookRecord, sub: String?, onChange: () -> 
 private fun Context.alive(): Boolean = (this as? Activity)?.let { !it.isFinishing && !it.isDestroyed } ?: true
 
 /**
- * 회차 하나의 메뉴(전체 기록의 회차 줄, 완독한 회차 하나뿐인 책의 기록 칸): 머리에 `2회 · 2025년 4월 20일 – 5월 10일`, 완독한 회차면 그 아래
- * `완독한 날 · 2025년 5월 10일 ›`(누르면 날짜 입력, [finishDayRow]), 그 회차의 별점·감상, 맨 아래 `취소` / `저장`.
+ * 회차 하나의 메뉴(전체 기록의 회차 줄, 회차 하나뿐인 책의 기록 칸): 머리에 `2회 · 2025년 4월 20일 – 5월 10일`, 그 아래
+ * `읽기 시작한 날 · 2025년 4월 20일 ›`, 완독한 회차면 `완독한 날 · 2025년 5월 10일 ›`(누르면 날짜 입력, [dayRow]), 그 회차의 별점·감상,
+ * 맨 아래 `취소` / `저장`. 진행 중 회차인데 별점·감상을 남길 수 없으면(5분 미만, [BookRecord.canReview]) 별점·감상 없이 날짜 줄과 `저장` / `취소`.
  * 닫히면(저장한 뒤에 온다) [then](고친 것을 다시 읽어 띄운다).
  */
 private fun Context.editRound(r: BookRecord, round: BookRecord.Round, onChange: () -> Unit, then: () -> Unit) {
     val head = listOfNotNull(round.nth?.let { getString(R.string.finish_nth, it) }, period(round, withYear = true)).joinToString("  ·  ")
+    val sub = "${r.book.title}  ·  $head"
     val finishId = round.finishId
     var day = round.to
-    val dayRow = if (finishId != null && day != null) finishDayRow(r, finishId, head, day) { day = it } else null
-    // 저장에서 완독한 날을 받지 못했으면 메뉴가 닫힌 뒤 그 안내를 먼저 띄우고, 안내를 닫으면 [then](둘이 겹치지 않게 닫힐 때 한 곳에서)
-    var rejected: String? = null
+    var start = round.from
+    // 입력 아래 범위 안내는 누르는 순간의 기록과 오늘로(메뉴를 연 사이 다음 회차가 생겼거나 자정이 지났을 수 있다)
+    fun hint(text: (BookRecord, BookRecord.Round, LocalDate) -> String): () -> String = {
+        roundNow(r, round)?.let { (now, cur) -> text(now, cur, LocalDate.now()) }.orEmpty()
+    }
+    val rows = vbox().apply {
+        // 시작한 날의 범위는 함께 고르는 완독한 날까지(완독한 날보다 뒤로 고르지 못하게)
+        val startRow = dayRow(R.string.start_day, sub, start, hint { now, cur, today -> startDayRangeText(now, cur, today, day ?: cur.to) },
+            { startDayError(r, round, it, day) }) { start = it }
+        addView(startRow, lp(MATCH, WRAP))
+        val to = day
+        if (finishId != null && to != null) {
+            // 두 줄 사이 틈은 줄 안쪽 여백으로(누르는 자리가 넓게)
+            val half = dp(DAY_ROW_GAP_DP) / 2
+            startRow.setPadding(0, 0, 0, half)
+            addView(dayRow(R.string.finish_day, sub, to, hint { now, cur, today -> finishDayRangeText(now, cur, today) },
+                { finishDayError(r, round, it) }) { day = it }.apply { setPadding(0, half, 0, 0) }, lp(MATCH, WRAP))
+        }
+    }
+    // 저장에서 받지 못한 날이 있으면 메뉴가 닫힌 뒤 그 안내(머리 = 그 줄 이름)를 먼저 띄우고, 안내를 닫으면 [then](둘이 겹치지 않게 닫힐 때 한 곳에서)
+    var rejected: Pair<Int, String>? = null
     val closed = {
         val error = rejected
         if (alive()) {
-            if (error != null) Sheet(this).header(getString(R.string.finish_day), error).onDismiss { if (alive()) then() }.show()
+            if (error != null) Sheet(this).header(getString(error.first), error.second).onDismiss { if (alive()) then() }.show()
             else then()
         }
     }
-    reviewSheet(r.book, head, getString(R.string.save), round.review, onDismiss = closed, top = dayRow) { review ->
-        // 완독한 회차는 그 완독 줄(id)에: 완독한 날은 고쳤을 때만, 저장하는 순간의 기록으로 다시 확인해서(메뉴를 연 사이 다음 회차가 시작했을 수 있다)
-        if (finishId != null) {
-            val changed = day.takeIf { it != round.to }
-            rejected = changed?.let { finishDayError(r, finishId, it) }
-            BookShelf.setFinish(this, r.book.id, finishId, review, changed.takeIf { rejected == null })
-            onChange()
-        } else if (saveRoundReview(r, round, review) == Saved.YES) onChange()  // STALE 이면 닫힌 뒤 then() 이 지금 상태로 다시 띄운다
+    // 한 트랜잭션으로 묶지 않는다: 날 확인이 기록을 다시 읽으며 읽은 시간을 저장할 수 있어(ReadingLog), 되돌리면 그 메모리 사본과 DB 가 어긋난다
+    fun save(review: Review?) { if (saveRound(r, round, review, day, start) { rejected = rejected ?: it }) onChange() }
+    if (round.finished || r.canReview) {
+        reviewSheet(r.book, head, getString(R.string.save), round.review, onDismiss = closed, top = rows) { save(it) }
+    } else {
+        Sheet(this).header(r.book.title, head, image = BookShelf.cover(this, r.book, dp(SHEET_COVER_DP))).note(rows)
+            .item(getString(R.string.save), bold = true) { save(null) }.item(getString(R.string.cancel)) {}.noClose()
+            .onDismiss(closed).show()
     }
 }
 
 /**
- * 완독 줄 [finishId] 의 완독한 날을 [day] 로 바꿀 수 있는가: 지금 기록과 오늘로 다시 본다(메뉴를 연 사이 다음 회차가 생겼거나 자정이 지났을 수 있다).
- * 바꿀 수 있으면 null, 아니면 지금 범위를 담은 안내.
+ * 회차 메뉴의 `저장`: [round] 의 별점·감상(null 이면 그대로)과 고른 완독한 날 [day]·읽기 시작한 날 [start](바뀐 것만). 날은 저장하는 순간의 기록으로 다시 확인하고,
+ * 받지 못한 날은 그 줄 이름과 안내를 [reject] 에. 무엇이든 저장했으면 true.
  */
-private fun Context.finishDayError(r: BookRecord, finishId: Long, day: LocalDate?): String? {
+private fun Context.saveRound(
+    r: BookRecord, round: BookRecord.Round, review: Review?, day: LocalDate?, start: LocalDate?, reject: (Pair<Int, String>) -> Unit,
+): Boolean {
+    var changed = false
+    var to = round.to
+    var stale = false
+    val finishId = round.finishId
+    // 완독한 회차는 그 완독 줄(id)에: 완독한 날은 고쳤을 때만, 저장하는 순간의 기록으로 다시 확인해서(메뉴를 연 사이 다음 회차가 시작했을 수 있다)
+    if (finishId != null) {
+        val moved = day.takeIf { it != round.to }
+        val error = moved?.let { finishDayError(r, round, it) }
+        if (error != null) reject(R.string.finish_day to error)
+        else if (moved != null) to = moved
+        BookShelf.setFinish(this, r.book.id, finishId, review ?: round.review ?: Review(), moved.takeIf { error == null })
+        changed = true
+    } else if (review == null) stale = staleTitleOnly(r)
+    else when (saveRoundReview(r, round, review)) {
+        Saved.YES -> changed = true
+        Saved.NO -> Unit
+        // 목록에 없던 책인데 같은 제목의 책이 생겼다: 시작한 날도 저장하지 않는다(닫힌 뒤 회차 메뉴의 then() 이 지금 상태로 다시 띄운다)
+        Saved.STALE -> stale = true
+    }
+    // 읽기 시작한 날은 고쳤을 때만, 저장한 완독한 날까지의 범위로 다시 확인해서
+    start.takeIf { it != round.from && !stale }?.let { began ->
+        val error = startDayError(r, round, began, to)
+        if (error != null) reject(R.string.start_day to error)
+        else { saveBegan(r, round, began); changed = true }
+    }
+    return changed
+}
+
+private const val DAY_ROW_GAP_DP = 14
+
+/**
+ * 회차 메뉴를 연 뒤의 지금 기록과 그 안의 그 회차: 완독한 회차는 그 완독 줄로(없어졌으면 null), 진행 중 회차는 같은 순번([BookRecord.roundIn]).
+ * 누르는·저장하는 순간에 다시 본다(메뉴를 연 사이 다음 회차가 생겼거나 다른 화면에서 완독했을 수 있다).
+ */
+private fun Context.roundNow(r: BookRecord, round: BookRecord.Round): Pair<BookRecord, BookRecord.Round>? {
     val now = r.reload(this)
-    val today = LocalDate.now()
-    val round = now.rounds.firstOrNull { it.finishId == finishId } ?: return getString(R.string.date_invalid, "")
-    return if (day != null && now.canFinishOn(round, day, today)) null else getString(R.string.date_invalid, finishDayRangeText(now, round, today))
+    val id = round.finishId
+    val cur = if (id == null) r.roundIn(now, round) else now.rounds.firstOrNull { it.finishId == id }
+    return cur?.let { now to it }
 }
 
 /**
- * 회차 메뉴의 `완독한 날 · 2025년 5월 10일 ›` 줄. 누르면 날짜 한 줄 입력(지금 날짜를 채워, 날짜 자판)이 위에 뜨고, 고른 날을 [onPick] 에.
- * 고를 수 있는 날은 [BookRecord.finishDayRange].
+ * 회차 [round] 의 완독한 날을 [day] 로 바꿀 수 있는가: 지금 기록과 오늘로 다시 본다(메뉴를 연 사이 다음 회차가 생겼거나 자정이 지났을 수 있다).
+ * 바꿀 수 있으면 null, 아니면 지금 범위를 담은 안내.
+ */
+private fun Context.finishDayError(r: BookRecord, round: BookRecord.Round, day: LocalDate?): String? {
+    val (now, cur) = roundNow(r, round) ?: return getString(R.string.date_invalid, "")
+    val today = LocalDate.now()
+    return if (day != null && now.canFinishOn(cur, day, today)) null else getString(R.string.date_invalid, finishDayRangeText(now, cur, today))
+}
+
+/** 회차 [round] 의 읽기 시작한 날을 [day] 로 바꿀 수 있는가(완독한 날 [to] 까지, [finishDayError] 처럼 지금 기록과 오늘로). 되면 null, 아니면 안내. */
+private fun Context.startDayError(r: BookRecord, round: BookRecord.Round, day: LocalDate?, to: LocalDate?): String? {
+    val (now, cur) = roundNow(r, round) ?: return getString(R.string.date_invalid, "")
+    val today = LocalDate.now()
+    val end = to ?: cur.to
+    return if (day != null && now.canStartOn(cur, day, today, end)) null else getString(R.string.date_invalid, startDayRangeText(now, cur, today, end))
+}
+
+/** 회차 [round] 의 읽기 시작한 날을 [day] 로 저장한다(그 회차가 그사이 완독됐으면 그 완독 줄에, 목록에 없던 책은 나간 책으로 적어 두고) */
+private fun Context.saveBegan(r: BookRecord, round: BookRecord.Round, day: LocalDate) {
+    val finishId = roundNow(r, round)?.second?.finishId
+    withBook(r) { BookShelf.setBegan(this, it, finishId, day) }
+}
+
+/**
+ * 회차 메뉴의 날짜 줄 `읽기 시작한 날 · 2025년 4월 20일 ›`(모르면 `모름 ›`). 누르면 날짜 한 줄 입력(머리 [label] / [sub], 지금 날짜를 채워,
+ * 날짜 자판)이 위에 뜨고, 고른 날을 [onPick] 에. 입력 아래 안내는 [hint](고를 수 있는 범위), 받지 못하면 [error] 의 안내.
  * 실제로 바꾸는 것은 회차 메뉴의 `저장`(취소하면 그대로).
  */
-private fun Context.finishDayRow(r: BookRecord, finishId: Long, head: String, initial: LocalDate, onPick: (LocalDate) -> Unit): View {
+private fun Context.dayRow(
+    label: Int, sub: String, initial: LocalDate?, hint: () -> String, error: (LocalDate?) -> String?, onPick: (LocalDate) -> Unit,
+): View {
     val value = text("", 21f)
-    fun show(d: LocalDate) { value.text = "${d.format(dateFormat(R.string.date_year_fmt))}  ›" }
+    fun show(d: LocalDate?) { value.text = "${d?.format(dateFormat(R.string.date_year_fmt)) ?: getString(R.string.day_unknown)}  ›" }
     show(initial)
     var picked = initial
     return hbox().apply {
-        addView(text(getString(R.string.finish_day), 18f, color = Ui.GRAY), lp(0, WRAP, 1f))
+        addView(text(getString(label), 18f, color = Ui.GRAY), lp(0, WRAP, 1f))
         addView(value)
         setOnClickListener {
-            // 범위는 누르는 순간의 기록과 오늘로(메뉴를 연 사이 다음 회차가 생겼거나 자정이 지났을 수 있다)
-            val now = r.reload(this@finishDayRow)
-            val range = now.rounds.firstOrNull { it.finishId == finishId }?.let { finishDayRangeText(now, it, LocalDate.now()) }.orEmpty()
-            Sheet(this@finishDayRow).header(getString(R.string.finish_day), "${r.book.title}  ·  $head")
-                .dateInput(picked.format(DOTTED), getString(R.string.date_hint, range), check = { v -> finishDayError(r, finishId, parseDay(v)) }) { v ->
+            Sheet(this@dayRow).header(getString(label), sub)
+                .dateInput(picked?.format(DOTTED).orEmpty(), getString(R.string.date_hint, hint()), check = { v -> error(parseDay(v)) }) { v ->
                     parseDay(v)?.let { picked = it; show(it); onPick(it) }
                 }
                 .show()
@@ -261,6 +338,13 @@ private fun Context.finishDayRow(r: BookRecord, finishId: Long, head: String, in
 internal fun Context.finishDayRangeText(r: BookRecord, round: BookRecord.Round, today: LocalDate): String {
     val (earliest, latest) = r.finishDayRange(round, today)
     return getString(R.string.date_range, (earliest ?: BookRecord.EARLIEST_DAY).format(DOTTED), latest.format(DOTTED))
+}
+
+/** 읽기 시작한 날을 고칠 수 있는 범위 글자(완독한 날 [to] 까지): 앞 회차가 있으면 `2025.05.10 – 2026.11.01 사이`, 첫 회차면 `2026.11.01 까지` */
+internal fun Context.startDayRangeText(r: BookRecord, round: BookRecord.Round, today: LocalDate, to: LocalDate?): String {
+    val (earliest, latest) = r.startDayRange(round, today, to)
+    return if (earliest == null) getString(R.string.date_until, latest.format(DOTTED))
+    else getString(R.string.date_range, earliest.format(DOTTED), latest.format(DOTTED))
 }
 
 /** 완독한 날 입력·안내의 날짜 꼴 `2026.10.12` */
@@ -299,7 +383,7 @@ internal enum class Saved { YES, NO, STALE }
 internal fun Context.saveRoundReview(r: BookRecord, round: BookRecord.Round, review: Review): Saved {
     round.finishId?.let { BookShelf.setFinish(this, r.book.id, it, review); return Saved.YES }
     if (r.state == State.TITLE_ONLY) {
-        if (BookShelf.findByTitle(this, r.book.title) != null || BookShelf.findLivePast(this, r.book.title) != null) return Saved.STALE
+        if (staleTitleOnly(r)) return Saved.STALE
         if (review.isEmpty) return Saved.NO
     } else {
         r.roundIn(r.reload(this), round)?.finishId?.let { BookShelf.setFinish(this, r.book.id, it, review); return Saved.YES }
@@ -307,6 +391,10 @@ internal fun Context.saveRoundReview(r: BookRecord, round: BookRecord.Round, rev
     withBook(r) { BookShelf.setReview(this, it, review) }
     return Saved.YES
 }
+
+/** 목록에 없던 책인데 열어 둔 사이 같은 제목의 책이 생겼다(자동 추가·되살림): 어느 책·회차에 붙일지 정할 수 없어 저장하지 않는다 */
+private fun Context.staleTitleOnly(r: BookRecord): Boolean =
+    r.state == State.TITLE_ONLY && (BookShelf.findByTitle(this, r.book.title) != null || BookShelf.findLivePast(this, r.book.title) != null)
 
 /** 상세의 별점·감상 칸에서 저장한 뒤: 저장했으면 [onChange], 열어 둔 사이 책이 바뀌었으면 지금 상태로 상세를 다시 */
 private fun Context.afterSave(saved: Saved, r: BookRecord, onChange: () -> Unit) {
@@ -328,7 +416,8 @@ private fun Context.headSheet(r: BookRecord, sub: String?): Sheet {
 /**
  * 기록 칸: 마지막 회차 한 줄 `2회`(회색, 회차가 둘 이상일 때만) · 기간(검정, `8월 20일 – 9월 6일`, 진행 중이면 `10월 8일부터`,
  * 올해가 아니면 해를 붙인다) · 읽은 시간(회색, 오른쪽 정렬). 완독한 적이 있으면 그 아래 회색 `완독 4회 · 마지막 10월 8일`과
- * 오른쪽에 회차가 둘 이상이면 `전체 기록 ›`, 완독한 회차 하나뿐이면 `고치기 ›`. `완독` 글자는 쓰지 않는다(표지의 띠가 말한다). 보일 것이 없으면 null.
+ * 오른쪽에 회차가 둘 이상이면 `전체 기록 ›`, 완독한 회차 하나뿐이면 `고치기 ›`. 완독한 적이 없으면 그 줄이 없으니 시간 뒤에 `›`
+ * (누르면 회차 메뉴). `완독` 글자는 쓰지 않는다(표지의 띠가 말한다). 보일 것이 없으면 null.
  */
 private fun Context.recordView(r: BookRecord): View? {
     val last = r.lastRound
@@ -339,7 +428,8 @@ private fun Context.recordView(r: BookRecord): View? {
         if (hasRow) addView(hbox().apply {
             last.nth?.let { addView(text(getString(R.string.finish_nth, it), 18f, color = Ui.GRAY), lp(WRAP, WRAP).apply { marginEnd = dp(14) }) }
             addView(text(recordPeriod(last, today), 18f), lp(0, WRAP, 1f))
-            addView(text(roundTime(last.ms).orEmpty(), 18f, color = Ui.GRAY).apply { gravity = Gravity.END }, lp(WRAP, WRAP).apply { marginStart = dp(12) })
+            val time = listOfNotNull(roundTime(last.ms), "›".takeUnless { r.finished }).joinToString("  ")
+            addView(text(time, 18f, color = Ui.GRAY).apply { gravity = Gravity.END }, lp(WRAP, WRAP).apply { marginStart = dp(12) })
         }, lp(MATCH, WRAP).apply { topMargin = dp(6) })
         finishSummary(r, today)?.let { summary ->
             addView(hbox().apply {
@@ -415,7 +505,7 @@ internal fun Context.period(s: BookRecord.Round, withYear: Boolean): String {
  * 굵은 `완독 5회` + 회색 `· 모두 21시간 7분 · 2023년부터`(회차 시간의 합, 시작한 해는 여러 해에 걸쳐 읽었을 때만),
  * 그 아래 최근 회차부터 세로 타임라인([Timeline]): 줄마다 해를 붙인 기간 / 회색 `5회 · 3시간 12분`(진행 중이면 `2회 · 진행 중 · …`)과
  * 그 회차의 작은 별 / 그 회차의 감상 한 줄(넘치면 `…`), 남긴 것이 없으면 옅은 회색 `별점·감상 남기기 ›`. 완독한 회차는 채운 점, 진행 중은 테두리만.
- * 줄을 누르면 그 회차 메뉴([editRound]: 완독한 날·별점·감상)를 띄우고 닫으면 다시 전체 기록으로.
+ * 줄을 누르면 그 회차 메뉴([editRound]: 읽기 시작한 날·완독한 날·별점·감상)를 띄우고 닫으면 다시 전체 기록으로.
  * 화면에 다 들어가지 않으면 쪽으로 나눠 요약 줄 오른쪽에 `‹ 1 / 2 ›`(눌러서 넘김). 닫으면(닫기·뒤로 가기·바깥) 상세로 돌아간다([back]).
  */
 private fun Context.showHistory(r: BookRecord, sub: String?, onChange: () -> Unit, back: () -> Unit) {

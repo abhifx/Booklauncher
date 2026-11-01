@@ -22,7 +22,7 @@ import java.time.YearMonth
  * 한 번이라도 완독한 책은 표지가 어디에 놓이든(격자·목록·상세) 오른쪽 위 모서리를 가로지르는 `완독` 띠. 완독한 날은 모두 남고
  * 상세에 회차마다 기간이 나온다. 다시 읽어도 완독 기록은 그대로다.
  * 하단 왼쪽 `목록 · 격자`, 가운데 `전체 · 완독`(그해 완독한 책만)으로 바꾸고 기억한다. 책을 누르면 홈과 같은 책 상세([showBookDetail]).
- * 제목 오른쪽 `10월 결산 ›`(지난해를 보고 있으면 그해 12월)은 ⑮ 월간 결산([RecapActivity]).
+ * 아래 줄 오른쪽 `10월 결산 ›`(지난해를 보고 있으면 그해 12월)은 ⑮ 월간 결산([RecapActivity]). 여러 쪽이면 쪽 표시는 제목 줄 오른쪽(`2026 ▾` 왼쪽).
  */
 class YearBooksActivity : EinkActivity() {
     /** 목록·격자(줄 높이가 달라 따로 두고 하나만 보인다) */
@@ -49,8 +49,9 @@ class YearBooksActivity : EinkActivity() {
     /** 제목 옆 권수(모든 앱의 앱 수와 같은 꼴). 지금 거른 목록의 수 */
     private lateinit var titleCount: TextView
     private lateinit var yearPick: TextView
-    /** 제목 줄과 그 오른쪽 `10월 결산 ›`(제목 줄에 다 들지 않으면 글자를 줄인다) */
+    /** 제목 줄(쪽 표시가 다 들지 않으면 글자를 줄인다) */
     private lateinit var titleBar: android.widget.LinearLayout
+    /** 아래 줄 오른쪽 `10월 결산 ›` */
     private lateinit var recapLink: TextView
 
     /** 한 줄: 책의 기록, 그해 마지막으로 읽은 날과 완독한 날 중 늦은 날(목록 순서), 그해 완독했는가(`완독` 거르기) */
@@ -63,13 +64,16 @@ class YearBooksActivity : EinkActivity() {
         super.onCreate(savedInstanceState)
         val root = vbox()
         root.addView(titleRow("", Palette.Area.LIBRARY) { finish() }.apply {
-            // 제목 줄: `‹` · 제목 · 권수 · (빈 자리) · `2026 ▾`(고를 해가 둘 이상일 때)
+            // 제목 줄: `‹` · 제목 · 권수 · (빈 자리) · 쪽 `‹ 1 / 2 ›`(여러 쪽일 때) · `2026 ▾`(고를 해가 둘 이상일 때)
             titleText = getChildAt(1) as TextView
             titleCount = text("", 21f, color = Ui.GRAY)
             addView(titleCount, lp(WRAP, WRAP).apply { marginStart = dp(14); topMargin = dp(6) })
             addView(View(context), lp(0, 0, 1f))
-            recapLink = text("", 17f, Ui.bold).apply { setPadding(dp(16), dp(20), 0, dp(20)) }
-            addView(recapLink, lp(WRAP, WRAP))
+            pageText = text("", 21f).apply {
+                setPadding(dp(16), dp(20), 0, dp(20))
+                pagesClick { rows }
+            }
+            addView(pageText, lp(WRAP, WRAP))
             yearPick = text("", 21f, Ui.bold).apply { setPadding(dp(16), dp(20), 0, dp(20)) }
             addView(yearPick, lp(WRAP, WRAP))
             titleBar = this
@@ -108,12 +112,12 @@ class YearBooksActivity : EinkActivity() {
             setOnClickListener { prefs.yearFinishedOnly = !prefs.yearFinishedOnly; render(); rows.showPage(0) }
         }
         footer.addView(filterToggle, FrameLayout.LayoutParams(WRAP, MATCH, Gravity.CENTER_HORIZONTAL))
-        pageText = text("", 21f).apply {
+        // 오른쪽 `10월 결산 ›`: ⑮ 월간 결산(올해면 이번 달, 지난해면 그해 12월)
+        recapLink = text("", 21f, Ui.bold).apply {
             gravity = Gravity.CENTER_VERTICAL
             setPadding(dp(24), 0, dp(Ui.MARGIN), 0)
-            pagesClick { rows }
         }
-        footer.addView(pageText, FrameLayout.LayoutParams(WRAP, MATCH, Gravity.END))
+        footer.addView(recapLink, FrameLayout.LayoutParams(WRAP, MATCH, Gravity.END))
         root.addView(footer, lp(MATCH, dp(Ui.FOOTER_DP)))
         for (r in listOf(listRows, gridRows)) r.onPageChanged = { if (r === rows) showPage() }
         setContentView(root)
@@ -145,6 +149,11 @@ class YearBooksActivity : EinkActivity() {
 
     private fun showPage() {
         pageText.text = pageLabel(rows)
+        // 한 쪽이면 자리(왼쪽 여백)도 비운다
+        pageText.visibility = if (pageText.text.isEmpty()) View.GONE else View.VISIBLE
+        // 제목 줄에 다 들지 않으면(좁은 화면·키운 글자·영어 제목과 `2026 ▾`) 쪽 표시를 줄인다. 쪽·해가 바뀌면 다시 재므로 처음 크기부터.
+        pageText.setSp(21f)
+        fitTitleLink(titleBar, pageText)
     }
 
     /** [state] 는 이미 센 [recordState](돌아왔을 때) */
@@ -167,9 +176,6 @@ class YearBooksActivity : EinkActivity() {
         val recapMonth = if (year == today.year) YearMonth.from(today) else YearMonth.of(year, 12)
         recapLink.text = RecapActivity.link(this, recapMonth)
         recapLink.setOnClickListener { startActivity(RecapActivity.intent(this, recapMonth)) }
-        // 제목 줄에 다 들지 않으면(좁은 화면·키운 글자·영어 제목과 `2026 ▾`) 글자를 줄인다. 해·언어가 바뀌면 다시 재므로 처음 크기부터.
-        recapLink.setSp(17f)
-        fitTitleLink(titleBar, recapLink)
         yearPick.setOnClickListener {
             choose(getString(R.string.pick_year), years.map { it.toString() }, years.indexOf(year)) {
                 year = years[it]

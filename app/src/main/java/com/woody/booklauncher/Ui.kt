@@ -244,7 +244,7 @@ fun Context.titleRow(title: String, area: Palette.Area = Palette.Area.SETTINGS, 
 
 /**
  * 제목 줄 [row] 가 화면 폭에 다 들지 않으면(기기가 밀도를 덮어써 폭이 좁은 화면·키운 글자) 오른쪽 끝이 잘리지 않게 [link] 글자를 줄인다.
- * 원래 크기의 [LINK_MIN_RATIO] 아래로는 줄이지 않는다(독서 기록 `올해 읽은 책 ›`, 올해 읽은 책 `10월 결산 ›`).
+ * 원래 크기의 [LINK_MIN_RATIO] 아래로는 줄이지 않는다(독서 기록 `올해 읽은 책 ›`, 올해 읽은 책의 쪽 표시 `‹ 1 / 2 ›`).
  */
 fun Context.fitTitleLink(row: View, link: TextView) {
     row.measure(0, 0)

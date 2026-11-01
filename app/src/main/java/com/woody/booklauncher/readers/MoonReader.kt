@@ -1,17 +1,14 @@
 package com.woody.booklauncher.readers
 
-import com.woody.booklauncher.WatchLog
-import com.woody.booklauncher.normTitle
-import java.io.File
-
 import android.view.accessibility.AccessibilityNodeInfo
 
 /**
  * 문리더(내 파일을 여는 리더): 서재(최근 목록·책장, 목록·격자 보기 같은 이름) 칸에 제목 `myBookName`·표지 `myBookImage`·
  * 진행률 `progresTv`, 목록 보기에 저자 `myBookAuthor`(격자 보기는 저자순 정렬일 때만 `myAuthor`). 칸을 누르면 알림이 온다.
  * 책장의 묶음 칸은 진행률 줄을 감춘다. 홈 탭의 '최근 목록' 줄과 책장 보기(`shelfBookList`, 나무 선반)는 칸에 표지(`myBookImage`)만 있어(누르면 빈 알림)
- * 읽는 화면 메뉴의 제목(`txtTitle`)으로 안다. 그 칸들의 표지는 제목을 몰라 자르지 못해(책장 보기는 나무 바탕·⋮ 점도 같이 잘린다), 책 파일 읽기를
- * 허용했으면 저장소에서 그 제목의 EPUB 을 찾아 그 표지를 쓴다([MoonReaderReader]. 문리더는 연 파일을 어디에도 내놓지 않는다).
+ * 읽는 화면 메뉴의 제목(`txtTitle`)으로 안다. 그 칸들의 표지는 제목을 몰라 자르지 못한다(책장 보기는 나무 바탕·⋮ 점도 같이 잘린다): 표지는
+ * 최근 목록 화면·책장 목록(목록·격자 보기)에서 연 책만. 문리더는 연 파일을 어디에도 내놓지 않아(10.8 코드) 책 파일로는 표지를 꺼내지도, 홈에서 그 책을 바로 열지도 않는다
+ * (1.7.2 까지는 메뉴 제목으로 저장소 전체에서 EPUB 을 찾아 표지를 꺼냈는데, 같은 책이 여러 폴더에 있으면 맞는 파일인지 알 수 없어 뺐다).
  * 읽는 화면(본문은 직접 그리는 뷰라 글자가 드러나지 않는다) 아래 상태 줄 오른쪽 `statusRight` 에 진행률(`30.9%`, 설정에 따라
  * `12/300`), 메뉴에 `txtTextViewPercent`(`30%`). 상태 줄 가운데(`statusMiddle`, `2장 (5/8)`)는 장 안의 쪽이라 쓰지 않는다.
  * 유료판(`com.flyersoft.moonreaderp`)은 같은 코드로 만든 앱이라 요소 이름은 같고, 화면 클래스도 그 패키지 아래에 있다
@@ -24,10 +21,7 @@ open class MoonReaderApp(pkg: String) : ReaderApp(
     titles = listOf("myBookName"), thumbs = listOf("myBookImage"), authors = listOf("myBookAuthor", "myAuthor"), progress = "progresTv", due = null,
     viewerProgress = listOf("statusRight", "txtTextViewPercent"), viewerTitle = "txtTitle",
     eagerCovers = true,
-    needsBookFiles = true,
 ) {
-    override fun newAdapter(): ReaderAdapter = MoonReaderReader(this)
-
     /**
      * 진행률이 없는 칸은 책이 아니다(책장의 묶음 칸은 진행률 줄을 감춘다). 보이지 않는 칸도 아니다: 한 번 연 '최근 목록' 화면이 책장 보기 뒤에
      * 남아 있어, 책장 보기에서 누른 자리가 그 화면의 다른 책 칸으로 잡힌다.
@@ -51,41 +45,3 @@ object MoonReader : MoonReaderApp("com.flyersoft.moonreader")
 
 /** 유료판(Moon+ Reader Pro) */
 object MoonReaderPro : MoonReaderApp("com.flyersoft.moonreaderp")
-
-/** 문리더의 판단과 기억: 바탕(메뉴 제목)에 더해, 메뉴 제목으로 안 책이 표지·파일이 없으면 저장소에서 그 제목의 EPUB 을 찾아 그 책의 파일로 적는다 */
-class MoonReaderReader(app: MoonReaderApp) : ScreenReader(app) {
-    /** 저장소에서 책 파일을 찾아 본 책(정리한 제목). 서비스가 살아 있는 동안 한 권에 한 번만 */
-    private val fileSearched = mutableSetOf<String>()
-
-    override fun onViewer(ctx: AppContext) {
-        val shown = readShown(ctx) ?: return
-        logShown(ctx, shown)
-        retryProgress(ctx, shown.progress)
-        recordShown(ctx, shown)
-        // 기록했는지와 상관없이(편 책 기록의 책이 이미 이 책이어도)
-        shown.title?.let { searchFile(ctx, it, shown.author) }
-    }
-
-    /**
-     * 연 파일을 내놓지 않는 리더의 책 [title]: 표지도 파일도 모르면 저장소에서 그 제목의 EPUB 을 찾아
-     * 그 책의 파일로 적는다(표지는 그릴 때 꺼낸다). 저장소를 훑으므로 뒤에서, 책마다 한 번만(책 파일 읽기를 허용하기 전에는 세지 않는다).
-     */
-    private fun searchFile(ctx: AppContext, title: String, author: String) {
-        val key = normTitle(title)
-        if (key in fileSearched) return
-        val lookup = ctx.recorder.lookup
-        // 이 앱의 책만(같은 제목의 다른 앱 책에 이 앱의 파일을 적지 않는다)
-        val book = lookup.byTitle(title)?.takeIf { it.app?.substringBefore('/') == ctx.pkg } ?: return
-        if (lookup.hasCover(book.id) || lookup.filePath(book.id) != null || !BookFiles.canRead(ctx.context)) return
-        fileSearched += key
-        ctx.inBackground({ BookFiles.findEpub(title, author) }) { result ->
-            val path = result.getOrNull() ?: return@inBackground
-            ctx.log(WatchLog.Kind.FILE, title, File(path).name)
-            // 찾는 사이 책을 빼거나(다른 앱으로 되살렸을 수도 있다) 다른 파일을 적었으면 두지 않고, 다음에 다시 찾는다.
-            // 홈에서 그 파일을 바로 열고, 표지가 없으면 그릴 때 그 파일에서 꺼낸다
-            val still = lookup.get(book.id)?.takeIf { it.app?.substringBefore('/') == ctx.pkg && lookup.filePath(it.id) == null }
-            if (still != null) ctx.recorder.setFile(still.id, path) else fileSearched -= key
-        }
-    }
-
-}
