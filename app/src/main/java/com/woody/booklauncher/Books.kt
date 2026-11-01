@@ -330,12 +330,10 @@ fun ReadingDays.firstReadDays(): Map<String, LocalDate> {
 }
 
 /**
- * 읽고 있는 책 목록(권수 제한 없음, 1.5.3 까지는 10권). 앞 [HOME]권이 홈에 바로 보이고(맨 앞 책은 크게, 나머지는 함께 읽는 책 다음 쪽), 맨 앞 책의 앱이 '읽고 있는 앱'이다.
+ * 읽고 있는 책 목록(권수 제한 없음, 1.5.3 까지는 10권). 맨 앞 책은 홈 위에, 나머지는 홈의 `내 책장` 격자에 쪽으로 보이고, 맨 앞 책의 앱이 '읽고 있는 앱'이다.
  * 목록은 DB([Db]) `shelf`, 나간 책은 `past`, 표지는 books/<id>.jpg.
  */
 object BookShelf {
-    /** 홈 책 자리 한 쪽의 책 수: 맨 앞 책 + 함께 읽는 책 3칸(나머지는 함께 읽는 책 다음 쪽) */
-    const val HOME = 4
     /** 줄인 표지(바이트로 재서 앱 메모리의 1/8 까지. 권수로 재면 큰 홈 표지가 작은 목록 표지 몇 장에 밀려난다) */
     private val covers = object : LruCache<String, Bitmap>((Runtime.getRuntime().maxMemory() / 8).toInt()) {
         override fun sizeOf(key: String, value: Bitmap) = value.byteCount

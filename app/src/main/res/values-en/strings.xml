@@ -174,7 +174,8 @@
     <string name="pick_reader_link">Choose reading app  ›</string>
     <string name="change_reader">Change reading app</string>
     <string name="no_network">Can\'t reach the internet. Check Wi-Fi.</string>
-    <string name="also_reading">Also reading</string>
+    <string name="also_reading">My shelf</string>
+    <string name="home_shelf_empty">Open more books and they line up here.</string>
     <string name="finish_book">Finished</string>
     <string name="read_again">Read again</string>
     <string name="forget_book">Remove from log</string>

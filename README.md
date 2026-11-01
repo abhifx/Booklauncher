@@ -2,14 +2,14 @@
 
 **An E Ink launcher for Android e-readers.** The book you're reading stays on Home, your shelf is a cover grid, and reading time, stats, widgets and apps are one tap away.
 
-BookLauncher is a fork of [Pebble Desk](https://github.com/hissinger/pebble-desk), rebuilt around a lower, more visual home screen: one row of favorites, a 3-column `Also reading` grid, and a bottom bar with **All apps · Stats · Widgets · Settings**.
+BookLauncher is a fork of [Pebble Desk](https://github.com/hissinger/pebble-desk), rebuilt around a lower, more visual home screen: one row of favorites, a bookshelf-style `My shelf` with fixed-size covers, and a bottom bar with **All apps · Stats · Widgets · Settings**.
 
-<p align="center"><img src="docs/screenshots/v1-home.png" width="340" alt="BookLauncher home on HiBreak: the current book, a 3-column Also reading grid, one row of favorite apps, and the bottom icon bar"></p>
+<p align="center"><img src="docs/screenshots/v1-home.png" width="340" alt="BookLauncher home on HiBreak: the current book, a bookshelf cover grid with fixed-size covers, one row of favorite apps, and the bottom icon bar"></p>
 
 ## What's in version 1
 
-- **The current book, on Home** — large cover, title, author, reading progress and the reading app. Tap anywhere on it to open the book.
-- **Also reading as a cover grid** — 3 columns, with the book title and app name below each cover. One page holds up to 9 books; swipe or use the page keys for more.
+- **The current book, on Home** — its cover stays the same size as your library grows, with title, author, reading progress and the reading app. Tap it to open the book.
+- **My shelf as a cover grid** — the other books in a bookshelf-style grid (up to four columns by two rows, up to 8 a page). Covers keep their size as you add books; the shelf pages instead. Swipe or use the page keys for more.
 - **One row of favorites** — 5 apps per page, in your own order. List or grid view. Long-press to rename, change the icon or remove.
 - **Bottom bar** — All apps, reading Stats, Widgets and Settings, with a little breathing room above the device edge.
 - **Widgets** — a large E Ink media-control pad for audiobooks and TTS, plus Android widgets added from a paged picker. One widget per page, long-press to remove.
@@ -88,7 +88,7 @@ Design and behavior are specified in [DESIGN.md](DESIGN.md); device notes are in
 
 ## License
 
-BookLauncher is a fork of Pebble Desk and keeps its license and `Required Notice`. Changes in this fork: the BookLauncher name and package, the one-row Favorites section, the 3-column `Also reading` grid, the bottom icon bar, the compact top bar, and the Widgets screen.
+BookLauncher is a fork of Pebble Desk and keeps its license and `Required Notice`. Changes in this fork: the BookLauncher name and package, the one-row Favorites section, the bookshelf-style `My shelf` with fixed-size covers, the bottom icon bar, the compact top bar, and the Widgets screen.
 
 [PolyForm Noncommercial 1.0.0](LICENSE). Individuals (hobby, study, research) and noncommercial organizations (schools, public institutions, charities, etc.) may use, modify and share it freely. When sharing, pass on this license and the `Required Notice` line.
 

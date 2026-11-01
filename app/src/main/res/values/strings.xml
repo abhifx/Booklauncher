@@ -178,7 +178,8 @@
     <string name="pick_reader_link">읽고 있는 앱 고르기  ›</string>
     <string name="change_reader">읽고 있는 앱 바꾸기</string>
     <string name="no_network">인터넷에 연결할 수 없습니다. 와이파이를 확인하세요.</string>
-    <string name="also_reading">함께 읽는 책</string>
+    <string name="also_reading">내 책장</string>
+    <string name="home_shelf_empty">책을 더 펴면 이 자리에 같은 크기로 쌓입니다.</string>
     <string name="finish_book">완독</string>
     <string name="read_again">다시 읽기</string>
     <string name="forget_book">기록에서 지우기</string>
