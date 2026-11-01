@@ -39,6 +39,8 @@ class HomeActivity : EinkActivity() {
      * 화면이 작아졌으면(BOOX 앱 최적화의 앱별 DPI) 고정하지 않고 글자 · 간격대로 잡는다(글자를 줄여 내 책장 줄을 맞출 수 있게).
      */
     private val fixedFrame by lazy { Ui.densityApplied(this) }
+    /** 홈 화면의 좌우 여백. 다른 화면(40dp)보다 좁혀 책장이 화면을 더 쓰게 한다. */
+    private val homeMargin get() = dp(HOME_MARGIN_DP)
 
     /** 틀 높이를 잴 때: 고정이면 기준 크기 글자로, 아니면 지금 글자대로 */
     private fun <T> frameText(block: () -> T): T = if (fixedFrame) Ui.atBaseText(block) else block()
@@ -57,7 +59,7 @@ class HomeActivity : EinkActivity() {
 
     /** 자주 쓰는 앱 격자 칸 수: 가로 페블처럼 오른쪽 칸이 좁으면 3칸 */
     private val gridColumns by lazy {
-        if (wide && resources.displayMetrics.widthPixels - heroPaneWidth() - 2 * dp(Ui.MARGIN) < dp(GRID_NARROW_DP)) 3 else GRID_COLUMNS
+        if (wide && resources.displayMetrics.widthPixels - heroPaneWidth() - 2 * homeMargin < dp(GRID_NARROW_DP)) 3 else GRID_COLUMNS
     }
 
     /** 가로 화면 왼쪽(책) 칸 폭: 화면의 [HERO_PANE_RATIO], 세로 화면 폭까지 */
@@ -405,7 +407,7 @@ class HomeActivity : EinkActivity() {
                 super.dispatchDraw(canvas)
             }
         }.apply { orientation = LinearLayout.VERTICAL }
-        topBar = TopBarView(this, fixedFrame).apply { setOnClickListener { Device.openQuickSettings(this@HomeActivity) } }
+        topBar = TopBarView(this, fixedFrame, HOME_MARGIN_DP).apply { setOnClickListener { Device.openQuickSettings(this@HomeActivity) } }
         root.addView(topBar, lp(MATCH, WRAP))
 
         hero = FrameLayout(this)
@@ -427,7 +429,7 @@ class HomeActivity : EinkActivity() {
         // 가로면 상단 바로 아래라 조금 더 내린다. 쪽 표시는 목록을 만든 뒤 연결한다.
         val (favHeader, page) = pagedHeader(getString(R.string.favorites), if (wide) FAV_TITLE_TOP_WIDE_DP else 12) { favRows }
         favPage = page
-        favLine = hline(1)
+        favLine = hline(1, marginDp = HOME_MARGIN_DP)
         // BookLauncher: 세로·가로 모두 자주 쓰는 앱은 한 줄만(격자도 한 줄). 나머지 높이는 책 자리에 준다.
         favRows = PagedRows(this, if (fixedFrame) dp(Ui.ROW_DP) else rowDp(Ui.ROW_DP), fixedRows = FAV_ROWS).apply { header = listOf(favHeader, favLine) }
         if (wide) body.addView(favRows, lp(0, MATCH, 1f)) else root.addView(favRows, lp(MATCH, WRAP))
@@ -509,7 +511,7 @@ class HomeActivity : EinkActivity() {
             if (favs.isEmpty()) listOf {
                 text(getString(R.string.favorites_empty), 18f, color = Ui.LIGHT_GRAY, lines = 2).apply {
                     gravity = Gravity.CENTER_VERTICAL
-                    setPadding(dp(Ui.MARGIN), 0, dp(Ui.MARGIN), 0)
+                    setPadding(homeMargin, 0, homeMargin, 0)
                 }
             } else if (grid) favs.chunked(gridColumns).let { lines ->
                 // 한 쪽의 몇째 줄인지와, 그 쪽이 한 줄뿐인지(위 줄 모양으로 둔다). 한 쪽 줄 수는 그릴 때 정해져 있다(가로면 높이에 따라).
@@ -522,7 +524,7 @@ class HomeActivity : EinkActivity() {
             }
             else favs.map { app ->
                 {
-                    appRow(app, app.label, Ui.ROW_ICON_DP, Ui.ROW_SP, showIcon = icons).apply {
+                    appRow(app, app.label, Ui.ROW_ICON_DP, Ui.ROW_SP, showIcon = icons, marginDp = HOME_MARGIN_DP).apply {
                         setOnClickListener { AppStore.launch(this@HomeActivity, app) }
                         setOnLongClickListener { showAppMenu(app, rename = true) { refresh() }; true }
                     }
@@ -548,7 +550,7 @@ class HomeActivity : EinkActivity() {
             else -> Gravity.CENTER_VERTICAL
         }
         val inner = GRID_INNER_DP / 2
-        setPadding(dp(Ui.MARGIN), dp(if (first) GRID_OUTER_DP else inner), dp(Ui.MARGIN), dp(if (last) GRID_OUTER_DP else inner))
+        setPadding(homeMargin, dp(if (first) GRID_OUTER_DP else inner), homeMargin, dp(if (last) GRID_OUTER_DP else inner))
         // 이름은 한 줄(길면 `…`)이라 글자를 키워도 이름 칸은 한 줄만큼만 커진다. 남는 높이를 아이콘에 준다.
         val labelH = text("가", 13f).run { measure(0, 0); measuredHeight }
         val icon = (favRows.rowHeightPx - dp(GRID_OUTER_DP + inner + GRID_LABEL_GAP_DP) - labelH).coerceIn(dp(32), dp(GRID_ICON_MAX_DP))
@@ -573,7 +575,7 @@ class HomeActivity : EinkActivity() {
         val baseH = frameText { text(title, 13f, Ui.bold).run { measure(0, 0); measuredHeight } }
         layoutParams = lp(MATCH, dp(topDp) + baseH + dp(8))
         gravity = Gravity.BOTTOM
-        setPadding(dp(Ui.MARGIN), 0, dp(Ui.MARGIN), dp(8))
+        setPadding(homeMargin, 0, homeMargin, dp(8))
     }
 
     /**
@@ -584,7 +586,7 @@ class HomeActivity : EinkActivity() {
         val titleView = sectionTitle(title, topDp)
         val page = text("", 13f, Ui.bold, Ui.GRAY).apply {
             gravity = Gravity.BOTTOM
-            setPadding(dp(24), 0, dp(Ui.MARGIN), dp(8))
+            setPadding(dp(24), 0, homeMargin, dp(8))
             pagesClick(rows)
         }
         val header = hbox().apply {
@@ -671,7 +673,7 @@ class HomeActivity : EinkActivity() {
 
     /** 맨 위 책 표지 폭: 화면 모양으로만 정한다(책 수·쪽과 상관없다). */
     private fun heroCoverWidth(): Int {
-        val availW = heroWidth() - 2 * dp(Ui.MARGIN)
+        val availW = heroWidth() - 2 * homeMargin
         val wanted = when {
             !fixedFrame -> dp(COMPACT_COVER_DP)
             wide -> minOf(dp(HERO_COVER_MAX_DP), (availW * HERO_WIDE_RATIO).toInt())
@@ -689,7 +691,7 @@ class HomeActivity : EinkActivity() {
 
     /** 책장 격자 배치: 맨 앞 책 줄([heroH]) 아래 남는 높이에 들어가는 만큼 표지를 같은 크기로 잡는다. */
     private fun shelfGeometry(heroH: Int): ShelfGeometry {
-        val availW = heroWidth() - 2 * dp(Ui.MARGIN)
+        val availW = heroWidth() - 2 * homeMargin
         val gap = dp(SHELF_GAP_DP)
         // 격자 칸 아래 제목 두 줄(글자 크기 설정을 따른다)
         val labelH = text("가", SHELF_TITLE_SP, Ui.bold).run { measure(0, 0); measuredHeight } * 2 + dp(SHELF_TITLE_GAP_DP)
@@ -708,7 +710,8 @@ class HomeActivity : EinkActivity() {
         }
         // 그 표지가 서로 비슷한 간격으로 늘어서게 칸 수를 정하고(2~4칸), 칸이 모자라면 표지를 줄인다.
         val wantedCell = byHeight + 2 * dp(SHELF_INSET_DP)
-        val columns = ((availW + gap + wantedCell / 2) / (wantedCell + gap)).coerceIn(2, 4)
+        val denom = wantedCell + gap
+        val columns = ((availW + gap + denom - 1) / denom).coerceIn(2, 6)
         val cellW = (availW - (columns - 1) * gap) / columns
         val coverW = byHeight.coerceAtMost(cellW - dp(SHELF_INSET_DP)).coerceAtLeast(dp(SHELF_COVER_MIN_DP))
         return ShelfGeometry(coverW, columns, rows, gap)
@@ -719,9 +722,9 @@ class HomeActivity : EinkActivity() {
         val (header, pageText) = pagedHeader(getString(R.string.also_reading), SHELF_HEADER_TOP_DP) { alsoPaged }
         pageText.text = pageLabel(alsoPaged)
         addView(header)
-        addView(hline(1))
+        addView(hline(1, marginDp = HOME_MARGIN_DP))
         val cells = vbox().apply {
-            setPadding(dp(Ui.MARGIN), 0, dp(Ui.MARGIN), 0)
+            setPadding(homeMargin, 0, homeMargin, 0)
             shelfCells(pages[alsoPage], g)
         }
         addView(cells, lp(MATCH, WRAP))
@@ -751,9 +754,9 @@ class HomeActivity : EinkActivity() {
     private fun shelfEmpty(): View = vbox().apply {
         val (header, _) = pagedHeader(getString(R.string.also_reading), SHELF_HEADER_TOP_DP) { alsoPaged }
         addView(header)
-        addView(hline(1))
+        addView(hline(1, marginDp = HOME_MARGIN_DP))
         addView(text(getString(R.string.home_shelf_empty), 15f, color = Ui.LIGHT_GRAY, lines = 2).apply {
-            setPadding(dp(Ui.MARGIN), dp(14), dp(Ui.MARGIN), 0)
+            setPadding(homeMargin, dp(14), homeMargin, 0)
         })
     }
 
@@ -768,7 +771,7 @@ class HomeActivity : EinkActivity() {
 
     /** 맨 앞 책 자리(표지·제목): 컬러면 홈 색면([Palette.Area.HOME])을 칠하고 아래로 [fieldBottom] 만큼 넓힌다. */
     private fun View.heroField() {
-        setPadding(dp(Ui.MARGIN), dp(heroPad), dp(Ui.MARGIN), dp(fieldBottom))
+        setPadding(homeMargin, dp(heroPad), homeMargin, dp(fieldBottom))
         Palette.current.field(Palette.Area.HOME)?.let { setBackgroundColor(it) }
     }
 
@@ -844,7 +847,7 @@ class HomeActivity : EinkActivity() {
         // 칸 높이는 표지 높이. 키운 글자가 다 들지 않으면 아래 줄부터 그리지 않는다.
         val info = column()
         // 글자를 키웠을 때 긴 제목이 두 줄에서 잘리지 않게 줄인다(옆 칸 폭: 화면 − 좌우 여백 − 표지 − 사이).
-        val infoW = heroWidth() - 2 * dp(Ui.MARGIN) - (coverW + dp(2)) - dp(24)
+        val infoW = heroWidth() - 2 * homeMargin - (coverW + dp(2)) - dp(24)
         info.addView(text(book.title, 34f, Ui.heavy, Palette.current.title(Palette.Area.HOME), lines = 2).apply { fitLines(34f, infoW) }, lp(MATCH, WRAP).apply { topMargin = dp(6) })
         // 저자와 이북 앱 서재에서 읽어 온 진행률·반납일은 한 줄에 ` · ` 로 잇는다. 한 줄 높이라 책을 바꿔도
         // 맨 위 책 줄 높이(그 아래 책장 표지 크기)가 흔들리지 않는다.
@@ -889,7 +892,7 @@ class HomeActivity : EinkActivity() {
      * 아래 `내 책장` 격자에 높이를 넘긴다. 누르면 그 책의 앱을 연다.
      */
     private fun compactMainBook(book: ShelfBook, reading: AppEntry?, coverDp: Int): View = hbox().apply {
-        setPadding(dp(Ui.MARGIN), 0, dp(Ui.MARGIN), 0)
+        setPadding(homeMargin, 0, homeMargin, 0)
         Palette.current.field(Palette.Area.HOME)?.let { setBackgroundColor(it) }
         val coverW = dp(coverDp)
         addView(coverView(book, coverW), lp(coverW + dp(2), coverW * 3 / 2 + dp(2)))
@@ -927,6 +930,8 @@ class HomeActivity : EinkActivity() {
     companion object {
         /** 하단 아이콘 줄과 화면 맨 아래 사이 여백(기기 테두리에 붙어 보이지 않게) */
         private const val FOOTER_BOTTOM_GAP_DP = 12
+        /** 홈 좌우 여백(다른 화면은 [Ui.MARGIN] 40dp) */
+        private const val HOME_MARGIN_DP = 20
         /** 자주 쓰는 앱 고정 줄 수(BookLauncher: 한 줄만) */
         private const val FAV_ROWS = 1
         /** 켜져 있는데 안 붙은 서비스를 '멈춤'으로 보기까지 기다리는 때(앱이 막 뜨면 붙는 데 1~2초 걸린다) */
@@ -949,10 +954,10 @@ class HomeActivity : EinkActivity() {
         private const val STATUS_BAR_GAP_DP = 16
         /**
          * 책장 격자: 남는 높이에 들어가는 만큼 표지를 키우고(두 줄, 바형은 세 줄까지), 표지에 맞춰 2~4칸으로 나눈다.
-         * 좌우 여백은 다른 구역과 같은 [Ui.MARGIN], 칸 사이는 좁게 둔다.
+         * 좌우 여백은 홈 여백([HOME_MARGIN_DP]), 칸 사이는 좁게 둔다.
          */
-        private const val SHELF_GAP_DP = 10
-        private const val SHELF_INSET_DP = 14
+        private const val SHELF_GAP_DP = 6
+        private const val SHELF_INSET_DP = 6
         private const val SHELF_COVER_MAX_DP = 140
         private const val SHELF_COVER_MIN_DP = 56
         private const val SHELF_ROWS = 3

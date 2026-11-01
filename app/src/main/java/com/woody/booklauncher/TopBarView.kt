@@ -108,7 +108,7 @@ class Radios(val wifiOn: Boolean, val wifiLinked: Boolean, val btOn: Boolean, va
  *              10월 3일 토요일 · 100% · 와이파이 · BT · 조명 · ⑮
  * 안드로이드 상단바 대신 쓰므로 시계·배터리·와이파이 등을 직접 그린다.
  */
-class TopBarView(context: Context, private val fixedFrame: Boolean = true) : View(context) {
+class TopBarView(context: Context, private val fixedFrame: Boolean = true, private val marginDp: Int = Ui.MARGIN) : View(context) {
     private val logo: Drawable? = Crema.logo(context)
     /**
      * 로고가 없고 폭이 넉넉한 기기(HiBreak 등)는 시계 오른쪽·상태 줄 오른쪽의 두 줄 대신
@@ -239,8 +239,8 @@ class TopBarView(context: Context, private val fixedFrame: Boolean = true) : Vie
     }
 
     override fun onDraw(canvas: Canvas) {
-        val left = context.dp(Ui.MARGIN).toFloat()
-        val right = width - context.dp(Ui.MARGIN).toFloat()
+        val left = context.dp(marginDp).toFloat()
+        val right = width - context.dp(marginDp).toFloat()
         val clockBase = (drawPadTop + clockCap).toFloat()
 
         // 로고: 아랫선을 시계 글자 아랫선에 맞춘다.

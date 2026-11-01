@@ -43,7 +43,7 @@ adb install -r app/build/outputs/apk/release/BookLauncher-1.0.0-release.apk </de
 
 ## 기기 특성(크레마 페블)
 
-- 1dp = 1.875px(300dpi, 572×777dp). 모든 dp 값은 이 폭 기준이고, 다른 기기는 짧은 변이 572dp 가 되게 앱 밀도를 다시 정한다(`Ui.designDensityDpi`. 메이북 E6 는 320 → 300). 패널 맨 아래 약 8px 는 테두리에 가려 보이지 않는다 → `Crema.reserveHiddenBottom()` 으로 모든 화면·아래 메뉴의 그쪽을 비운다(가로로 돌리면 왼쪽·오른쪽, 회전 방향을 본다. 실기기 미확인).
+- 1dp = 1.875px(300dpi, 572×777dp). 모든 dp 값은 이 폭 기준이고, 다른 기기는 짧은 변이 572dp 가 되게 앱 밀도를 다시 정한다(`Ui.designDensityDpi`. 메이북 E6 는 320 → 300). 패널 맨 아래 약 8px 는 테두리에 가려 보이지 않는다 → `Crema.reserveHiddenBottom()` 으로 모든 화면·아래 메뉴의 그쪽을 비운다(가로로 돌리면 왼쪽·오른쪽, 회전 방향을 본다. 실기기 미확인). 홈만 좌우 여백이 20dp(`HOME_MARGIN_DP`, 다른 화면은 `Ui.MARGIN` 40dp)이고 책장 칸 사이는 6dp 다.
 - 연한 회색을 실제보다 어둡게 그린다(#e6 → 약 #c1). 아주 연한 회색은 디자인 값보다 밝게 잡는다(링 바탕 #f2).
   - 원인은 크레마 **화면 대비**(`Settings.System hq_contrast`, 기본 56): 앱 화면 전체를 밝기^(1/s) 로 어둡게 그리고(s = 1 − 대비×90/8000 = 0.37, SystemUI `EinkSettingsProvider`) ImageView 그림만 같은 만큼 다시 밝힌다(bleach).
   - 그래서 직접 그리는 표지는 `Crema.undoContrast` 로 미리 밝힌다(`Crema.contrastTone`). 검색 결과처럼 ImageView 에 넣는 그림은 밝히지 않는다(두 번 밝아짐).

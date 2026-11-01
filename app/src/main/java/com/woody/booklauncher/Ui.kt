@@ -195,12 +195,12 @@ fun Context.text(
     ellipsize = TextUtils.TruncateAt.END
 }
 
-/** 가로 선. [inset] 이 true 면 좌우 여백만큼 들여 그린다. */
-fun Context.hline(heightDp: Number, color: Int = Ui.BLACK, inset: Boolean = true): View = View(this).apply {
+/** 가로 선. [inset] 이 true 면 좌우 여백([marginDp])만큼 들여 그린다. */
+fun Context.hline(heightDp: Number, color: Int = Ui.BLACK, inset: Boolean = true, marginDp: Int = Ui.MARGIN): View = View(this).apply {
     setBackgroundColor(color)
     layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(heightDp)).apply {
         if (inset) {
-            marginStart = dp(Ui.MARGIN); marginEnd = dp(Ui.MARGIN)
+            marginStart = dp(marginDp); marginEnd = dp(marginDp)
         }
     }
 }
@@ -428,8 +428,9 @@ fun Context.appRow(
     color: Int = Ui.BLACK,
     showIcon: Boolean,
     right: View? = null,
+    marginDp: Int = Ui.MARGIN,
 ): LinearLayout = hbox().apply {
-    setPadding(dp(Ui.MARGIN), 0, dp(Ui.MARGIN), 0)
+    setPadding(dp(marginDp), 0, dp(marginDp), 0)
     if (showIcon && app != null) {
         addView(picture(AppIcons.icon(context, app, dp(iconDp))), lp(dp(iconDp), dp(iconDp)).apply { marginEnd = dp(16) })
     }
