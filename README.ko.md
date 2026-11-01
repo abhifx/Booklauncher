@@ -6,7 +6,7 @@
 
 <p align="center"><img src="docs/screenshots/v1-home.png" width="340" alt="HiBreak의 BookLauncher 홈: 지금 읽는 책, 같은 크기 표지가 늘어선 책장 격자, 자주 쓰는 앱 한 줄, 아래 아이콘 줄"></p>
 
-## 1.0.0에 들어간 것
+## 1.5.0에 들어간 것
 
 - **홈의 지금 읽는 책** — 책을 더 넣어도 표지 크기가 그대로인 지금 읽는 책. 제목·저자·진행률·읽는 앱과 함께 있고, 누르면 그 책의 앱이 열립니다.
 - **내 책장 표지 격자** — 나머지 책을 책장처럼 격자로(4칸 × 2줄, 한 쪽에 8권까지). 책이 늘어도 표지 크기는 그대로이고 쪽만 늘어납니다. 넘기면 다음 쪽, 표지 아래에 책 이름.
@@ -52,7 +52,7 @@
 
 ## 설치
 
-1. [Releases](https://github.com/abhifx/Booklauncher/releases)에서 `BookLauncher-1.0.0-release.apk`를 받아 기기의 파일 관리자에서 엽니다.
+1. [Releases](https://github.com/abhifx/Booklauncher/releases)에서 `BookLauncher-1.5.0-release.apk`를 받아 기기의 파일 관리자에서 엽니다.
 2. 설정 › 앱 관리 › `기본 홈 앱`에서 BookLauncher를 고릅니다.
 3. 처음 실행하면 `시작하기`에서 **읽는 책 자동 추가**(접근성)와 **오늘 읽은 시간**(사용 기록 액세스)을 켭니다. 안드로이드 13+에서 파일로 설치한 앱은 앱 정보의 **제한된 설정 허용**이 필요할 수 있습니다.
 
@@ -79,7 +79,7 @@ Android Studio의 JDK로 빌드합니다(minSdk 28, targetSdk 34, Java 17).
 ```bash
 export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 ./gradlew assembleRelease
-adb install -r app/build/outputs/apk/release/BookLauncher-1.0.0-release.apk
+adb install -r app/build/outputs/apk/release/BookLauncher-1.5.0-release.apk
 ```
 
 윈도우에서는 `gradlew.bat`을 씁니다. 이 포크의 릴리스는 기본으로 디버그 키로 서명합니다. 널리 배포하기 전에 릴리스 서명 설정으로 바꾸세요.

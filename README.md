@@ -6,7 +6,7 @@ BookLauncher is a fork of [Pebble Desk](https://github.com/hissinger/pebble-desk
 
 <p align="center"><img src="docs/screenshots/v1-home.png" width="340" alt="BookLauncher home on HiBreak: the current book, a bookshelf cover grid with fixed-size covers, one row of favorite apps, and the bottom icon bar"></p>
 
-## What's in version 1
+## What's in 1.5.0
 
 - **The current book, on Home** — its cover stays the same size as your library grows, with title, author, reading progress and the reading app. Tap it to open the book.
 - **My shelf as a cover grid** — the other books in a bookshelf-style grid (up to four columns by two rows, up to 8 a page). Covers keep their size as you add books; the shelf pages instead. Swipe or use the page keys for more.
@@ -52,7 +52,7 @@ NeoReader (BOOX) and AcousText are supported too. AcousText books can be control
 
 ## Install
 
-1. Download `BookLauncher-1.0.0-release.apk` from [Releases](https://github.com/abhifx/Booklauncher/releases) and open it in a file manager on the device.
+1. Download `BookLauncher-1.5.0-release.apk` from [Releases](https://github.com/abhifx/Booklauncher/releases) and open it in a file manager on the device.
 2. Choose BookLauncher in Settings › Apps › `Default home app`.
 3. On first run, `Getting started` turns on the two core features: **Auto-add books** (Android Accessibility) and **Reading time** (Usage access). On Android 13+, an app installed from a file may need **Allow restricted settings** in its app info first.
 
@@ -79,7 +79,7 @@ Build with Android Studio's JDK (minSdk 28, targetSdk 34, Java 17).
 ```bash
 export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 ./gradlew assembleRelease
-adb install -r app/build/outputs/apk/release/BookLauncher-1.0.0-release.apk
+adb install -r app/build/outputs/apk/release/BookLauncher-1.5.0-release.apk
 ```
 
 On Windows use `gradlew.bat`. Release builds use the debug key by default for this fork; replace it with your own release signing config before distributing widely.
