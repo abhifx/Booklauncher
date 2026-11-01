@@ -354,7 +354,7 @@
     <string name="guide_n_aladin_title">For books opened in grid view or resumed, added when you open the menu</string>
     <string name="guide_n_ridi_cover">For books opened without the shelf, added when you return to the shelf</string>
     <string name="guide_n_yes24lib_title">For books opened from a library page, added when you open the menu</string>
-    <string name="guide_n_moon_cover">For books opened from the Home tab or bookshelf view, added when Read book files is on</string>
+    <string name="guide_n_moon_cover">Only for books opened from the recent list or the bookshelf list</string>
     <string name="guide_n_moon_title">For books opened from the Home tab or bookshelf view, added when you open the menu</string>
     <string name="guide_n_kindle_cover">For Send to Kindle documents, added when you return to the library after reading</string>
     <string name="guide_n_kindle_title">For books not yet downloaded, added when you open the menu</string>
@@ -366,7 +366,6 @@
     <string name="guide_r_subscription">Subscription books have no due date</string>
     <string name="guide_r_own_file">Your own files have no due date</string>
     <string name="guide_r_android11">Available from Android 11</string>
-    <string name="guide_n_moon_cover_before11">Added when you open the menu while reading (EPUB only)</string>
     <string name="guide_n_ez_files">EPUB, CBZ and image folders only</string>
     <string name="guide_added_readest_data">Added once you move the data</string>
     <string name="guide_t_kyobo_bottom">In the viewer settings, set the bottom info to one that includes reading progress. With no info, progress while reading does not come in.</string>
@@ -379,7 +378,7 @@
     <string name="guide_t_ridi_bottom">In the viewer settings, set the bottom left/right info to reading progress and page number.</string>
     <string name="guide_t_ridi_menu">After opening a book, tap the middle once to open the menu. The Ridi shelf does not tell which book you tapped.</string>
     <string name="guide_t_yes24_bottom">In the viewer screen settings, set the bottom info to show progress or pages. It starts as showing nothing.</string>
-    <string name="guide_t_moon_open">Open books from the recent list or the bookshelf list. Books opened from the Home tab\'s recent row or the bookshelf view come in when you open the menu while reading.</string>
+    <string name="guide_t_moon_open">Open books from the recent list or the bookshelf list (list or grid view). Covers come only from these two. Books opened from the Home tab\'s recent row or the bookshelf view come in without a cover when you open the menu while reading.</string>
     <string name="guide_t_ez_open">Open books by tapping them in the EzViewer file list. Files opened from other apps do not come in.</string>
     <string name="guide_t_ez_bar">Keep the file name and page shown in the bar at the top of the reading screen.</string>
     <string name="guide_t_kindle_menu">Books not yet downloaded, and progress while reading, come in only when you tap the middle to open the menu.</string>
