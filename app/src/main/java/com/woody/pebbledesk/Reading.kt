@@ -77,6 +77,12 @@ object ReadingLog {
     /** 자정 직전에 펼친 책도 세도록 하루 시작보다 조금 앞에서부터 기록을 읽는다. */
     private const val LOOKBACK_MS = 6 * 60 * 60 * 1000L
 
+    /**
+     * 화면이 꺼져도 읽는 화면이 앞에 그대로 있다가(멈추지 않고) 이만큼 안에 다시 켜지면 꺼진 동안도 읽은 것으로 센다.
+     * Bigme 는 읽는 중에도 몇십 초마다 화면을 끄고(그림은 남는다) 쪽을 넘기면 켠다(이슈 #13).
+     */
+    private const val DOZE_MS = 5 * 60_000L
+
     fun hasAccess(context: Context): Boolean {
         val ops = context.getSystemService(AppOpsManager::class.java)
         val mode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -466,9 +472,27 @@ object ReadingLog {
         private var openPkg = ""
         private var openClass: String? = null
         private var openHosted = false
+        /** 화면이 꺼지거나 잠겨 멈춘 읽는 화면([openClass])이 아직 앞에 있으면 멈춘 때, 아니면 -1 */
+        private var dozeAt = -1L
+        /** 멈춘 동안도 셀지(잠금 화면이 뜨지 않았을 때만) */
+        private var dozeFill = false
+        private var screenOn = true
+        private var locked = false
 
         private fun add(pkg: String, a: Long, b: Long) {
             if (b > start) spans += Span(pkg, maxOf(a, start), b, openHosted)
+        }
+
+        /** 화면이 꺼지거나 잠기면 세기를 멈추고, 읽는 화면이 앞에 있던 채 다시 켜지면([wake]) 잇는다. */
+        private fun doze(at: Long, fill: Boolean) {
+            if (openAt >= 0) { add(openPkg, openAt, at); openAt = -1; dozeAt = at; dozeFill = true }
+            if (!fill) dozeFill = false
+        }
+
+        private fun wake(at: Long) {
+            if (dozeAt < 0 || !screenOn || locked) return
+            openAt = if (dozeFill && at - dozeAt <= DOZE_MS) dozeAt else at
+            dozeAt = -1
         }
 
         /** 날마다 칸([ReadKey])별 시간([totalsOf]) */
@@ -493,6 +517,7 @@ object ReadingLog {
                 when (e.eventType) {
                     UsageEvents.Event.MOVE_TO_FOREGROUND -> {
                         if (openAt >= 0) add(openPkg, openAt, e.timeStamp)
+                        dozeAt = -1
                         val cls = e.className
                         val hosted = cls != null && ReaderApps.hostsViewer(cls)
                         val reading = e.packageName in packages && cls != null && (isReaderScreen(context, e.packageName, cls) || hosted)
@@ -501,11 +526,15 @@ object ReadingLog {
                         openClass = if (reading) cls else null
                         openHosted = reading && hosted
                     }
-                    UsageEvents.Event.MOVE_TO_BACKGROUND -> if (openAt >= 0 && e.className == openClass) {
-                        add(openPkg, openAt, e.timeStamp); openAt = -1
+                    UsageEvents.Event.MOVE_TO_BACKGROUND -> if (openClass != null && e.className == openClass) {
+                        if (openAt >= 0) add(openPkg, openAt, e.timeStamp)
+                        openAt = -1; dozeAt = -1; openClass = null
                     }
-                    // 화면이 꺼지면 읽기도 멈춘 것으로 본다.
-                    UsageEvents.Event.SCREEN_NON_INTERACTIVE -> if (openAt >= 0) { add(openPkg, openAt, e.timeStamp); openAt = -1 }
+                    // 화면이 꺼지면 읽기도 멈춘 것으로 본다. 읽는 화면이 그대로 앞에 있던 채 켜지면 이어 센다(보통은 꺼질 때 화면이 내려간다).
+                    UsageEvents.Event.SCREEN_NON_INTERACTIVE -> { screenOn = false; doze(e.timeStamp, fill = true) }
+                    UsageEvents.Event.KEYGUARD_SHOWN -> { locked = true; doze(e.timeStamp, fill = false) }
+                    UsageEvents.Event.SCREEN_INTERACTIVE -> { screenOn = true; wake(e.timeStamp) }
+                    UsageEvents.Event.KEYGUARD_HIDDEN -> { locked = false; wake(e.timeStamp) }
                 }
             }
             // 아직 열려 있는 읽는 화면은 닫힐 때 센다(홈에서 부르므로 보통은 이미 닫혀 있다).
