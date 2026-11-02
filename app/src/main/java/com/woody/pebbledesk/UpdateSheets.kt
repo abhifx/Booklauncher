@@ -4,8 +4,6 @@ import android.app.Activity
 import android.app.Dialog
 import android.content.Context
 import android.content.Intent
-import android.graphics.Canvas
-import android.graphics.Paint
 import android.graphics.Typeface
 import android.net.Uri
 import android.provider.Settings
@@ -13,7 +11,6 @@ import android.text.SpannableStringBuilder
 import android.text.style.ForegroundColorSpan
 import android.text.style.RelativeSizeSpan
 import android.text.style.StyleSpan
-import android.view.View
 
 /**
  * 업데이트 창들(설정 › 업데이트와 홈의 새 판 알림이 같이 쓴다): 바뀐 점과 `설치`, 설치 허용 안내, 받는 중 창, 설치 실패 알림.
@@ -91,7 +88,7 @@ class UpdateSheets(private val activity: Activity) {
      * [Update.MIN_SHOW_MS](5초)에 걸쳐 채운다(받은 만큼보다 앞서 가지 않는다). 받기가 끝나면 닫히고 설치 창이 뜬다.
      */
     private fun showProgress(release: Update.Release) {
-        val bar = ProgressLine(activity)
+        val bar = ProgressLine(activity, PROGRESS_DP)
         val dialog = Sheet(activity).header("Pebble Desk ${release.version}", activity.getString(R.string.update_downloading))
             .note(bar).locked().show()
         progressDialog = dialog
@@ -125,6 +122,8 @@ class UpdateSheets(private val activity: Activity) {
         /** 바뀐 점 창에 보이는 릴리스 설명 줄 수(크레마 페블에서 한 줄 한국어 약 28자). 릴리스 설명은 이 안에 맞춰 쓴다. */
         const val NOTES_LINES = 18
         private const val NOTES_SCAN_CHARS = 2_000
+        /** 받는 중 막대 높이 */
+        private const val PROGRESS_DP = 8
 
         /**
          * 릴리스 설명에서 앱 언어의 부분만: 한국어 아래 `## English` 제목 줄이 있으면 영어는 그 아래, 한국어는 그 위만(CLAUDE.md 릴리스 절).
@@ -170,26 +169,5 @@ class UpdateSheets(private val activity: Activity) {
             }
             return out.takeIf { it.isNotEmpty() }
         }
-    }
-}
-
-/** 받는 중 막대: 연회색 줄 위에 받은 만큼 검정(박스 없이, 높이 [HEIGHT_DP]) */
-private class ProgressLine(context: Context) : View(context) {
-    var percent = 0
-        set(v) { field = v; invalidate() }
-    private val paint = Paint()
-
-    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) =
-        setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), context.dp(HEIGHT_DP))
-
-    override fun onDraw(canvas: Canvas) {
-        paint.color = Ui.DIVIDER
-        canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
-        paint.color = Ui.BLACK
-        canvas.drawRect(0f, 0f, width * percent / 100f, height.toFloat(), paint)
-    }
-
-    companion object {
-        const val HEIGHT_DP = 8
     }
 }

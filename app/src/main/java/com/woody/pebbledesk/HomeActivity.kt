@@ -843,7 +843,10 @@ class HomeActivity : EinkActivity() {
         }
     }
 
-    /** 맨 앞 책: 왼쪽 표지, 오른쪽 제목·저자와 읽고 있는 앱 */
+    /**
+     * 맨 앞 책: 왼쪽 표지, 오른쪽 제목·저자와 읽고 있는 앱. 진행률은 글자 칸 아래 끝(표지 아래 끝)에 `55% 읽음` 과 그 오른쪽 막대 한 줄,
+     * 글자를 키워 그 자리가 모자라면 그 줄은 그리지 않는다(글자 · 간격을 줄이는 것은 사용자가).
+     */
     private fun mainBook(book: ShelfBook, reading: AppEntry?, coverW: Int): View = hbox().apply {
         gravity = Gravity.TOP
         heroField()
@@ -857,8 +860,8 @@ class HomeActivity : EinkActivity() {
         if (book.author.isNotBlank()) {
             info.addView(text(book.author, 16f, color = Ui.GRAY), lp(MATCH, WRAP).apply { topMargin = dp(10) })
         }
-        // 이북 앱 서재에서 읽어 온 진행률·반납일(읽는 책 자동 추가를 켰을 때), 한 줄씩
-        bookStatus(book).forEachIndexed { i, s ->
+        // 이북 앱 서재에서 읽어 온 읽는 화·반납일(읽는 책 자동 추가를 켰을 때), 한 줄씩. 진행률은 아래 끝에 막대와 함께.
+        bookStatus(book, withPercent = false).forEachIndexed { i, s ->
             info.addView(text(s, 15f, color = Ui.GRAY), lp(MATCH, WRAP).apply { topMargin = dp(if (i == 0) 6 else 2) })
         }
         info.addView(
@@ -869,7 +872,19 @@ class HomeActivity : EinkActivity() {
             // 제목·저자 바로 아래에 붙여 한 덩어리로 읽히게 한다.
             lp(WRAP, WRAP).apply { topMargin = dp(26) }
         )
-        addView(info, lp(0, coverH + dp(2), 1f).apply { marginStart = dp(24) })
+        val infoH = coverH + dp(2)
+        // `55% 읽음 ▬▬▬───` 한 줄: 글자 오른쪽에 칸 끝까지 막대(글자 줄 가운데 높이)
+        val progress = if (!book.percentShown) null else hbox().apply {
+            addView(text(getString(R.string.progress_pct, book.progress), 15f, color = Ui.GRAY))
+            addView(ProgressLine(context, PROGRESS_DP).apply { percent = book.progress }, lp(0, WRAP, 1f).apply { marginStart = dp(12) })
+        }
+        // 진행률 줄은 가장 아래 줄이라 글자 줄 아래에 [PROGRESS_GAP_DP] 띄워 다 들어갈 때만 둔다(아래 줄부터 그리지 않는다)
+        val column = if (progress == null || info.heightAt(infoW) + dp(PROGRESS_GAP_DP) + progress.heightAt(infoW) > infoH) info
+        else FrameLayout(context).apply {
+            addView(info, FrameLayout.LayoutParams(MATCH, MATCH))
+            addView(progress, FrameLayout.LayoutParams(MATCH, WRAP, Gravity.BOTTOM))
+        }
+        addView(column, lp(0, infoH, 1f).apply { marginStart = dp(24) })
         setOnClickListener { openBook(book) }
         setOnLongClickListener { showBookMenu(book); true }
     }
@@ -918,6 +933,9 @@ class HomeActivity : EinkActivity() {
         private const val COVER_DP = 160
         private const val COVER_MAX_DP = 230
         private const val COVER_SMALLER_DP = 136
+        /** 맨 앞 책 진행률 막대 높이, 그 위 글자(읽고 있는 앱 줄)와 떨어질 최소 간격 */
+        private const val PROGRESS_DP = 6
+        private const val PROGRESS_GAP_DP = 12
         /** 맨 앞 책 표지 위 여백(바형은 [HERO_PAD_TALL_DP]). 컬러면 홈 색면 안에서 표지 아래 여백도 같다. */
         private const val HERO_PAD_TOP_DP = 8
         private const val HERO_PAD_TALL_DP = 14
