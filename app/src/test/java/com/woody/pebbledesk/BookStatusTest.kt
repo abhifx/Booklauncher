@@ -2,6 +2,8 @@ package com.woody.pebbledesk
 
 import android.content.Context
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -24,4 +26,17 @@ class BookStatusTest {
 
     @Test fun `반납일은 읽는 화와 함께`() =
         assertEquals(listOf("Ch. 12", context.getString(R.string.due_days, 4)), context.bookStatus(book(33, "Ch. 12", today.toEpochDay() + 4), today))
+
+    /** 홈 맨 앞 책은 % 를 막대와 함께 따로 그려 상태 줄에서는 뺀다(반납일은 그대로) */
+    @Test fun `% 를 빼면 반납일만`() {
+        assertEquals(listOf(context.getString(R.string.due_days, 4)), context.bookStatus(book(33, due = today.toEpochDay() + 4), today, withPercent = false))
+        assertTrue(book(33).percentShown)
+    }
+
+    /** 읽는 화는 막대가 없어 % 를 빼도 상태 줄에 남는다 */
+    @Test fun `% 를 빼도 읽는 화는 남는다`() {
+        assertEquals(listOf("Ch. 12"), context.bookStatus(book(33, "Ch. 12"), today, withPercent = false))
+        assertFalse(book(33, "Ch. 12").percentShown)
+        assertFalse(book(-1).percentShown)
+    }
 }

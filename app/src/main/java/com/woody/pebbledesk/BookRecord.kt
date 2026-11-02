@@ -1,7 +1,9 @@
 package com.woody.pebbledesk
 
 import android.content.Context
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 
 /**
  * 책 한 권의 읽은 기록: 책(목록에 없던 책은 제목만 든 임시 책), 상태, 완독 모두(오래된 순, 그 회차의 별점·감상과 함께 [finishList]),
@@ -69,13 +71,16 @@ class BookRecord(
     /**
      * 한 회차(읽기 시작해 완독까지). 상태는 완독([finished])과 진행 중 둘뿐이다(뺀 책도 다시 읽으면 이어지니 진행 중).
      * 번호(회차가 둘 이상일 때만), 시작 날(모르면 null), 끝 날(완독한 날, 진행 중이면 null), 그 동안 읽은 시간, 그 회차의 별점·감상,
-     * 완독한 회차면 그 완독 줄 id(완독한 날·별점·감상을 고칠 때), 그 회차에 마지막으로 읽은 날(완독한 날을 이보다 앞으로 고치지 못하게),
+     * 완독한 회차면 그 완독 줄 id(완독한 날·별점·감상을 고칠 때), 그 회차에 마지막으로 읽은 날(완독한 날을 고칠 수 있는 범위, [finishDayRange]),
      * 회차가 시작된 경계(`다시 읽기`로 시작했으면 그날, 아니면 기록으로 센 시작 날(읽기 시작한 날을 고쳐도 그대로). 앞뒤 회차의 완독한 날을
-     * 이 너머로 고치지 못하게).
+     * 이 너머로 고치지 못하게), 완독을 누른 날(그날까지 읽은 시간은 완독한 날을 앞으로 고쳐도 이 회차. 누른 때를 모르는 1.5.3 이전 완독과
+     * 진행 중 회차는 null), 이 회차 시간에 들었지만 고친 기간([from] ~ [to]) 밖에 읽은 날(읽기 시작한 날을 처음 읽은 날 뒤로, 완독한 날을
+     * 누른 날 앞으로 고쳤을 때. 월간 결산만 책 막대·시간에서 뺀다, [periodDayMs]), 시작 날이 사용자가 고친 날인가(결산 막대가 그날부터).
      */
     class Round(
         val nth: Int?, val from: LocalDate?, val to: LocalDate?, val ms: Long, val finished: Boolean, val review: Review?,
-        val finishId: Long? = null, val lastRead: LocalDate? = null, val begin: LocalDate? = from,
+        val finishId: Long? = null, val lastRead: LocalDate? = null, val begin: LocalDate? = from, val pressed: LocalDate? = null,
+        val outside: List<LocalDate> = emptyList(), val startSet: Boolean = false,
     )
 
     /**
@@ -90,47 +95,75 @@ class BookRecord(
      */
     val rounds: List<Round> by lazy {
         val days = dayMs.filterValues { it > 0 }.keys.sorted()
-        // [after] 다음 날부터 [upTo] 까지인 회차(`다시 읽기`한 날 [start], 고친 읽기 시작한 날 [began])의 시작 날·시간·마지막으로 읽은 날·시작 경계.
-        fun span(after: LocalDate?, start: LocalDate?, began: LocalDate?, upTo: LocalDate?, make: (LocalDate?, Long, LocalDate?, LocalDate?) -> Round): Round {
+        // [after] 다음 날부터 [upTo] 까지 읽은 회차(`다시 읽기`한 날 [start], 고친 읽기 시작한 날 [began])의 시작 날·시간·마지막으로 읽은 날·시작 경계.
+        // 고친 읽기 시작한 날은 앞 회차 완독한 날 [prevDay] ~ 이 회차 완독한 날 [day] 안이어야 쓴다(읽은 시간을 나누는 [after]·[upTo] 와 따로).
+        fun span(
+            after: LocalDate?, upTo: LocalDate?, prevDay: LocalDate?, day: LocalDate?, start: LocalDate?, began: LocalDate?,
+            make: (LocalDate?, Long, LocalDate?, LocalDate?, List<LocalDate>, Boolean) -> Round,
+        ): Round {
             val before = start?.minusDays(1)
             val fromStart = before != null && spent(after, before) < ReadingLog.MIN_DAY_MS
             val bound = if (fromStart) listOfNotNull(after, before).max() else after
             val read = days.filter { (bound == null || it > bound) && (upTo == null || it <= upTo) }
             val recorded = read.firstOrNull() ?: start
-            val from = began?.takeIf { b -> (after == null || b >= after) && (upTo == null || b <= upTo) } ?: recorded
-            return make(from, spent(bound, upTo), read.lastOrNull(), if (fromStart) start else recorded)
+            val set = began?.takeIf { b -> (prevDay == null || b >= prevDay) && (day == null || b <= day) }
+            val from = set ?: recorded
+            val outside = read.filter { (from != null && it < from) || (day != null && it > day) }
+            return make(from, spent(bound, upTo), read.lastOrNull(), if (fromStart) start else recorded, outside, set != null)
         }
         val out = mutableListOf<Round>()
-        var prev: LocalDate? = null
+        // 앞 회차까지 읽은 시간의 끝(완독을 누른 날과 완독한 날 중 늦은 날)과 앞 회차 완독한 날
+        var prevEnd: LocalDate? = null
+        var prevDay: LocalDate? = null
         for (f in finishList) {
-            out += span(prev, f.started, f.began, f.day) { from, ms, lastRead, begin -> Round(null, from, f.day, ms, true, f.review, f.id, lastRead, begin) }
-            prev = f.day
+            val pressed = f.at?.let { Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate() }
+            val end = listOfNotNull(f.day, pressed).max()
+            out += span(prevEnd, end, prevDay, f.day, f.started, f.began) { from, ms, lastRead, begin, outside, set ->
+                Round(null, from, f.day, ms, true, f.review, f.id, lastRead, begin, pressed, outside, set)
+            }
+            prevEnd = end
+            prevDay = f.day
         }
-        val last = prev
+        val last = prevEnd
         if (last == null || state == State.READING || openRound || openReview != null || spent(last, null) >= ReadingLog.MIN_DAY_MS) {
-            out += span(last, openStart, openBegan, null) { from, ms, lastRead, begin -> Round(null, from, null, ms, false, openReview, null, lastRead, begin) }
+            out += span(last, null, prevDay, null, openStart, openBegan) { from, ms, lastRead, begin, outside, set ->
+                Round(null, from, null, ms, false, openReview, null, lastRead, begin, outside = outside, startSet = set)
+            }
         }
         if (out.size < 2) out
-        else out.mapIndexed { i, r -> Round(i + 1, r.from, r.to, r.ms, r.finished, r.review, r.finishId, r.lastRead, r.begin) }
+        else out.mapIndexed { i, r -> Round(i + 1, r.from, r.to, r.ms, r.finished, r.review, r.finishId, r.lastRead, r.begin, r.pressed, r.outside, r.startSet) }
     }
 
     /**
-     * 완독한 회차 [round] 의 완독한 날을 고칠 수 있는 범위: 가장 이른 날(앞 회차 완독일·그 회차 시작 경계·그 회차에 마지막으로 읽은 날·
-     * 고친 읽기 시작한 날 중 가장 늦은 날. 첫 회차에 읽은 날도 없으면 null = 아래 제한은 [EARLIEST_DAY] 만) ~ 가장 늦은 날(다음 회차 시작 경계
-     * (다시 읽기한 날, 없으면 처음 읽은 날)와 고친 읽기 시작한 날 중 이른 날, 마지막 회차면 [today]. 둘 다 [today] 를 넘지 않는다). 그 밖으로 옮기면 읽은 시간이 엉뚱한 회차로 가거나 회차 순서가 바뀐다.
+     * 월간 결산의 책 막대·시간: 날마다 읽은 시간에서 회차의 고친 기간 밖에 읽은 날([Round.outside])을 뺀 것. 날짜를 고치지 않은 책은 [dayMs] 그대로.
+     * 결산 밖의 화면(상세의 회차 시간·올해 읽은 책·독서 기록)과 DB 는 [dayMs] 를 쓴다.
      */
-    fun finishDayRange(round: Round, today: LocalDate): Pair<LocalDate?, LocalDate> {
+    val periodDayMs: Map<LocalDate, Long> by lazy {
+        val outside = rounds.flatMapTo(HashSet()) { it.outside }
+        if (outside.isEmpty()) dayMs else dayMs.filterKeys { it !in outside }
+    }
+
+    /**
+     * 완독한 회차 [round] 의 완독한 날을 고칠 수 있는 범위: 가장 이른 날(앞 회차 완독일·그 회차 읽기 시작한 날 중 늦은 날. 첫 회차에 둘 다
+     * 없으면 null = 아래 제한은 [EARLIEST_DAY] 만) ~ 가장 늦은 날(다음 회차 시작 경계(다시 읽기한 날, 없으면 처음 읽은 날)와 고친 읽기 시작한 날
+     * 중 이른 날, 마지막 회차면 [today]. 둘 다 [today] 를 넘지 않는다). 완독을 누른 날까지 읽은 시간은 완독한 날을 그 앞으로 고쳐도 이 회차라
+     * 마지막으로 읽은 날보다 앞으로도 옮긴다(기간 글자만 바뀐다). 다만 누른 날 뒤에 읽은 날(완독한 날을 누른 날 뒤로 고쳐 들어온 시간)과,
+     * 누른 때를 모르는 옛 완독(1.5.3 이전)은 그 회차 시작 경계·마지막으로 읽은 날보다 앞으로 옮기지 못한다(읽은 시간이 엉뚱한 회차로 가지 않게).
+     * 읽기 시작한 날은 [from](회차 메뉴에서 함께 고르는 중이면 고른 날).
+     */
+    fun finishDayRange(round: Round, today: LocalDate, from: LocalDate? = round.from): Pair<LocalDate?, LocalDate> {
         val i = rounds.indexOf(round)
-        // 고친 읽기 시작한 날([Round.from])보다 앞으로도 옮기지 못한다(읽은 기록이 없는 회차)
-        val earliest = listOfNotNull(rounds.getOrNull(i - 1)?.to, round.begin, round.lastRead, round.from).maxOrNull()
+        val pressed = round.pressed
+        val held = if (pressed == null) listOfNotNull(round.begin, round.lastRead) else listOfNotNull(round.lastRead?.takeIf { it > pressed })
+        val earliest = (listOfNotNull(rounds.getOrNull(i - 1)?.to, from) + held).maxOrNull()
         val next = rounds.getOrNull(i + 1)
         val nextStart = next?.let { listOfNotNull(it.begin, it.from).minOrNull() ?: it.to }
         return earliest to minOf(nextStart ?: today, today)
     }
 
     /** 완독한 회차 [round] 의 완독한 날을 [day] 로 고칠 수 있는가([finishDayRange] 안, [EARLIEST_DAY] 이후. 오타 `0206.1.1` 같은 날은 막는다) */
-    fun canFinishOn(round: Round, day: LocalDate, today: LocalDate): Boolean {
-        val (earliest, latest) = finishDayRange(round, today)
+    fun canFinishOn(round: Round, day: LocalDate, today: LocalDate, from: LocalDate? = round.from): Boolean {
+        val (earliest, latest) = finishDayRange(round, today, from)
         return day >= (earliest ?: EARLIEST_DAY) && day >= EARLIEST_DAY && day <= latest
     }
 

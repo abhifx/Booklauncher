@@ -387,6 +387,23 @@ class FitColumn(context: Context, private val unbounded: Boolean = true) : Linea
         child.bottom <= height - paddingBottom && super.drawChild(canvas, child, drawingTime)
 }
 
+/** 진행 막대: 연회색 줄 위에 [percent] 만큼 검정(테두리 없이, 높이 [heightDp]) */
+class ProgressLine(context: Context, private val heightDp: Int) : View(context) {
+    var percent = 0
+        set(v) { field = v; invalidate() }
+    private val paint = Paint()
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) =
+        setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), context.dp(heightDp))
+
+    override fun onDraw(canvas: Canvas) {
+        paint.color = Ui.DIVIDER
+        canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
+        paint.color = Ui.BLACK
+        canvas.drawRect(0f, 0f, width * percent / 100f, height.toFloat(), paint)
+    }
+}
+
 /** 그림 한 장(앱 아이콘 등) */
 fun Context.picture(bitmap: Bitmap?): PictureView = PictureView(this).apply { this.bitmap = bitmap }
 
