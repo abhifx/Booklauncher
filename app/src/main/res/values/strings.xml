@@ -109,6 +109,19 @@
     <string name="watch_log_events">받은 알림 %s</string>
     <string name="watch_log_none">없음</string>
     <string name="watch_log_empty">기록 없음</string>
+    <string name="watch_log_reading">오늘 읽은 시간 (읽는 화면이 앞에 있던 시간 · 센 시간)</string>
+    <string name="watch_log_reading_app">%1$s 앞 %2$s · 센 %3$s</string>
+    <string name="watch_log_reading_none">오늘 이북 앱을 연 기록이 없습니다</string>
+    <string name="watch_log_ev_front">앞</string>
+    <string name="watch_log_ev_back">뒤</string>
+    <string name="watch_log_ev_shelf">서재</string>
+    <string name="watch_log_ev_screen_off">화면 꺼짐</string>
+    <string name="watch_log_ev_screen_on">화면 켜짐</string>
+    <string name="watch_log_ev_lock">잠금</string>
+    <string name="watch_log_ev_unlock">잠금 풀림</string>
+    <string name="watch_log_marks">표시 %s</string>
+    <string name="watch_log_mark_open">열림</string>
+    <string name="watch_log_mark_closed">닫힘</string>
     <string name="wl_connected">서비스 연결</string>
     <string name="wl_unbound">서비스 끊김</string>
     <string name="wl_destroyed">서비스 끝남</string>
@@ -358,7 +371,7 @@
     <string name="guide_n_aladin_title">격자 보기·이어 읽기로 연 책은 메뉴를 띄우면 들어옵니다</string>
     <string name="guide_n_ridi_cover">서재를 거치지 않고 연 책은 서재로 돌아가면 들어옵니다</string>
     <string name="guide_n_yes24lib_title">도서관 화면에서 연 책은 메뉴를 띄우면 들어옵니다</string>
-    <string name="guide_n_moon_cover">홈 탭·책장 보기로 연 책은 책 파일 읽기를 켜면 들어옵니다</string>
+    <string name="guide_n_moon_cover">최근 목록 화면·책장 목록에서 연 책만 들어옵니다</string>
     <string name="guide_n_moon_title">홈 탭·책장 보기로 연 책은 메뉴를 띄우면 들어옵니다</string>
     <string name="guide_n_kindle_cover">Send to Kindle 문서는 읽고 서재로 돌아가면 들어옵니다</string>
     <string name="guide_n_kindle_title">받지 않았던 책은 메뉴를 띄우면 들어옵니다</string>
@@ -370,7 +383,6 @@
     <string name="guide_r_subscription">구독이라 반납일이 없습니다</string>
     <string name="guide_r_own_file">내 파일이라 반납일이 없습니다</string>
     <string name="guide_r_android11">안드로이드 11 부터 됩니다</string>
-    <string name="guide_n_moon_cover_before11">읽다가 메뉴를 띄우면 들어옵니다(EPUB 만)</string>
     <string name="guide_n_ez_files">EPUB·CBZ·그림 폴더만 들어옵니다</string>
     <string name="guide_added_readest_data">데이터를 옮기면 들어옵니다</string>
     <string name="guide_t_kyobo_bottom">뷰어 설정 › 뷰어 하단 정보 표시를 \'독서 진행률\'이 들어간 것으로 두세요. \'정보 표시 없음\'이면 읽는 중 진행률이 들어오지 않습니다.</string>
@@ -383,7 +395,7 @@
     <string name="guide_t_ridi_bottom">뷰어 설정 › 하단 좌/우 정보 표시를 독서 진행률·페이지 번호로 두세요.</string>
     <string name="guide_t_ridi_menu">책을 펴면 가운데를 눌러 메뉴를 한 번 띄우세요. 리디 서재는 누른 책을 알려 주지 않습니다.</string>
     <string name="guide_t_yes24_bottom">뷰어 화면설정 › 하단 정보 표시를 진행률이나 페이지가 보이게 바꾸세요. 처음 값은 \'모두 표시 안함\'입니다.</string>
-    <string name="guide_t_moon_open">최근 목록·책장 목록에서 책을 눌러 여세요. 홈 탭의 최근 목록이나 책장 보기(선반)로 연 책은 읽다가 메뉴를 띄워야 들어옵니다.</string>
+    <string name="guide_t_moon_open">최근 목록 화면이나 책장 목록(목록·격자 보기)에서 책을 눌러 여세요. 표지는 이 두 곳에서만 가져옵니다. 홈 탭의 최근 목록 줄이나 책장 보기(선반)로 연 책은 표지 없이, 읽다가 메뉴를 띄우면 들어옵니다.</string>
     <string name="guide_t_ez_open">이지뷰어 서재(파일 목록)에서 책을 눌러 여세요. 다른 앱에서 연 파일은 들어오지 않습니다.</string>
     <string name="guide_t_ez_bar">읽는 화면 위 줄에 파일 이름과 쪽이 보여야 합니다.</string>
     <string name="guide_t_kindle_menu">받지 않았던 책과 읽는 중 진행률은 가운데를 눌러 메뉴를 띄워야 들어옵니다.</string>

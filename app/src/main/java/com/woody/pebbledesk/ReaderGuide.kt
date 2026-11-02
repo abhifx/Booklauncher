@@ -145,8 +145,6 @@ internal object ReaderGuide {
         App(listOf(R.string.guide_moon, R.string.guide_moon_pro), listOf(MoonReader, MoonReaderPro), Info(
             listOf(R.string.guide_t_moon_open),
             cover = yes(R.string.guide_n_moon_cover), title = yes(R.string.guide_n_moon_title), author = YES, progress = YES, due = OWN_FILE,
-            bookFiles = R.string.guide_files_cover,
-            coverBefore11 = Field(R.string.guide_added_book_files, R.string.guide_n_moon_cover_before11),
         )),
         App(listOf(R.string.guide_easyview, R.string.guide_cherie), listOf(EasyView, EasyViewFree, CherieViewer), Info(
             listOf(R.string.guide_t_ez_open, R.string.guide_t_ez_bar),
