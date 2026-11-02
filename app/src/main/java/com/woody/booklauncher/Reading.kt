@@ -116,13 +116,19 @@ object ReadingLog {
     fun days(context: Context, packages: Set<String>): ReadingDays? {
         // 잠금 해제 전에는 사용 기록이 비어 보인다. 그대로 세면 어제를 0분으로 확정해 버리므로 기다린다.
         if (!Storage.isUnlocked(context) || !hasAccess(context)) return null
-        // 자동 추가가 붙어 있지 않으면(설정에서 꺼짐, 켜져 있어도 시스템이 떼어 놓음, 꺼질 때 알림이 오지 않은 경우도) 내려간 때부터 책 모름
-        // (지금이 아니라: 그 사이 시간이 앞 책에 붙지 않게). 다시 붙으면 같은 때로 적으니 겹치지 않는다.
-        if (!ReaderWatchService.bound) watchStopped(context, ReaderWatchService.stoppedAt(context))
+        noteWatchDown(context)
         // 책을 정할 목록은 잠금 밖에서 읽는다(잠금 순서는 늘 BookShelf → ReadingLog. [adopt] 는 BookShelf 의 저장 안에서 불린다).
         val shelf = BookShelf.list(context)
         val past = BookShelf.history(context)
         return count(context, packages, shelf, past)
+    }
+
+    /**
+     * 자동 추가가 붙어 있지 않으면(설정에서 꺼짐, 켜져 있어도 시스템이 떼어 놓음, 꺼질 때 알림이 오지 않은 경우도) 내려간 때부터 책 모름
+     * (지금이 아니라: 그 사이 시간이 앞 책에 붙지 않게). 다시 붙으면 같은 때로 적으니 겹치지 않는다. 셀 때마다 먼저([days]·[todayCheck]).
+     */
+    private fun noteWatchDown(context: Context) {
+        if (!ReaderWatchService.bound) watchStopped(context, ReaderWatchService.stoppedAt(context))
     }
 
     @Synchronized
@@ -294,6 +300,8 @@ object ReadingLog {
      * 이 뒤로 이북 앱에서 읽은 시간은 어느 책인지 모른다(꺼진 동안 편 책을 알 수 없다).
      * 앱마다 '책 모름'(제목 없는 편 책)을 적어 두어 그 시간은 하루 합계·연속일에만 들어가고 책에는 붙지 않게 한다
      * (그러지 않으면 꺼지기 전에 마지막으로 편 책에 붙는다). 다시 켜고 책을 펴면 그 책이 적혀 그때부터 다시 책에 붙는다.
+     * 표시로 읽은 시간을 자르는 앱도 그때부터 지켜보지 않을 때의 상태로 둔다([ReaderApps.unwatchedShown]: 서비스가 끝날 때의 [WatchCore] 와 같게.
+     * 끝나는 알림 없이 내려갔으면(업데이트·앱 오류) 마지막 표시가 남아, KOReader 의 책을 닫은 표시가 남으면 그 뒤 읽은 시간을 하나도 세지 않았다).
      */
     @Synchronized
     fun watchStopped(context: Context, at: Long = System.currentTimeMillis()) {
@@ -302,6 +310,7 @@ object ReadingLog {
             if (mine.lastOrNull { it.at <= at }?.title?.isEmpty() == true) null else Open(at, pkg, "")
         }
         if (unknown.isNotEmpty()) keepOpens(context, list + unknown, at)
+        ReaderApps.unwatchedShown.forEach { (pkg, shown) -> viewerShown(context, pkg, shown, at) }
     }
 
     /** 편 책 기록을 저장한다: 다시 셀 수 있는 날 남짓만 남기고(앱마다 마지막 것은 남긴다) DB 에 들어간 뒤에만 메모리 사본을 바꾼다. */
@@ -334,14 +343,35 @@ object ReadingLog {
         return load(context).days.filterKeys { it < today }
     }
 
+    /**
+     * 기록 보기의 오늘 읽은 시간 확인: 이북 앱마다 (오늘 읽는 화면이 앞에 있던 시간, 그 가운데 읽은 시간으로 센 것)(ms, 앞에 있던 시간이 있는 앱만).
+     * 홈과 같은 셈([Counter]·[totalsOf])을 오늘만 새로 한다(표시로 자르는 앱은 둘이 다르다). 권한이 없거나 잠금 해제 전이면 null.
+     */
+    fun todayCheck(context: Context, packages: Set<String>): Map<String, Pair<Long, Long>>? {
+        if (!Storage.isUnlocked(context) || !hasAccess(context)) return null
+        noteWatchDown(context)
+        val zone = ZoneId.systemDefault()
+        val today = LocalDate.now(zone)
+        val c = Counter(today, packages, zone).also { it.feed(context) }
+        val counted = c.totals(opens(context), marks(context))[today].orEmpty()
+        return c.front(today).mapValues { (pkg, ms) -> ms to counted.filterKeys { it.pkg == pkg }.values.sum() }
+    }
+
+    /** [since] 뒤에 적은 읽는 화면 열림·닫힘([viewerShown])과 앱마다 그 앞의 마지막 것([since] 때의 상태), 때 순(기록 보기) */
+    internal fun marksFrom(context: Context, since: Long): List<Mark> {
+        val all = marks(context)
+        val before = all.filter { it.at < since }.groupBy { it.pkg }.values.map { it.last() }
+        return (before + all.filter { it.at >= since }).sortedBy { it.at }
+    }
+
     /** 접근성 서비스가 본 '[at] 에 [pkg] 의 서재 안에 읽는 화면이 떴다([shown])·닫혔다' */
     internal class Mark(val at: Long, val pkg: String, val shown: Boolean)
 
     @Volatile private var marks: List<Mark>? = null
 
-    /** DB `viewer_mark`(때 순) */
+    /** DB `viewer_mark`(때 순, 같은 때면 적은 순: 같은 때 열림 → 닫힘이면 닫힘) */
     @Synchronized
-    private fun marks(context: Context): List<Mark> = marks ?: Db.get(context).rows("SELECT at, pkg, shown FROM viewer_mark ORDER BY at") {
+    private fun marks(context: Context): List<Mark> = marks ?: Db.get(context).rows("SELECT at, pkg, shown FROM viewer_mark ORDER BY at, rowid") {
         Mark(it.getLong(0), it.getString(1), it.getInt(2) != 0)
     }.also { marks = it }
 
@@ -444,6 +474,14 @@ object ReadingLog {
         /** 날마다 칸([ReadKey])별 시간([totalsOf]) */
         @Synchronized
         fun totals(opens: List<Open>, marks: List<Mark>): ReadingDays = totalsOf(spans, opens, zone, marks)
+
+        /** [day] 에 앱마다 읽는 화면이 앞에 있던 시간(표시로 자르지 않고, [todayCheck]) */
+        @Synchronized
+        fun front(day: LocalDate): Map<String, Long> {
+            val a = day.atStartOfDay(zone).toInstant().toEpochMilli()
+            val b = day.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli()
+            return spans.groupBy { it.pkg }.mapValues { (_, mine) -> mine.sumOf { maxOf(0L, minOf(it.b, b) - maxOf(it.a, a)) } }.filterValues { it > 0 }
+        }
 
         @Synchronized
         fun feed(context: Context) {

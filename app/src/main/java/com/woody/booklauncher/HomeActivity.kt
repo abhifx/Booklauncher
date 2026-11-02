@@ -668,7 +668,7 @@ class HomeActivity : EinkActivity() {
             alsoPage = alsoPage.coerceIn(0, maxOf(0, alsoCount - 1))
             addView(if (rest.isEmpty()) shelfEmpty() else shelf(pages, shelf))
         }
-        hero.addView(view, FrameLayout.LayoutParams(MATCH, WRAP))
+        hero.addView(view, FrameLayout.LayoutParams(MATCH, MATCH))
     }
 
     /** 맨 위 책 표지 폭: 화면 모양으로만 정한다(책 수·쪽과 상관없다). */
@@ -695,10 +695,10 @@ class HomeActivity : EinkActivity() {
         val gap = dp(SHELF_GAP_DP)
         // 격자 칸 아래 제목 두 줄(글자 크기 설정을 따른다)
         val labelH = text("가", SHELF_TITLE_SP, Ui.bold).run { measure(0, 0); measuredHeight } * 2 + dp(SHELF_TITLE_GAP_DP)
-        // 높이에 들어가는 만큼 표지를 키운다(두 줄까지, 화면이 낮으면 한 줄).
+        // 높이에 들어가는 만큼 표지를 키운다(기본 두 줄, 세로가 남는 바형은 세 줄까지. 화면이 낮으면 한 줄).
         var rows = 1
         var byHeight = dp(SHELF_COVER_MIN_DP)
-        for (r in SHELF_ROWS downTo 1) {
+        for (r in (if (Ui.tallScreen && !wide) SHELF_ROWS else 2) downTo 1) {
             val room = heroHeight - heroH - dp(SHELF_HEADER_DP) - (r - 1) * gap
             if (room <= 0) continue
             val w = (((room / r) - labelH) * 2 / 3).coerceAtMost(dp(SHELF_COVER_MAX_DP))
@@ -708,7 +708,7 @@ class HomeActivity : EinkActivity() {
                 break
             }
         }
-        // 그 표지가 서로 비슷한 간격으로 늘어서게 칸 수를 정하고(2~4칸), 칸이 모자라면 표지를 줄인다.
+        // 그 표지가 서로 비슷한 간격으로 늘어서게 칸 수를 정하고(2~6칸), 칸이 모자라면 표지를 줄인다.
         val wantedCell = byHeight + 2 * dp(SHELF_INSET_DP)
         val denom = wantedCell + gap
         val columns = ((availW + gap + denom - 1) / denom).coerceIn(2, 6)
@@ -888,13 +888,13 @@ class HomeActivity : EinkActivity() {
     }
 
     /**
-     * 지금 읽는 책의 작은 줄(기기가 밀도를 덮어쓴 화면). 표지 40dp 옆에 제목·저자·앱을 한 줄씩 두어
+     * 지금 읽는 책의 작은 줄(기기가 밀도를 덮어쓴 화면). 표지 [coverPx] 옆에 제목·저자·앱을 한 줄씩 두어
      * 아래 `내 책장` 격자에 높이를 넘긴다. 누르면 그 책의 앱을 연다.
      */
-    private fun compactMainBook(book: ShelfBook, reading: AppEntry?, coverDp: Int): View = hbox().apply {
+    private fun compactMainBook(book: ShelfBook, reading: AppEntry?, coverPx: Int): View = hbox().apply {
         setPadding(homeMargin, 0, homeMargin, 0)
         Palette.current.field(Palette.Area.HOME)?.let { setBackgroundColor(it) }
-        val coverW = dp(coverDp)
+        val coverW = coverPx
         addView(coverView(book, coverW), lp(coverW + dp(2), coverW * 3 / 2 + dp(2)))
         val info = vbox()
         info.addView(text(book.title, 20f, Ui.heavy, Palette.current.title(Palette.Area.HOME), lines = 2), lp(MATCH, WRAP))
@@ -953,7 +953,7 @@ class HomeActivity : EinkActivity() {
         /** 기기 상단 바를 보일 때(홈 상단을 뺄 때) 상단 바 아래 빈 띠 */
         private const val STATUS_BAR_GAP_DP = 16
         /**
-         * 책장 격자: 남는 높이에 들어가는 만큼 표지를 키우고(두 줄, 바형은 세 줄까지), 표지에 맞춰 2~4칸으로 나눈다.
+         * 책장 격자: 남는 높이에 들어가는 만큼 표지를 키우고(두 줄, 바형은 세 줄까지), 표지에 맞춰 2~6칸으로 나눈다.
          * 좌우 여백은 홈 여백([HOME_MARGIN_DP]), 칸 사이는 좁게 둔다.
          */
         private const val SHELF_GAP_DP = 6

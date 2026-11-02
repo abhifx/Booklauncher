@@ -36,8 +36,13 @@ object ReaderApps {
     /** [cls] 가 읽는 화면이 보인 동안만 세는 액티비티인가([hosts]) */
     fun hostsViewer(cls: String) = cls in hosts
 
-    /** 읽는 화면이 떴는지 적힌 것이 없으면 떠 있는 것으로 보는 앱([ViewerTime.MARKS_OPEN], KOReader: 데이터를 못 읽으면 앞에 있던 동안을 다 센다). 아니면 안 뜬 것으로(Libby) */
-    private val shownByDefault = ALL.filter { it.viewerTime == ViewerTime.MARKS_OPEN }.map { it.pkg }.toSet()
+    /**
+     * 표시로 읽은 시간을 자르는 앱마다 지켜보지 않을 때의 상태: [ViewerTime.MARKS_OPEN](KOReader)은 열림(앞에 있던 동안을 다 센다),
+     * [ViewerTime.MARKS_CLOSED](Libby·Readest·북커스 2.0)는 닫힘. 적힌 것이 없을 때와 서비스가 없는 동안([com.woody.booklauncher.ReadingLog.watchStopped])
+     */
+    val unwatchedShown: Map<String, Boolean> =
+        ALL.filter { it.viewerTime != ViewerTime.SCREEN }.associate { it.pkg to (it.viewerTime == ViewerTime.MARKS_OPEN) }
 
-    fun shownByDefault(pkg: String) = pkg in shownByDefault
+    /** 읽는 화면이 떴는지 적힌 것이 없으면 떠 있는 것으로 보는 앱([unwatchedShown]) */
+    fun shownByDefault(pkg: String) = unwatchedShown[pkg] == true
 }

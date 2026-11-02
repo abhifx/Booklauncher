@@ -151,17 +151,26 @@ class ReadingActivity : EinkActivity() {
      */
     private fun renderWide(days: ReadingDays, today: LocalDate, since: LocalDate, goalMs: Long, frac: (LocalDate) -> Float) {
         val month = monthGoal(days, today, since, goalMs, frac)
-        val heroH = Ui.atBaseText { heroCompact(days, today, goalMs, frac(today), month).heightAt(summaryWidth()) }
+        // 바형을 가로로 돌린 화면(HiBreak 등)은 높이가 낮아 기준 크기 그대로는 왼쪽 칸이 아래로 넘친다:
+        // 링·줄 높이·제목 위 여백을 줄여 이번 주 읽은 책까지 들어가게 한다.
+        val dense = resources.displayMetrics.heightPixels < dp(DENSE_MAX_HEIGHT_DP)
+        val ring = if (dense) DENSE_RING else RING
+        val heroH = Ui.atBaseText { heroCompact(days, today, goalMs, frac(today), month, ringDp = ring).heightAt(summaryWidth()) }
         body.addView(hbox().apply {
             gravity = Gravity.TOP
             // 글자를 키워 칸 높이를 넘으면 다 들지 않는 칸은 그리지 않는다(반쯤 잘린 줄이 보이지 않게)
             addView(FitColumn(context, unbounded = false).apply {
-                addView(heroCompact(days, today, goalMs, frac(today), month, heroH), lp(MATCH, heroH))
-                addView(section(getString(R.string.read_time), totalsCompact(days, today), titleTopDp = 12), lp(MATCH, WRAP).inset())
+                addView(heroCompact(days, today, goalMs, frac(today), month, heroH, ringDp = ring), lp(MATCH, heroH))
+                addView(
+                    section(getString(R.string.read_time), totalsCompact(days, today, if (dense) DENSE_TOTAL_ROW_DP else TOTAL_ROW_DP), titleTopDp = if (dense) 4 else 12),
+                    lp(MATCH, WRAP).inset(),
+                )
                 val page = text("", 13f, Ui.bold, Ui.GRAY)
                 // 이번 주 읽은 책은 남는 높이에 들어가는 만큼 한 쪽에
-                addView(section(getString(R.string.books_this_week), byBook(days, today, page, fill = true), page, fill = true, titleTopDp = 14),
-                    lp(MATCH, 0, 1f).inset().apply { bottomMargin = dp(12) })
+                addView(
+                    section(getString(R.string.books_this_week), byBook(days, today, page, fill = true), page, fill = true, titleTopDp = if (dense) 4 else 14),
+                    lp(MATCH, 0, 1f).inset().apply { bottomMargin = dp(if (dense) 6 else 12) },
+                )
             }, lp(summaryWidth(), MATCH))
             addView(vline(16))
             addView(calendar(days, today, since, goalMs, frac, fill = true), lp(0, MATCH, 1f))
@@ -228,7 +237,7 @@ class ReadingActivity : EinkActivity() {
      * 가로 화면 왼쪽 위(세로 화면도 [hero] 가 들지 않으면): 왼쪽에 `읽는 중 · 최장 N일` · 큰 연속일과 `일 연속` · 이번 달 목표 달성을 위아래로, 오른쪽 오늘 링.
      * 세로 화면([hero])은 큰 숫자가 글자 왼쪽에 있어 좁은 칸에 들지 않는다.
      */
-    private fun heroCompact(days: ReadingDays, today: LocalDate, goalMs: Long, todayFrac: Float, month: Pair<String, String>, frameH: Int? = null) = hbox().apply {
+    private fun heroCompact(days: ReadingDays, today: LocalDate, goalMs: Long, todayFrac: Float, month: Pair<String, String>, frameH: Int? = null, ringDp: Int = RING) = hbox().apply {
         gravity = Gravity.TOP
         val field = Palette.current.field(Palette.Area.READING)
         field?.let { setBackgroundColor(it) }
@@ -236,7 +245,10 @@ class ReadingActivity : EinkActivity() {
         val number = text(ReadingLog.streak(days, today).toString(), STREAK_WIDE_SP, Ui.heavy, Palette.current.goal)
         // 칸 높이가 정해져 있으면(글자 · 간격과 상관없이) 다 들지 않는 줄은 그리지 않는다
         val column = FitColumn(context).apply {
-            addView(text(getString(R.string.streak_sub, ReadingLog.longestStreak(days)), 15f, Ui.medium, Ui.GRAY))
+            // 가로 화면은 칸이 좁아 `읽는 중 · 최장 N일` 이 길면 한 줄에 다 들지 않는다: 줄이지 않고 줄임표 대신 글자를 조금 줄인다.
+            val sub = text(getString(R.string.streak_sub, ReadingLog.longestStreak(days)), 15f, Ui.medium, Ui.GRAY)
+            if (frameH != null) sub.fitLines(15f, dp(SUMMARY_DP) - dp(ringDp) - dp(10))
+            addView(sub)
             addView(hbox().apply {
                 gravity = Gravity.BOTTOM
                 addView(number)
@@ -246,12 +258,12 @@ class ReadingActivity : EinkActivity() {
         }
         // 키운 글자로 칸을 넘으면 큰 숫자를 기준 크기로 줄여 이번 달 목표 달성 줄이 들게 한다(홈 큰 제목처럼)
         frameH?.let { h ->
-            val columnW = dp(SUMMARY_DP) - dp(RING) - dp(10)
+            val columnW = dp(SUMMARY_DP) - dp(ringDp) - dp(10)
             if (column.heightAt(columnW) > h - paddingTop - paddingBottom) number.setTextSize(TypedValue.COMPLEX_UNIT_DIP, STREAK_WIDE_SP)
         }
         // WRAP 이라야 기준 크기로 잴 때 글자 칸 높이가 든다(높이가 WRAP 인 가로 줄은 MATCH 자식을 높이 계산에서 뺀다). 칸 높이가 정해지면 그 안으로 줄어든다.
         addView(column, lp(0, WRAP, 1f))
-        addView(todayRing(days, today, goalMs, todayFrac), lp(dp(RING), dp(RING)).apply { marginStart = dp(10) })
+        addView(todayRing(days, today, goalMs, todayFrac, ringDp), lp(dp(ringDp), dp(ringDp)).apply { marginStart = dp(10) })
     }
 
     /** 이번 달 목표 달성 한 줄(`10월 목표 달성` 회색 + `11 / 15일` 굵게, [month]: 제목 to 값) */
@@ -261,10 +273,10 @@ class ReadingActivity : EinkActivity() {
     }
 
     /** 오늘 링(가운데 오늘 읽은 시간과 `/ 30분`) */
-    private fun todayRing(days: ReadingDays, today: LocalDate, goalMs: Long, todayFrac: Float): View {
+    private fun todayRing(days: ReadingDays, today: LocalDate, goalMs: Long, todayFrac: Float, ringDp: Int = RING): View {
         val time = text(duration(days.total(today)), 17f, Ui.bold)
         val goal = if (goalMs > 0) text(getString(R.string.goal_of, duration(goalMs)), 11f, Ui.medium, Ui.GRAY) else null
-        fitInRing(time, goal)
+        fitInRing(time, goal, ringDp)
         return FrameLayout(this).apply {
             addView(RingView(context, RING_STROKE).apply { frac = todayFrac }, FrameLayout.LayoutParams(MATCH, MATCH))
             addView(vbox().apply {
@@ -276,9 +288,9 @@ class ReadingActivity : EinkActivity() {
     }
 
     /** 오늘 링 안쪽 동그라미에 들어가게 [time] 글자를 줄인다(`1시간 34분`처럼 길면 링에 겹친다). */
-    private fun fitInRing(time: TextView, goal: TextView?) {
+    private fun fitInRing(time: TextView, goal: TextView?, ringDp: Int = RING) {
         fun TextView.lineH() = paint.fontMetrics.let { it.descent - it.ascent }
-        val r = dpf(RING / 2f - RING_STROKE)
+        val r = dpf(ringDp / 2f - RING_STROKE)
         var sp = 17f
         // 링 크기는 고정이라 글자 배율과 상관없이 실제 12sp 까지 줄인다.
         while (sp > 12f / Ui.textScale) {
@@ -429,12 +441,12 @@ class ReadingActivity : EinkActivity() {
     }
 
     /** 가로 화면 왼쪽 칸: 이번 주 · 이번 달 · 올해 읽은 시간을 한 줄씩(이름 왼쪽, 시간 오른쪽. 줄 높이는 글자 · 간격과 상관없이 같다) */
-    private fun totalsCompact(days: ReadingDays, today: LocalDate) = vbox().apply {
+    private fun totalsCompact(days: ReadingDays, today: LocalDate, rowH: Int = TOTAL_ROW_DP) = vbox().apply {
         sums(days, today).forEach { (label, value) ->
             addView(hbox().apply {
                 addView(text(label, 14f, Ui.medium, Ui.GRAY), lp(0, WRAP, 1f))
                 addView(text(value, 19f, Ui.bold), lp(WRAP, WRAP).apply { marginStart = dp(12) })
-            }, lp(MATCH, dp(TOTAL_ROW_DP)))
+            }, lp(MATCH, dp(rowH)))
         }
     }
 
@@ -515,6 +527,10 @@ class ReadingActivity : EinkActivity() {
         /** 가로 화면 큰 연속일 글자(sp, 칸을 넘으면 이 크기 dp 로 줄인다) */
         private const val STREAK_WIDE_SP = 48f
         private const val CAL_MIN_DP = 280
+        /** 가로 화면의 높이가 이보다 낮으면(바형을 돌린 화면·HiBreak) 링·줄 높이를 줄여 왼쪽 칸이 넘치지 않게 한다 */
+        private const val DENSE_MAX_HEIGHT_DP = 500
+        private const val DENSE_RING = 80
+        private const val DENSE_TOTAL_ROW_DP = 30
 
         fun intent(context: Context) = Intent(context, ReadingActivity::class.java)
     }
