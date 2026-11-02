@@ -4,9 +4,9 @@
 
 [Pebble Desk](https://github.com/hissinger/pebble-desk)를 포크해 홈을 더 낮고 책 중심으로 바꿨습니다. 지금 읽는 책에는 `이어 읽기` 단추와 진행률, `함께 읽는 책`은 책마다 앱·진행률이 붙은 책장 격자, 자주 쓰는 앱은 한 줄, 아래에는 **모든 앱 · 통계 · 위젯 · 설정** 아이콘 줄(가로에서는 왼쪽 세로 줄)이 있습니다.
 
-<p align="center"><img src="docs/screenshots/v1-home.png" width="340" alt="HiBreak의 BookLauncher 홈: 이어 읽기와 진행률이 있는 지금 읽는 책, 책마다 앱·진행률이 붙은 책장 격자, 자주 쓰는 앱 한 줄, 아래 아이콘 줄"></p>
+<p align="center"><img src="docs/screenshots/v2-home.png" width="340" alt="HiBreak의 BookLauncher 2.0 홈: 이어 읽기와 진행률이 있는 지금 읽는 책, 책마다 앱·진행률이 붙은 책장 격자, 자주 쓰는 앱 한 줄, 아래 아이콘 줄"></p>
 
-## 1.5.0에 들어간 것
+## 2.0.0에 들어간 것
 
 - **홈의 지금 읽는 책** — 표지·제목·저자·읽는 앱과 `이어 읽기` 단추, 진행률 막대. 누구를 눌러도 그 책의 앱이 열립니다.
 - **함께 읽는 책 표지 격자** — 나머지 책을 책장처럼 격자로(좁은 화면 4칸, 페블 6칸, 가로 5칸 × 2줄), 표지 아래에 제목·읽는 앱·진행률. 책이 늘어도 표지 크기는 그대로이고 쪽만 늘어납니다. `모두 보기`는 책 목록을 엽니다.
@@ -20,9 +20,11 @@
 
 | 홈 | 독서 기록 | 위젯 |
 |---|---|---|
-| <img src="docs/screenshots/v1-home.png" width="220"> | <img src="docs/screenshots/v1-reading.png" width="220"> | <img src="docs/screenshots/v1-widgets.png" width="220"> |
+| <img src="docs/screenshots/v2-home.png" width="220"> | <img src="docs/screenshots/v1-reading.png" width="220"> | <img src="docs/screenshots/v1-widgets.png" width="220"> |
 | **모든 앱** | **설정** | |
 | <img src="docs/screenshots/v1-apps.png" width="220"> | <img src="docs/screenshots/v1-settings.png" width="220"> | |
+
+<p align="center"><img src="docs/screenshots/v2-home-landscape.png" width="720" alt="BookLauncher 2.0 가로 홈: 왼쪽 세로 단추 줄, 지금 읽는 책·자주 쓰는 앱 카드, 화면 폭 전체의 함께 읽는 책 격자"></p>
 
 모든 화면은 HiBreak에서 찍었습니다.
 

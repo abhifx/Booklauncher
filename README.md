@@ -4,9 +4,9 @@
 
 BookLauncher is a fork of [Pebble Desk](https://github.com/hissinger/pebble-desk), rebuilt around a lower, more visual home screen: the current book with a `Continue reading` button and progress, a bookshelf-style `Also reading` grid with each book's app and progress, one row of favorites, and **All apps · Stats · Widgets · Settings** at the bottom (or as a left sidebar in landscape).
 
-<p align="center"><img src="docs/screenshots/v1-home.png" width="340" alt="BookLauncher home on HiBreak: the current book with Continue reading and progress, a bookshelf cover grid with app and progress under each book, one row of favorite apps, and the bottom icon bar"></p>
+<p align="center"><img src="docs/screenshots/v2-home.png" width="340" alt="BookLauncher 2.0 home on HiBreak: the current book with Continue reading and progress, a bookshelf cover grid with app and progress under each book, one row of favorite apps, and the bottom icon bar"></p>
 
-## What's in 1.5.0
+## What's in 2.0.0
 
 - **The current book, on Home** — cover, title, author, reading app, a `Continue reading` button and a progress bar. Tap anywhere to open the book.
 - **Also reading as a cover grid** — the other books in a bookshelf-style grid (4 columns on narrow screens, 6 on the Pebble, 5 in landscape), with title, reading app and progress under each cover. Covers keep their size as you add books; the shelf pages instead. `See all` opens the full book list.
@@ -20,9 +20,11 @@ BookLauncher is a fork of [Pebble Desk](https://github.com/hissinger/pebble-desk
 
 | Home | Reading log | Widgets |
 |---|---|---|
-| <img src="docs/screenshots/v1-home.png" width="220"> | <img src="docs/screenshots/v1-reading.png" width="220"> | <img src="docs/screenshots/v1-widgets.png" width="220"> |
+| <img src="docs/screenshots/v2-home.png" width="220"> | <img src="docs/screenshots/v1-reading.png" width="220"> | <img src="docs/screenshots/v1-widgets.png" width="220"> |
 | **All apps** | **Settings** | |
 | <img src="docs/screenshots/v1-apps.png" width="220"> | <img src="docs/screenshots/v1-settings.png" width="220"> | |
+
+<p align="center"><img src="docs/screenshots/v2-home-landscape.png" width="720" alt="BookLauncher 2.0 landscape home: left sidebar, current book and Favorites cards, and a full-width Also reading shelf"></p>
 
 All screenshots were taken on a HiBreak.
 
