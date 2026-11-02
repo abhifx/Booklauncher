@@ -171,4 +171,44 @@ class RecapTest {
         assertNull(Recap.dominantHue(listOf(gray to 100L)))
         assertNull(Recap.dominantHue(emptyList()))
     }
+
+    @Test fun `고친 기간 밖에 읽은 날은 결산의 책 막대·시간에서만 빠지고 합계에는 남는다`() {
+        // 11월 1일에 30분 읽고 11월 2일에 완독을 눌렀고, 읽기 시작한 날 10월 14일·완독한 날 10월 15일로 고쳤다
+        val pressed = d("2026-11-02").atTime(12, 0).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val r = BookRecord(
+            ShelfBook("m", "몽실 언니", "", null, 0), State.PAST, false,
+            listOf(BookShelf.Finish(1, d("2026-10-15"), pressed, null, Review(8, "좋았다"), d("2026-10-14"))),
+            mapOf(d("2026-11-01") to 30 * 60_000L),
+        )
+        val days = days(listOf(r))
+        val octM = Recap.build(oct, days, listOf(r), 30, DayOfWeek.MONDAY)
+        val b = octM.books.single()
+        assertEquals(15, b.finishDay)
+        assertEquals(14, b.startDay)
+        assertEquals(listOf(14, 15), b.days)
+        assertEquals(0L, b.ms)
+        assertEquals(8, b.halves)
+        assertEquals(1, octM.finished)
+        assertEquals(0L, octM.totalMs)
+        // 11월: 책 목록에는 없고, 읽은 30분은 그달 합계에 그대로
+        val novM = Recap.build(YearMonth.of(2026, 11), days, listOf(r), 30, DayOfWeek.MONDAY)
+        assertTrue(novM.books.isEmpty())
+        assertEquals(30 * 60_000L, novM.totalMs)
+        assertEquals(1, novM.readDays)
+        // 결산 밖(상세의 회차 시간)은 그대로
+        assertEquals(30 * 60_000L, r.rounds.single().ms)
+    }
+
+    @Test fun `날짜를 고치지 않은 책은 완독 뒤 잠깐 연 날도 결산에 그대로`() {
+        val pressed = d("2026-10-10").atTime(12, 0).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val r = BookRecord(
+            ShelfBook("a", "a", "", null, 0), State.PAST, false,
+            listOf(BookShelf.Finish(1, d("2026-10-10"), pressed, null, null)),
+            mapOf(d("2026-10-08") to 30 * 60_000L, d("2026-10-12") to 2 * 60_000L),
+        )
+        assertEquals(r.dayMs, r.periodDayMs)
+        val b = Recap.build(oct, days(listOf(r)), listOf(r), 30, DayOfWeek.MONDAY).books.single()
+        assertEquals(listOf(8, 10, 12), b.days)
+        assertNull(b.startDay)
+    }
 }
