@@ -113,6 +113,8 @@ class IReaderTest {
     }
 
     @Before fun setup() {
+        // 책 파일 경로를 적으면 표지를 파일에서 꺼낼지 권한을 본다(Robolectric 은 외부 저장소가 비어 있어 권한을 볼 수 없다)
+        org.robolectric.shadows.ShadowEnvironment.addExternalDir("sdcard")
         provider = BooksProvider().apply {
             attachInfo(context, ProviderInfo().apply { authority = IReader.DATA.authority })
         }
@@ -653,5 +655,28 @@ class IReaderTest {
         h.changed()
         h.settle()
         assertEquals("읽던 책", h.opened?.title)
+    }
+
+    private fun home() = HomeContext(context, android.content.ComponentName(IReader.pkg, "com.zhangyue.iReader.Eink.Activity.alias.ActivityAliasBookStore"))
+
+    @Test fun `홈에서 누르면 적어 둔 그 책의 파일로 연다(없어졌으면 서재)`() {
+        noFirmware()
+        val file = File(context.cacheDir, "새 책.epub").apply { writeText("epub") }
+        provider.rows = listOf(row(1, "새 책", 100_500) + ("path" to file.path))
+        val h = Harness()
+        h.enter()
+        h.settle()
+        val book = h.opened!!
+        assertEquals(file.path, BookShelf.filePath(context, book.id))
+        val open = (IReader.open(home(), book) as OpenResult.Start).intent
+        assertEquals(IReader.OPEN_BOOK, open.component?.className)
+        assertEquals(file.path, open.getStringExtra("file"))
+        file.delete()
+        assertEquals(IReader.SHELF, (IReader.open(home(), book) as OpenResult.Start).intent.component?.className)
+    }
+
+    @Test fun `파일을 모르는 책은 서재를 연다`() {
+        val book = ShelfRecorder(context).opened(IReader.pkg, Seen("파일을 모르는 책"), null, Target.ByTitle)
+        assertEquals(IReader.SHELF, (IReader.open(home(), book) as OpenResult.Start).intent.component?.className)
     }
 }

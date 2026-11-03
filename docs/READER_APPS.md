@@ -30,7 +30,7 @@ Pebble Desk 가 이북 앱에서 무엇을 알아내고 무엇을 할 수 있는
 | Mihon `app.mihon`·Kahon `com.amanoteam.kahon`(만화, 오픈소스. Kahon 은 Mihon 포크) | `eu.kanade.tachiyomi.ui.reader.ReaderActivity` | ? | 그냥 열면 마지막 화면 | X | 사용자가 고른 저장 폴더(로컬 만화 `<폴더>/local/<작품>/<화>.cbz`) |
 | Futon `io.github.landwarderer.futon`·Kotatsu `org.koitharu.kotatsu`(만화·소설, 오픈소스. Futon 은 Kotatsu 포크, Kotatsu 는 2025-11 저장소 보관·GitHub 릴리스·F-Droid 에서 내려감) | `<이름공간>.reader.ui.ReaderActivity`(Futon 은 소설·PDF `novel.ui.reader.NovelReaderActivity`·`…pdf.PdfReaderActivity` 도) | ? | 그냥 열면 마지막 화면 | X | 앱 전용 폴더(`Android/data/…/files/manga`, 불러오기로 복사) |
 | Librera `com.foobnix.pdf.reader`(무료, 광고)·Librera Pro `com.foobnix.pro.pdf.reader`(Play 유료, GitHub·F-Droid 판도 이 패키지. 오픈소스 내 파일 리더, 우주의 원본) | `com.foobnix.pdf.search.activity.HorizontalViewActivity`(책 넘김)·`org.ebookdroid.ui.viewer.VerticalViewActivity`(스크롤) | O (`file://` 를 `com.foobnix.OpenerActivity` 로, 읽던 쪽으로) | O (그냥 열면 라이브러리) | ? | 사용자가 둔 곳(공유 저장소). Librera 기록은 `/sdcard/Librera`(모든 파일 액세스가 없으면 `Download/Librera`) |
-| 아이리더 기본 리더 `com.zhangyue.iReader.Eink`(掌阅 iReader SmartOS 기기의 시스템 앱. Tango·Ocean 5C 에서 확인) | `com.zhangyue.iReader.Eink.Activity.ActivityRead`·`ActivityReadP1` | X (앱 실행) | O | X | 앱 전용 DB |
+| 아이리더 기본 리더 `com.zhangyue.iReader.Eink`(掌阅 iReader SmartOS 기기의 시스템 앱. Tango·Ocean 5C 에서 확인) | `com.zhangyue.iReader.Eink.Activity.ActivityRead`·`ActivityReadP1` | O (`ActivityAliasOpenBook` 에 파일 경로 `file`) | O (`ActivityAliasBookShelf`. 실행 화면은 기기에 따라 서점 별칭) | X | 앱 전용 DB |
 | YES24 `com.yes24.ebook.einkstore`(my YES, 시스템 앱. USB 디버깅 중에는 쓸 수 없음) | O | X (스토어 상세만) | O | X | `Android/data` |
 
 - 사용 기록에는 **앱·화면 이름과 시각만** 남는다. 어떤 책인지는 알 수 없다.

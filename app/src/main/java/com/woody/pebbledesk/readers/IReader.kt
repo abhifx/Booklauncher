@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
+import com.woody.pebbledesk.ShelfBook
 import com.woody.pebbledesk.WatchLog
 
 /**
@@ -14,6 +15,7 @@ import com.woody.pebbledesk.WatchLog
  * 알려 주지 않는 기기(Ocean 5 Pro 4.1.0.215.0 등)는 최근 책 맨 위 줄을 지금 책으로 본다: iReader 는 책 열기가 끝나면 그 책의 읽은 때를
  * 그때로 적어(ActivityRead.onBookOpenSuccess) 맨 위로 올리고, 잠금 화면의 지금 책 표지도 같은 줄을 쓴다(bookWallpaperInfo).
  * 표지는 getBookCoverWallpaper 가 내주는 그림(읽기 허락이 같이 온다. 작은 표지는 iReader 의 기본 표지).
+ * 홈에서는 그 책의 파일(최근 책 줄의 경로)을 ActivityAliasOpenBook 으로 열고, 모르면 서재를 연다.
  * 따로 까는 판 com.zhangyue.read.iReader.eink 와는 다른 앱이다.
  */
 object IReader : ReaderApp(
@@ -26,6 +28,16 @@ object IReader : ReaderApp(
     internal val DATA = Uri.parse("content://com.szzy.ireader.eink.ireaderdata")
 
     override fun newAdapter(): ReaderAdapter = IReaderReader()
+
+    /** 홈에서 책을 못 열 때 여는 서재(이 패키지의 실행 화면은 기기에 따라 서점 별칭이라 앱을 열면 서점이 뜬다) */
+    internal const val SHELF = "com.zhangyue.iReader.Eink.Activity.alias.ActivityAliasBookShelf"
+    /** 책 파일 경로(`file`)만 주면 그 파일로 책을 여는 화면(바로가기·런처가 쓴다. ActivityAliasOpenBook.onCreate → 경로로 열기) */
+    internal const val OPEN_BOOK = "com.zhangyue.iReader.Eink.Activity.alias.ActivityAliasOpenBook"
+
+    /** 네오리더처럼 책을 정할 때 적어 둔 그 책의 파일로 연다. 파일을 모르거나 없으면 서재 */
+    override fun open(ctx: HomeContext, book: ShelfBook): OpenResult = OpenResult.Start(
+        ctx.bookFile(book)?.let { Intent().setClassName(pkg, OPEN_BOOK).putExtra("file", it) } ?: Intent().setClassName(pkg, SHELF)
+    )
 
     internal const val RECORD_ACTION = "com.szzy.ireader.ink.reader.process.READER_PROCESS_INFO_RECORDER"
     internal val RECENT = Uri.parse("content://com.szzy.ireader.provider.notebookshelf/bookshelf/recent?limit=2")
@@ -328,6 +340,8 @@ internal class IReaderReader : ScreenReader(IReader) {
             ctx.unknownOpenAt = null
             retryProgress(ctx, shown.progress)
             val book = ctx.recorder.recordedBook(ctx.pkg) ?: return@inBackground
+            // 홈에서 그 책의 파일로 열려고 경로를 적어 둔다(경로가 없는 줄은 id 라 적지 않는다)
+            if (info.identifier.startsWith("/")) ctx.recorder.setFile(book.id, info.identifier)
             if (ctx.recorder.lookup.hasCover(book.id)) return@inBackground
             if (coverBusy) { ctx.viewerAgain(1000L); return@inBackground }
             val attempts = coverAttempts[book.id] ?: 0
