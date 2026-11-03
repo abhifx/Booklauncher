@@ -90,7 +90,7 @@ Pebble Desk 가 이북 앱에서 무엇을 알아내고 무엇을 할 수 있는
 | Kobo Books | 서재·책 상세 | 서재(돌아왔을 때 맨 위 칸)·책 상세 | 서재·책 상세 | 메뉴 | X |
 | Futon·Kotatsu | 작품 상세 | 서재·작품 상세·메뉴 | 작품 상세 | 작품 상세(%)·메뉴(화 이름) | X |
 | Librera·Librera Pro | 서재·파일 | 서재·메뉴·파일 | 서재·파일 | 서재·메뉴·파일 | X |
-| iReader 기기 내장판 4.1.0(실기기 미확인) | 공개 Provider 의 표지 | 최근 책 Provider(펌웨어 식별자로 맞추거나, 없으면 맨 위 줄) | 최근 책 Provider | 메뉴 | X |
+| iReader 기기 내장판 4.1.0(실기기 미확인) | 공개 Provider 의 표지 | 최근 책 Provider(펌웨어 식별자로 맞추거나, 없으면 맨 위 줄) | 최근 책 Provider | 저장한 진행률(`readpercent`, 읽는 화면을 나올 때) | X |
 
 #### 아이리더 기본 리더 `com.zhangyue.iReader.Eink`
 
@@ -102,7 +102,7 @@ Pebble Desk 가 이북 앱에서 무엇을 알아내고 무엇을 할 수 있는
 - **목차 이름**: 목차(`TextChapterSubMenuFragment`)의 위 막대 `sub_menu_chapter_title_bar` 에 `toolbar.setTitle(책 이름)` 을 하고, 막대 제목은 `BaseToolbar` 의 `TextView` `IdToolTitle` 이다. 사용자는 읽을 때 목차를 열지 않아 쓰지 않는다(목차를 열게 하는 것도 하지 않기로 했다).
 - **잠금(`is_encrypt`)**: DRM 이 아니라 사용자가 서재에서 비밀번호로 건 잠금이다(`FragmentShelfBase.A1` → `toSelectPwdType`, `NoteLockHandler`). 잠근 책도 최근 책 줄에 제목·저자가 있고 표지 API 도 거르지 않지만, 숨기려고 잠근 책을 홈에 보이지 않게 적지 않는다. 서점 DRM 책은 이 표시와 상관없어 들어온다.
 - **표지**: 같은 Provider의 `getBookCoverWallpaper`가 `EXTRA_BOOK_COVER_URI`로 `com.zhangyue.iReader.Eink.SHARE_FILE` URI를 주고 호출자에게 읽기를 허용한다. 요청 전후 현재 책(펌웨어 식별자나 맨 위 줄로 다시 물은 책의 식별자·제목·저자)이 정한 책과 같고, `bookWallpaperInfo`의 제목·저자·열람 시각이 같은 때 읽은 최근 책 행과 같을 때만 그 책에 붙인다(열람 시각은 위치를 저장할 때마다 바뀌어 정한 책과는 비교하지 않는다). 일시적인 실패는 읽기 진입마다 책당 최대 3번 시도한다. 큰 표지는 원본, 작은 표지·표지 없는 책은 iReader가 만든 기본 표지가 될 수 있다. 모든 파일 액세스는 필요하지 않다.
-- **진행률**: 읽는 화면 메뉴의 `Id_read_menu_progress_ui`(퍼센트 또는 전체 쪽)·PDF 메뉴의 `Id_reader_menu_pdf_progress_percent`만 읽는다. 본문·격자 서재를 훑지 않는다. 1초 제한 안의 마지막 변경은 다시 예약하고, 묻는 동안 화면이 바뀌면 그 답을 버리고 다시 묻는다. 앱을 떠났으면 응답을 버린다. 반환일은 제공하지 않는다.
+- **진행률**: 최근 책 줄의 `readpercent`(0~1, `oj1` 이 위치를 저장할 때 `getPageStartPercentInBook`, 끝이면 1)를 쓴다. 읽는 화면을 떠날 때 저장하므로 홈에 오면 그 줄을 한 번 더 읽는다. 가운데를 눌러 뜨는 메뉴에는 진행률 숫자가 없고(아래 줄 디렉토리·참고·진행률·설정, 2026-11-03 Ocean 5 Pro 사진), `진행률` 단추로 여는 하위 메뉴(`TextProgressSubMenuFragment`)의 `Id_read_menu_progress_ui`(퍼센트 또는 전체 쪽)·PDF 메뉴의 `Id_reader_menu_pdf_progress_percent`가 보이면 그것을 먼저 쓴다. 본문·격자 서재를 훑지 않는다. 1초 제한 안의 마지막 변경은 다시 예약하고, 묻는 동안 화면이 바뀌면 그 답을 버리고 다시 묻는다. 앱을 떠났으면 응답을 버린다. 반환일은 제공하지 않는다.
 - **에뮬 관련 참고**: [jdkruzr/ireader_ink_sdk_unofficial](https://github.com/jdkruzr/ireader_ink_sdk_unofficial)은 Musnap Ocean의 필기 API용 래퍼와 컴파일 전용 스텁뿐이며, 기기 바이너리·네이티브 라이브러리를 배포하지 않는다. 이 저장소로 빠진 `.so`를 보충할 수는 없다.
 - **근거**: 사용자 두 사람의 기기 정보 사진(2026-10-31, Tango `PM06A-CKD` 시스템 4.1.0.215.0 · Ocean 5C `SM07A-CKDC` 4.1.0.214.0, Pebble Desk 1.7.1)의 `최근에 뜬 다른 화면` 에 `com.zhangyue.iReader.Eink / ActivityRead` 가 있었다(기기 정보는 클래스의 마지막 이름만 보여 마지막 이름으로 가린다). iReader 홈은 `com.szzy.ireader.ink.launcher / LauncherActivity`.
 - **APK**(2026-10-31): 같은 패키지의 화웨이 MatePad Paper 용 `掌阅墨水屏版`(InkReaderEink) 1.8.3(versionCode 100901123, targetSdk 30, 3673.com 파일 `zsInkReaderEink_v1.8.3_3673.com.apk`, 사용자가 받음)을 보았다. 읽는 화면은 `com.zhangyue.iReader.Eink.Activity.ActivityRead`(기기 사진과 같은 이름), 서재는 `Eink.home.ActivityHome`. SmartOS 4.1 의 기본 리더와 같은 판인지는 **(미확인)**. 네이티브 라이브러리가 32비트 ARM(`armeabi-v7a`)뿐이라 Mac 의 64비트 전용 에뮬레이터에는 깔리지 않아(`INSTALL_FAILED_NO_MATCHING_ABIS`) jadx 로 레이아웃·코드만 보았다.

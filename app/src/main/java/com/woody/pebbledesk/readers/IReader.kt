@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Bundle
 import com.woody.pebbledesk.ShelfBook
 import com.woody.pebbledesk.WatchLog
+import com.woody.pebbledesk.hasTitle
 
 /**
  * iReader 기기 내장판 4.1.0. 서재는 ShelfView(뷰 하나)가 직접 그리고 읽는 화면 메뉴에도 제목이 없어 화면으로는 책을 알 수 없다.
@@ -41,12 +42,15 @@ object IReader : ReaderApp(
 
     internal const val RECORD_ACTION = "com.szzy.ireader.ink.reader.process.READER_PROCESS_INFO_RECORDER"
     internal val RECENT = Uri.parse("content://com.szzy.ireader.provider.notebookshelf/bookshelf/recent?limit=2")
-    internal val COLUMNS = arrayOf("id", "name", "author", "path", "bookid", "readlasttime", "is_encrypt", "isnotebook", "type")
+    internal val COLUMNS = arrayOf("id", "name", "author", "path", "bookid", "readlasttime", "is_encrypt", "isnotebook", "type", "readpercent")
     /** 따로 도는 프로세스(:read1)의 두 번째 읽는 화면. 최근 책은 프로세스를 가르지 않아 맨 위 줄로 정하지 않는다 */
     internal const val SECOND_VIEWER = "com.zhangyue.iReader.Eink.Activity.ActivityReadP1"
 
-    /** [readAt] 은 iReader 가 위치를 저장할 때마다 바뀌어 같은 책인지([same])는 보지 않는다 */
-    internal data class Book(val title: String, val author: String, val readAt: Long, val identifier: String = "") {
+    /**
+     * [readAt] 은 iReader 가 위치를 저장할 때마다 바뀌어 같은 책인지([same])는 보지 않는다. [percent] 는 iReader 가 저장한 진행률(%, 모르면 -1):
+     * 읽는 화면을 떠날 때(onPause·닫기) 위치와 함께 저장한다(readpercent 0~1, 끝까지 읽으면 1).
+     */
+    internal data class Book(val title: String, val author: String, val readAt: Long, val identifier: String = "", val percent: Int = -1) {
         fun same(other: Book) = identifier == other.identifier && title == other.title && author == other.author
     }
 
@@ -101,13 +105,15 @@ object IReader : ReaderApp(
         context.contentResolver.query(RECENT, COLUMNS, null, null, null)?.use { cursor ->
             buildList {
                 fun text(column: String) = cursor.getString(cursor.getColumnIndexOrThrow(column)).orEmpty()
+                val percentColumn = cursor.getColumnIndex("readpercent")
                 while (cursor.moveToNext()) {
                     val title = plain(text("name"))
+                    val percent = if (percentColumn < 0 || cursor.isNull(percentColumn)) -1 else (cursor.getFloat(percentColumn) * 100).toInt().coerceIn(0, 100)
                     val at = text("readlasttime").toLongOrNull() ?: 0L
                     val usable = title.isNotEmpty() && at > 0 && text("is_encrypt") == "0" && text("isnotebook") == "0" && text("type") !in setOf("26", "55")
                     val key = text("path").ifEmpty { "id:" + text("id") }
                     val ids = setOf(text("id"), text("path"), text("bookid")) - ""
-                    add(Row(key, ids, at, if (usable) Book(title, plain(text("author")), at, key) else null))
+                    add(Row(key, ids, at, if (usable) Book(title, plain(text("author")), at, key, percent) else null))
                 }
             }
         }
@@ -233,10 +239,16 @@ internal class IReaderReader : ScreenReader(IReader) {
     }
 
     override fun onHome(ctx: AppContext) {
+        val read = confirmed?.takeIf { it.identifier.isNotEmpty() }
         giveUp(ctx)
         enteredAt = null
         confirmed = null
         pending = false
+        // iReader 는 읽는 화면을 떠날 때 진행률을 저장하므로 홈에 오면 그 책의 줄을 한 번 더 읽는다(아직 안 썼으면 다음에 들어올 때)
+        if (read != null) ctx.inBackground({ IReader.recent(ctx.context)?.firstOrNull { it.key == read.identifier }?.book?.percent }) { r ->
+            val percent = r.getOrNull()?.takeIf { it >= 0 } ?: return@inBackground
+            ctx.recorder.recordedBook(ctx.pkg)?.takeIf { it.hasTitle(read.title) }?.let { ctx.recorder.status(it.id, percent) }
+        }
     }
 
     /** 들어온 읽는 화면의 책을 정하지 못했다: 들어온 때부터 책 모름(앞서 적은 책에 붙이지 않게) */
@@ -332,13 +344,14 @@ internal class IReaderReader : ScreenReader(IReader) {
             }
             if (confirmed?.same(info) != true) confirmed = info
             settled = true
-            val shown = IReader.readViewer(windows)
-            val current = ViewerInfo(info.title, info.author, shown.progress)
+            // 진행률은 메뉴(진행률 하위 메뉴)에 보이면 그것, 아니면 iReader 가 저장한 것
+            val progress = IReader.readViewer(windows).progress.takeIf { it >= 0 } ?: info.percent
+            val current = ViewerInfo(info.title, info.author, progress)
             logShown(ctx, current)
             recordShown(ctx, current)
             // 앞서 적은 책이라 다시 적지 않았으면 들어온 때를 지운다(읽는 화면 안에서 다른 책을 펴면 그때부터)
             ctx.unknownOpenAt = null
-            retryProgress(ctx, shown.progress)
+            retryProgress(ctx, progress)
             val book = ctx.recorder.recordedBook(ctx.pkg) ?: return@inBackground
             // 홈에서 그 책의 파일로 열려고 경로를 적어 둔다(경로가 없는 줄은 id 라 적지 않는다)
             if (info.identifier.startsWith("/")) ctx.recorder.setFile(book.id, info.identifier)

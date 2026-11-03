@@ -99,8 +99,8 @@ internal object ReaderGuide {
     /** 자동 추가 안내의 앱들. [ReaderApps.ALL] 을 빠짐없이 덮어야 한다(단위 테스트, 앱을 더하면 여기도) */
     val APPS = listOf(
         App(listOf(R.string.guide_ireader), listOf(IReader), Info(
-            listOf(R.string.guide_t_progress_menu),
-            cover = yes(R.string.guide_n_ireader_cover), title = YES, author = YES, progress = READING_MENU, due = NO,
+            emptyList(),
+            cover = yes(R.string.guide_n_ireader_cover), title = YES, author = YES, progress = yes(R.string.guide_n_ireader_progress), due = NO,
             appCover = true,
         )),
         App(listOf(R.string.guide_kel), listOf(KyoboLibrary), Info(

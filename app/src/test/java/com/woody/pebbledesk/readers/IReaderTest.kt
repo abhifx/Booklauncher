@@ -679,4 +679,18 @@ class IReaderTest {
         val book = ShelfRecorder(context).opened(IReader.pkg, Seen("파일을 모르는 책"), null, Target.ByTitle)
         assertEquals(IReader.SHELF, (IReader.open(home(), book) as OpenResult.Start).intent.component?.className)
     }
+
+    @Test fun `메뉴에 진행률이 없으면 iReader 가 저장한 진행률, 홈에 오면 다시 읽는다`() {
+        noFirmware()
+        provider.rows = listOf(row(1, "책", 100_500) + ("readpercent" to 0.25f))
+        val h = Harness()
+        h.host.front = window("")
+        h.enter()
+        h.settle()
+        assertEquals(25, h.opened?.progress)
+        provider.rows = listOf(row(1, "책", 102_000) + ("readpercent" to 0.5f))
+        h.core.home()
+        h.host.finish()
+        assertEquals(50, h.opened?.progress)
+    }
 }
