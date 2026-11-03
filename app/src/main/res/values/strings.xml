@@ -537,4 +537,7 @@
     <string name="recap_year_hours">%1$d시간</string>
     <string name="recap_footer_fmt">yyyy.MM</string>
     <string name="recap_no_books">읽은 책이 없습니다</string>
+    <string name="guide_ireader">iReader (기기 내장판)</string>
+    <string name="guide_n_ireader_progress">읽는 화면을 나오면 iReader 가 저장한 진행률로 들어옵니다</string>
+    <string name="guide_n_ireader_cover">iReader의 표지를 가져옵니다. 작은 표지는 iReader의 기본 표지로 들어올 수 있습니다.</string>
 </resources>

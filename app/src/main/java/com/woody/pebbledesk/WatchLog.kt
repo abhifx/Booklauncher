@@ -43,6 +43,8 @@ object WatchLog {
         FILE,
         /** 이북 앱 알림을 처리하다 난 오류(그 알림만 건너뛴다). [Entry.arg] 는 오류 종류, [Entry.detail] 은 내용 */
         ERROR,
+        /** 앱 어댑터가 남긴 진단 한 줄(책을 알아내지 못한 까닭 등). [Entry.arg] 를 그대로 보인다 */
+        NOTE,
         /** 앱이 오류로 죽었다(다음에 뜰 때 [CrashLog] 가 남긴다, 때는 죽은 때). [Entry.arg] 는 예외, [Entry.detail] 은 이 앱 코드 자리 */
         CRASH,
     }

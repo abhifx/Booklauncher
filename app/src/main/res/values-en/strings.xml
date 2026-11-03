@@ -531,4 +531,7 @@
     <string name="recap_year_hours">%1$d h</string>
     <string name="recap_footer_fmt">MMM yyyy</string>
     <string name="recap_no_books">No books read</string>
+    <string name="guide_ireader">iReader (built-in)</string>
+    <string name="guide_n_ireader_progress">Updated from iReader’s saved progress when you leave the reading screen</string>
+    <string name="guide_n_ireader_cover">Uses the cover provided by iReader. Small covers may be replaced by its default cover.</string>
 </resources>

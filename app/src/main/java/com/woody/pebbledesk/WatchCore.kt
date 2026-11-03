@@ -42,6 +42,8 @@ interface WatchHost {
     val canScreenshot: Boolean
     /** 화면을 한 번 찍어 [done] 으로(메인 스레드, 실패하면 부르지 않는다) */
     fun screenshot(done: (Bitmap) -> Unit)
+    /** 뒤 스레드에서 실행하고 결과는 메인 스레드로 돌린다. */
+    fun <T> inBackground(work: () -> T, done: (Result<T>) -> Unit) = Bg.run(work, done)
 }
 
 /** 홈에서 서비스로 가는 신호(프로세스 수명). 홈에서 바로 연 책의 파일: 읽는 화면에 그 파일 이름이 보이면 그 책을 편 것이다 */
@@ -330,7 +332,7 @@ class WatchCore(private val host: WatchHost, private val clock: WatchClock, priv
         }
 
         override fun viewerRetry(): Boolean = viewerRetries-- > 0
-        override fun <T> inBackground(work: () -> T, done: (Result<T>) -> Unit) = Bg.run(work, done)
+        override fun <T> inBackground(work: () -> T, done: (Result<T>) -> Unit) = host.inBackground(work, done)
     }
 
     companion object {
