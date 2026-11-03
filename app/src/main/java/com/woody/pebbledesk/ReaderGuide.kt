@@ -100,7 +100,7 @@ internal object ReaderGuide {
     val APPS = listOf(
         App(listOf(R.string.guide_ireader), listOf(IReader), Info(
             emptyList(),
-            cover = yes(R.string.guide_n_ireader_cover), title = YES, author = YES, progress = yes(R.string.guide_n_ireader_progress), due = NO,
+            cover = YES, title = YES, author = YES, progress = YES, due = NO,
             appCover = true,
         )),
         App(listOf(R.string.guide_kel), listOf(KyoboLibrary), Info(
