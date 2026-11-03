@@ -122,10 +122,21 @@ class HomeActivity : EinkActivity() {
     private val lightObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
         override fun onChange(selfChange: Boolean) = updateStatus()
     }
+    /**
+     * 끊긴 와이파이. 시스템은 끊김(onLost)을 알린 뒤에 네트워크 목록에서 빼서, 알림을 받자마자 읽으면 끊긴 와이파이가
+     * 아직 남아 있을 수 있다(안드로이드 14 기기에서 끊어도 아이콘이 남았다가 다른 화면에 다녀오면 지워졌다). 다시 연결될 때까지 뺀다.
+     */
+    private val lostWifi = mutableSetOf<Network>()
     /** 와이파이 연결·끊김(연결 방송은 안드로이드 11 에뮬에서 오지 않았다) */
     private val wifiCallback = object : ConnectivityManager.NetworkCallback() {
-        override fun onAvailable(network: Network) = updateStatus()
-        override fun onLost(network: Network) = updateStatus()
+        override fun onAvailable(network: Network) {
+            lostWifi.remove(network)
+            updateStatus()
+        }
+        override fun onLost(network: Network) {
+            lostWifi.add(network)
+            updateStatus()
+        }
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -326,6 +337,7 @@ class HomeActivity : EinkActivity() {
     override fun onStop() {
         runCatching { unregisterReceiver(statusReceiver) }
         runCatching { getSystemService(ConnectivityManager::class.java).unregisterNetworkCallback(wifiCallback) }
+        lostWifi.clear()
         contentResolver.unregisterContentObserver(lightObserver)
         super.onStop()
     }
@@ -398,7 +410,7 @@ class HomeActivity : EinkActivity() {
     /** 화면이 꺼져 있을 때는 그리지 않는다(슬립화면 위에 덧그리지 않도록). 켜지면 SCREEN_ON 으로 다시 부른다. */
     private fun updateStatus() {
         if (!::topBar.isInitialized || !getSystemService(PowerManager::class.java).isInteractive) return
-        topBar.update(DeviceStatus.read(this))
+        topBar.update(DeviceStatus.read(this, lostWifi))
     }
 
     private fun buildViews() {
