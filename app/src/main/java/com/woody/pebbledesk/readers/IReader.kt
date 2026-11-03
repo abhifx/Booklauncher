@@ -42,7 +42,9 @@ object IReader : ReaderApp(
 
     internal const val RECORD_ACTION = "com.szzy.ireader.ink.reader.process.READER_PROCESS_INFO_RECORDER"
     internal val RECENT = Uri.parse("content://com.szzy.ireader.provider.notebookshelf/bookshelf/recent?limit=2")
-    internal val COLUMNS = arrayOf("id", "name", "author", "path", "bookid", "readlasttime", "is_encrypt", "isnotebook", "type", "readpercent")
+    /** 최근 책에서 묻는 칸. 진행률(readpercent)은 없는 판이 있을 수 있어 따로([COLUMNS] 가 실패하면 [BASE_COLUMNS] 로 다시) */
+    internal val BASE_COLUMNS = arrayOf("id", "name", "author", "path", "bookid", "readlasttime", "is_encrypt", "isnotebook", "type")
+    internal val COLUMNS = BASE_COLUMNS + "readpercent"
     /** 따로 도는 프로세스(:read1)의 두 번째 읽는 화면. 최근 책은 프로세스를 가르지 않아 맨 위 줄로 정하지 않는다 */
     internal const val SECOND_VIEWER = "com.zhangyue.iReader.Eink.Activity.ActivityReadP1"
 
@@ -105,7 +107,7 @@ object IReader : ReaderApp(
      * Provider 는 받은 칸을 그대로 쿼리에 쓰므로 진행률 칸(readpercent)이 없는 판이면 그 칸을 빼고 다시 묻는다(진행률만 모름).
      */
     internal fun recent(context: Context): List<Row>? =
-        recent(context, COLUMNS) ?: recent(context, COLUMNS.filter { it != "readpercent" }.toTypedArray())
+        recent(context, COLUMNS) ?: recent(context, BASE_COLUMNS)
 
     private fun recent(context: Context, columns: Array<String>): List<Row>? = runCatching {
         context.contentResolver.query(RECENT, columns, null, null, null)?.use { cursor ->
@@ -154,7 +156,7 @@ object IReader : ReaderApp(
         }.onFailure { add("rec ${fail(it)}") }
         add("want an=${screen.substringAfterLast('.')} pn=${short(process(screen))}")
         runCatching {
-            context.contentResolver.query(RECENT, COLUMNS, null, null, null)?.use { c ->
+            context.contentResolver.query(RECENT, BASE_COLUMNS, null, null, null)?.use { c ->
                 add("recent rows ${c.count}")
                 while (c.moveToNext() && c.position < 2) {
                     val at = c.text("readlasttime").toLongOrNull()?.let { "%+ds".format((it - since) / 1000) } ?: "?"
