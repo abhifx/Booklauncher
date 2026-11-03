@@ -284,7 +284,7 @@ class DeviceInfoActivity : EinkActivity() {
         ).joinToString("  ·  ") { (label, value) -> "$label $value" }
     }
 
-    /** `와이파이 켜짐·연결 없음 · 블루투스 켜짐 A2DP0 HFP0 HID?`(프로필 0 끊김·2 연결됨, ? 는 물을 수 없음(안드로이드 12+ 권한)) */
+    /** `와이파이 켜짐·연결 없음 · 블루투스 켜짐 A2DP0 HFP0 HID0`(프로필 0 끊김·2 연결됨, ? 는 물을 수 없음. 12+ 는 짐작한 값, [DeviceStatus.radios]) */
     private fun radiosText(): String {
         val r = DeviceStatus.radios(this)
         val wifi = if (!r.wifiOn) onOff(false)

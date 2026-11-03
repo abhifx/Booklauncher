@@ -10,7 +10,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- 기기 정보: 와이파이가 켜져 있는지 -->
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <!-- 상태 줄: 블루투스가 켜져 있는지·연결된 기기(12+ 는 '근처 기기' 권한이 필요해 연결은 모른다) -->
+    <!-- 상태 줄: 블루투스가 켜져 있는지·연결된 기기(12+ 는 '근처 기기' 권한 대신 소리 출력·외부 입력 장치로 짐작한다) -->
     <uses-permission
         android:name="android.permission.BLUETOOTH"
         android:maxSdkVersion="30" />

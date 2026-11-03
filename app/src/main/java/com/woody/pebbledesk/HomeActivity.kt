@@ -15,6 +15,10 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.DashPathEffect
 import android.graphics.Paint
+import android.hardware.input.InputManager
+import android.media.AudioDeviceCallback
+import android.media.AudioDeviceInfo
+import android.media.AudioManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -137,6 +141,19 @@ class HomeActivity : EinkActivity() {
             lostWifi.add(network)
             updateStatus()
         }
+    }
+    /**
+     * 블루투스 이어폰·리모컨이 붙고 떨어질 때. 안드로이드 12+ 는 연결 방송(`ACTION_CONNECTION_STATE_CHANGED`)이 '근처 기기' 권한
+     * 없이는 오지 않아, 상태 줄이 연결을 짐작하는 소리 출력·외부 입력 장치의 바뀜으로 다시 읽는다([DeviceStatus]).
+     */
+    private val audioCallback = object : AudioDeviceCallback() {
+        override fun onAudioDevicesAdded(added: Array<out AudioDeviceInfo>) = updateStatus()
+        override fun onAudioDevicesRemoved(removed: Array<out AudioDeviceInfo>) = updateStatus()
+    }
+    private val inputListener = object : InputManager.InputDeviceListener {
+        override fun onInputDeviceAdded(deviceId: Int) = updateStatus()
+        override fun onInputDeviceRemoved(deviceId: Int) = updateStatus()
+        override fun onInputDeviceChanged(deviceId: Int) = Unit
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -324,12 +341,15 @@ class HomeActivity : EinkActivity() {
             addAction(BluetoothAdapter.ACTION_STATE_CHANGED)
             addAction(BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED)
         })
+        val main = Handler(Looper.getMainLooper())
         runCatching {
             getSystemService(ConnectivityManager::class.java).registerNetworkCallback(
                 NetworkRequest.Builder().addTransportType(NetworkCapabilities.TRANSPORT_WIFI).build(),
-                wifiCallback, Handler(Looper.getMainLooper()),
+                wifiCallback, main,
             )
         }
+        runCatching { getSystemService(AudioManager::class.java).registerAudioDeviceCallback(audioCallback, main) }
+        runCatching { getSystemService(InputManager::class.java).registerInputDeviceListener(inputListener, main) }
         Device.lightKeys.forEach { contentResolver.registerContentObserver(Settings.System.getUriFor(it), false, lightObserver) }
         updateStatus()
     }
@@ -338,6 +358,8 @@ class HomeActivity : EinkActivity() {
         runCatching { unregisterReceiver(statusReceiver) }
         runCatching { getSystemService(ConnectivityManager::class.java).unregisterNetworkCallback(wifiCallback) }
         lostWifi.clear()
+        runCatching { getSystemService(AudioManager::class.java).unregisterAudioDeviceCallback(audioCallback) }
+        runCatching { getSystemService(InputManager::class.java).unregisterInputDeviceListener(inputListener) }
         contentResolver.unregisterContentObserver(lightObserver)
         super.onStop()
     }
