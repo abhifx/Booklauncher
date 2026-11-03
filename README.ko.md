@@ -36,7 +36,7 @@
 <tr><td align="center" width="96"><img src="docs/screenshots/app-icons/kobo.png" width="48"><br><sub>Kobo</sub></td><td align="center" width="96"><img src="docs/screenshots/app-icons/futon.png" width="48"><br><sub>Futon</sub></td><td align="center" width="96"><img src="docs/screenshots/app-icons/kotatsu.png" width="48"><br><sub>Kotatsu</sub></td><td align="center" width="96"><img src="docs/screenshots/app-icons/librera.png" width="48"><br><sub>Librera</sub></td></tr>
 </table>
 
-네오리더(BOOX)도 된다.
+네오리더(BOOX)도 된다. iReader 기기 내장판(4.1.0)은 시험 중이다: iReader 의 최근 책에서 지금 읽는 책을 골라 넣는다(목차를 열 필요 없음). 실기기에서는 아직 확인하지 못했다.
 
 ## 설치
 

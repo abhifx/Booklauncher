@@ -36,7 +36,7 @@ What each app provides (cover, title, author, progress, due date) is shown in Se
 <tr><td align="center" width="96"><img src="docs/screenshots/app-icons/yes24-ebook.png" width="48"><br><sub>YES24 eBook</sub></td><td align="center" width="96"><img src="docs/screenshots/app-icons/futon.png" width="48"><br><sub>Futon</sub></td><td align="center" width="96"><img src="docs/screenshots/app-icons/kotatsu.png" width="48"><br><sub>Kotatsu</sub></td><td align="center" width="96"><img src="docs/screenshots/app-icons/librera.png" width="48"><br><sub>Librera</sub></td></tr>
 </table>
 
-NeoReader (BOOX) is supported too.
+NeoReader (BOOX) is supported too. The built-in iReader app (4.1.0) is experimental: it picks the book you are reading from iReader’s recent books (no need to open the contents). Not yet checked on a real device.
 
 ## Install
 
