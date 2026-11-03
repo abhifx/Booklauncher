@@ -11,6 +11,7 @@ import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
 import android.net.ConnectivityManager
+import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.wifi.WifiManager
 import android.os.BatteryManager
@@ -34,7 +35,8 @@ data class DeviceStatus(
     val refreshEvery: Int,
 ) {
     companion object {
-        fun read(context: Context): DeviceStatus {
+        /** [lostWifi]: 끊겼다고 알려 온 와이파이. 시스템 목록에 아직 남아 있어도 연결로 치지 않는다 */
+        fun read(context: Context, lostWifi: Set<Network>): DeviceStatus {
             val battery = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
             val level = battery?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
             val scale = battery?.getIntExtra(BatteryManager.EXTRA_SCALE, 100) ?: 100
@@ -42,7 +44,7 @@ data class DeviceStatus(
             return DeviceStatus(
                 battery = if (level >= 0 && scale > 0) level * 100 / scale else -1,
                 charging = plugged,
-                wifi = wifiConnected(context),
+                wifi = wifiConnected(context, lostWifi),
                 bluetooth = bluetoothOn(),
                 bluetoothConnected = bluetoothConnected(),
                 light = Device.lightOn(context),
@@ -56,9 +58,9 @@ data class DeviceStatus(
             .getOrDefault(false)
 
         @Suppress("DEPRECATION")
-        private fun wifiConnected(context: Context) = runCatching {
+        private fun wifiConnected(context: Context, lost: Set<Network> = emptySet()) = runCatching {
             val cm = context.getSystemService(ConnectivityManager::class.java)
-            cm.allNetworks.any { cm.getNetworkCapabilities(it)?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true }
+            cm.allNetworks.any { it !in lost && cm.getNetworkCapabilities(it)?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true }
         }.getOrDefault(false)
 
         /** 이어폰(A2DP·헤드셋)·키보드·리모컨(HID, 숨은 상수 4) 중 하나라도 연결돼 있으면 */
