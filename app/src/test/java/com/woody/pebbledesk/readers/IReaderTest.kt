@@ -87,6 +87,8 @@ class IReaderTest {
         var onRecent: () -> Unit = {}
         /** 있으면 최근 책 줄을 [data] 대신 이것으로(읽은 때가 늦은 순으로 넣는다) */
         var rows: List<Map<String, Any>>? = null
+        /** 진행률 칸이 없는 판: 그 칸을 물으면 쿼리가 실패한다 */
+        var noPercent = false
         override fun query(uri: Uri, projection: Array<out String>?, selection: String?, selectionArgs: Array<out String>?, sortOrder: String?): Cursor? {
             if (denied) throw SecurityException("Provider unavailable")
             if (uri.authority == "test.reader.records") return MatrixCursor(arrayOf("k_bi", "k_an", "k_pn")).apply {
@@ -94,6 +96,7 @@ class IReaderTest {
                 secondRecord?.let { addRow(arrayOf(it, recordActivity, recordProcess)) }
             }
             onRecent()
+            if (noPercent && projection?.contains("readpercent") == true) throw IllegalArgumentException("no such column: readpercent")
             val columns = projection ?: IReader.COLUMNS
             rows?.let { list -> return MatrixCursor(columns).apply { list.forEach { v -> addRow(columns.map { v[it] }.toTypedArray()) } } }
             return MatrixCursor(columns).apply {
@@ -692,5 +695,17 @@ class IReaderTest {
         h.core.home()
         h.host.finish()
         assertEquals(50, h.opened?.progress)
+    }
+
+    @Test fun `진행률 칸이 없는 판이어도 책은 정한다`() {
+        noFirmware()
+        provider.noPercent = true
+        provider.rows = listOf(row(1, "새 책", 100_500))
+        val h = Harness()
+        h.host.front = window("")
+        h.enter()
+        h.settle()
+        assertEquals("새 책", h.opened?.title)
+        assertEquals(-1, h.opened?.progress)
     }
 }

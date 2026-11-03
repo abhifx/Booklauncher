@@ -100,9 +100,15 @@ object IReader : ReaderApp(
         return matches.singleOrNull()?.book?.takeIf { identifier(context, screen, authorities) == id }
     }
 
-    /** 최근 책(읽은 때가 늦은 순으로 두 줄). 못 읽으면 null. 화면 스레드에서 부르지 않는다. */
-    internal fun recent(context: Context): List<Row>? = runCatching {
-        context.contentResolver.query(RECENT, COLUMNS, null, null, null)?.use { cursor ->
+    /**
+     * 최근 책(읽은 때가 늦은 순으로 두 줄). 못 읽으면 null. 화면 스레드에서 부르지 않는다.
+     * Provider 는 받은 칸을 그대로 쿼리에 쓰므로 진행률 칸(readpercent)이 없는 판이면 그 칸을 빼고 다시 묻는다(진행률만 모름).
+     */
+    internal fun recent(context: Context): List<Row>? =
+        recent(context, COLUMNS) ?: recent(context, COLUMNS.filter { it != "readpercent" }.toTypedArray())
+
+    private fun recent(context: Context, columns: Array<String>): List<Row>? = runCatching {
+        context.contentResolver.query(RECENT, columns, null, null, null)?.use { cursor ->
             buildList {
                 fun text(column: String) = cursor.getString(cursor.getColumnIndexOrThrow(column)).orEmpty()
                 val percentColumn = cursor.getColumnIndex("readpercent")
