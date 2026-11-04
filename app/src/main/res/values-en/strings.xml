@@ -335,6 +335,7 @@
     <string name="guide_futon">Futon</string>
     <string name="guide_kotatsu">Kotatsu</string>
     <string name="guide_librera">Librera</string>
+    <string name="guide_wattpad">Wattpad</string>
     <string name="guide_librera_pro">Librera Pro</string>
     <string name="guide_permissions">Permissions</string>
     <string name="guide_todo">In the app</string>
@@ -432,6 +433,10 @@
     <string name="guide_t_librera_open">Open books from the Library. Books opened another way, and PDFs, come in when you tap the middle to open the menu while reading (right away if you allow reading book files).</string>
     <string name="guide_n_librera_cover_files">EPUB, comics and PDF only</string>
     <string name="guide_files_librera">opened book, covers, progress</string>
+    <string name="guide_t_wattpad_open">Open stories from your Library or with Start reading or Continue reading on a story\'s page. If you pick up mid-part another way, it continues with the story you opened last.</string>
+    <string name="guide_n_wattpad_author">Added when your Library is in list view or you view the story\'s page</string>
+    <string name="guide_n_wattpad_chapter">Shows the part name at the top of the page instead of a percentage</string>
+    <string name="guide_note_wattpad">Each story counts as one book (parts don\'t become separate books).</string>
     <string name="guide_note_librera">The free version from the Play Store adds only books opened from the Library or with the menu open.</string>
     <string name="book_files">Read book files</string>
     <string name="book_files_desc">Needed to get book info.</string>

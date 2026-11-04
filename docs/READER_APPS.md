@@ -31,6 +31,7 @@ Pebble Desk 가 이북 앱에서 무엇을 알아내고 무엇을 할 수 있는
 | Futon `io.github.landwarderer.futon`·Kotatsu `org.koitharu.kotatsu`(만화·소설, 오픈소스. Futon 은 Kotatsu 포크, Kotatsu 는 2025-11 저장소 보관·GitHub 릴리스·F-Droid 에서 내려감) | `<이름공간>.reader.ui.ReaderActivity`(Futon 은 소설·PDF `novel.ui.reader.NovelReaderActivity`·`…pdf.PdfReaderActivity` 도) | ? | 그냥 열면 마지막 화면 | X | 앱 전용 폴더(`Android/data/…/files/manga`, 불러오기로 복사) |
 | Librera `com.foobnix.pdf.reader`(무료, 광고)·Librera Pro `com.foobnix.pro.pdf.reader`(Play 유료, GitHub·F-Droid 판도 이 패키지. 오픈소스 내 파일 리더, 우주의 원본) | `com.foobnix.pdf.search.activity.HorizontalViewActivity`(책 넘김)·`org.ebookdroid.ui.viewer.VerticalViewActivity`(스크롤) | O (`file://` 를 `com.foobnix.OpenerActivity` 로, 읽던 쪽으로) | O (그냥 열면 라이브러리) | ? | 사용자가 둔 곳(공유 저장소). Librera 기록은 `/sdcard/Librera`(모든 파일 액세스가 없으면 `Download/Librera`) |
 | 아이리더 기본 리더 `com.zhangyue.iReader.Eink`(掌阅 iReader SmartOS 기기의 시스템 앱. Tango·Ocean 5C 에서 확인) | `com.zhangyue.iReader.Eink.Activity.ActivityRead`·`ActivityReadP1` | O (`ActivityAliasOpenBook` 에 파일 경로 `file`) | O (`ActivityAliasBookShelf`. 실행 화면은 기기에 따라 서점 별칭) | X | 앱 전용 DB |
+| Wattpad `wp.wattpad`(웹 소설, 로그인 필요. 한국 Play 스토어에 없음) | `wp.wattpad.reader.ReaderActivity` | O `wattpad://story/<이야기 번호>`(읽던 자리. 번호는 공개 검색으로) | 그냥 열면 이어 보기 | ? | 앱 전용 저장소 (미확인) |
 | YES24 `com.yes24.ebook.einkstore`(my YES, 시스템 앱. USB 디버깅 중에는 쓸 수 없음) | O | X (스토어 상세만) | O | X | `Android/data` |
 
 - 사용 기록에는 **앱·화면 이름과 시각만** 남는다. 어떤 책인지는 알 수 없다.
@@ -91,6 +92,7 @@ Pebble Desk 가 이북 앱에서 무엇을 알아내고 무엇을 할 수 있는
 | Futon·Kotatsu | 작품 상세 | 서재·작품 상세·메뉴 | 작품 상세 | 작품 상세(%)·메뉴(화 이름) | X |
 | Librera·Librera Pro | 서재·파일 | 서재·메뉴·파일 | 서재·파일 | 서재·메뉴·파일 | X |
 | iReader 기기 내장판 4.1.0 | 공개 Provider 의 표지 | 최근 책 Provider(펌웨어 식별자로 맞추거나, 없으면 맨 위 줄) | 최근 책 Provider | 저장한 진행률(`readpercent`, 읽는 화면을 나올 때) | X |
+| Wattpad | 서재·이야기 화면 | 서재·이야기 화면·읽는 화면(화 처음의 툴바) | 서재(목록 보기)·이야기 화면 | 읽는 화면(화 이름) | X |
 
 #### 아이리더 기본 리더 `com.zhangyue.iReader.Eink`
 
@@ -111,6 +113,17 @@ Pebble Desk 가 이북 앱에서 무엇을 알아내고 무엇을 할 수 있는
   - 데이터: 책·표지·기록 폴더가 `getExternalFilesDir(DOCUMENTS)/iReader/…`(= `Android/data/com.zhangyue.iReader.Eink/…`)라 모든 파일 액세스로도 읽을 수 없다(안드로이드 11+). DB `ireader2.db` 는 앱 전용.
   - 그래서 이 판 기준으로는 화면으로도 파일로도 어떤 책인지 알 길이 없다. 비슷한 이름의 `com.zhangyue.read.iReader.eink`(掌阅精选墨水屏版, 20.2.0 을 보니 휴대폰판 코드: 읽는 화면 `com.zhangyue.iReader.read.ui.Activity_BookBrowser_TXT`·서재 `bookshelf.ui.ActivityBookShelf`, `ActivityRead` 없음, 네이티브는 `armeabi` 뿐)·`com.zhangyue.read.ireadercn`(휴대폰판)·einkcn 의 옛 iReader(`com.chaozh.iReaderFree`)는 다른 앱이다.
 - 위 1.8.3 분석은 과거 조사 기록이다. 이번 4.1.0도 서재는 직접 그리는 뷰지만 공개 Provider가 있어 별도 경로로 구현했다. 일반 설치판은 지원 대상으로 추가하지 않는다.
+
+### Wattpad `wp.wattpad`
+
+- **권한**: 공통.
+- **할 것**: 이야기는 서재(Library › Current Reads)에서 누르거나 이야기 화면의 `Start reading`·`Continue reading` 으로 연다. 화 처음부터 열면 위 툴바에 이야기 제목이 보여 다른 길로 연 이야기도 들어오지만, 화 중간에서 이어 여는 다른 길(Wattpad 홈의 이어 읽기 등)은 툴바가 숨어 직전에 편 이야기로 적힌다.
+- **표지**: 서재 칸·이야기 화면(옆으로 넘기는 상세)에서 잘라 온다. 읽는 화면 위의 그림은 표지를 크게 자른 것이라 쓰지 않는다.
+- **제목**: 서재에서 누른 칸, 상세에서 연 이야기, 화 처음부터 연 읽는 화면의 툴바. 읽다가 넘기면 툴바가 숨어 제목이 없어지고, 화 중간에서 이어 열거나 앱을 다시 열면 툴바가 숨은 채 열려 그때는 Wattpad 에서 마지막으로 편 이야기로 이어 간다.
+- **저자**: 서재 목록 보기의 저자(Wattpad 사용자 이름), 이야기 화면(거기서 연 이야기, 목록에 있는 이야기의 빈 저자). 격자 보기·읽는 화면에는 없다.
+- **진행률**: % 는 없다(서재 칸의 막대·읽는 화면 아래 막대는 값을 내주지 않는다). 화마다 맨 위에 보이는 화 이름(작가가 붙인 이름 그대로, `Chapter IV`)을 읽는 화로 둔다(Mihon 과 같이 홈·목록·상세에 % 대신 화 이름). 화 중간에서 다시 열면 그 화의 머리가 보일 때까지 앞서 적은 화 그대로다. 몇 번째 화인지는 알 수 없다(목차 서랍도 지금 화를 색으로만 표시한다).
+- **반납일**: 없다.
+- **제약**: 이야기 하나를 책 한 권으로 본다. 로그인해야 쓸 수 있다. 한국 Play 스토어에서는 받을 수 없다. 홈에서 책을 누르면 `wattpad://story/<이야기 번호>` 로 그 이야기를 읽던 자리에서 바로 연다. 번호는 저자를 아는 책이 들어올 때 Wattpad 공개 검색으로 제목·저자가 같은 이야기를 찾아 둔 것이고(인터넷), 저자를 모르거나 못 찾았으면 앱을 연다.
 
 ## 교보도서관 `kr.co.kyobobook.KEL`
 
@@ -890,3 +903,17 @@ Bilingify 의 오픈소스 리더(https://github.com/readest/readest, Tauri). �
   - **DjVu**(2026-10-29, 예제는 djvu.js 저장소 `library/assets` 의 `boy.djvu`·`DjVu3Spec_bundled.djvu`·`czech_1-3.djvu` 를 이름을 바꿔 `Download` 에): Librera 의 라이브러리 칸 제목은 책 안 제목(DjVu 메타데이터 `title`, `DjvuExtract`)이 있으면 그것, 없으면 파일 이름을 손본 것이다(`TxtUtils.getTitleAuthorByPath`: 확장자를 떼고, ` - `·` _ ` 등이 있으면 앞은 저자·뒤는 제목, 끝의 `(…)`(10자 넘음)도 저자, 첫 글자를 대문자로, `-`·`—`·`_` 은 빈칸으로. PDF 도 이름에 ` - ` 가 있으면 같다). 그래서 `djvu-notitle.djvu` 는 `Djvu notitle`, `djvu-spec.djvu` 는 `Djvu spec` 로 보였고, 읽는 화면 제목(파일 이름)으로 넣은 책 `djvu-notitle`·`djvu-spec` 과 정리한 제목(`normTitle`, 대소문자·빈칸·기호 무시)이 같아 서재 칸의 첫 쪽이 표지로 붙었다. `Kim Author - Czech Pages.djvu` 는 칸이 제목 `Czech Pages`·저자 `Kim Author` 라 칸 제목만으로는 책 `Kim Author - Czech Pages` 와 맞지 않아, 칸의 저자·제목을 이은 것으로도 맞춘다(제목·저자 순서도. 고친 뒤 `Park Writer - Boy Again.djvu` 에 표지와 저자 `Park Writer` 가 붙었다). 라이브러리 격자는 위 막대(`filterLayout`)·아래 탭 줄(`slidingTabs2`) 밑까지 이어져, 넘긴 서재의 첫 줄 칸을 자르면 위 막대가 표지에 찍혔다(`Czech Pages`): 막대에 걸린 칸은 자르지 않는다(걸린 동안 `Boy Again` 은 표지 없음 → 맨 위로 올리자 붙음). 한 가지 색(검은 첫 쪽 `Czech Again`)은 공통 규칙대로 표지로 두지 않는다. 책 안 제목이 든 DjVu 는 시험하지 못했다(직접 `ANTa` 묶음으로 제목을 넣은 한 쪽짜리 파일은 Librera 가 제목으로 읽지 않았다. 문서 전체 메타데이터는 공유 주석 파일에 두는 것으로 보인다).
   - Librera 를 뒤로 나올 때 Play 스토어 평가 창(`InAppReviewActivity`)이 한 번 떴다(Librera 동작).
   - **무료판**(Play 10.0.11, 광고 포함, minSdk 24): 매니페스트에 저장소 권한이 없다. 처음 열면 라이브러리에 데모 책 둘(`Alice's Adventures in Wonderland`·`The Count of Monte Cristo`, Librera 전용 폴더 `Android/data/com.foobnix.pdf.reader/files/TempDownloads/`)과 `다운로드 폴더를 검색하도록 허용` 띠(폴더 허용, SAF)가 보인다. 기록은 `Download/Librera/profile.BETA/device.<기기>/` 에 적힌다(`app-Recent.json` 경로가 `internal-storage:/Android/data/…`). 화면 요소 이름은 Pro 와 같다. 칸을 눌러 연 `The Count of Monte Cristo` 가 저자 `Alexandre Dumas, Auguste Maquet` 와 함께 들어왔다. 그 전에 `uiautomator` 를 돌린 바로 뒤 연 `Alice's Adventures in Wonderland` 는 누름을 놓쳐 메뉴 제목으로 저자 없이 들어왔다가, 서재를 다시 볼 때 칸의 저자 `Lewis Carroll` 이 채워졌다(시험 도구 탓). 기록의 책 파일을 Pebble Desk 가 읽을 수 없어 메뉴 없이 쪽을 넘긴 진행률은 들어오지 않는다(예상대로).
+
+### Wattpad `wp.wattpad` (2026-11-04, 에뮬레이터 `CremaPebble_A11_Play`(안드로이드 11) · WebView 155, APKPure XAPK 11.42.0 (3836), minSdk 29, **지원**)
+
+- **받기**: 한국 Play 스토어에서는 `거주 국가에서 사용할 수 없는 항목` 이라 사용자가 APKPure XAPK 를 받았다(서명 `O=WP Technology Inc.` SHA-256 `012de458…03ef`, Google 출처 도장). 네이티브 라이브러리가 `armeabi-v7a` 분할뿐이라 arm64 에뮬에는 그 분할을 빼고 깔았다(그래도 실행·읽기는 된다). 처음 열면 가입·로그인 화면(`onboarding.MainActivity`)만 있고 손님 모드는 없다(사용자가 로그인).
+- **화면**: 홈 `home.WattpadHomeActivity`, 서재 `library.activities.LibraryActivity`, 이야기 상세 `discover.storyinfo.activities.StoryInfoComposeActivity`, 읽는 화면 `reader.ReaderActivity`(읽는 화면 규칙 `ReaderActivity` 에도 맞는다).
+  - 서재(Current Reads 탭): 격자 칸 `grid_item_card` 안에 표지 `dimmable_cover_cover`·제목 `story_title`·진행 막대 `reading_progress`(값 없음)·오프라인 단추 `offline_state`. 목록 보기는 `story_author`·`story_status`(`Completed`)·`overflow_menu` 도. 칸을 누르면 상세 없이 바로 읽는 화면. 아래 추천 줄은 제목이 `title` 이다.
+  - 상세(Compose, 요소 이름 없음, 옆으로 넘겨 다른 이야기): 표지 그림(설명 = 제목) → 제목 글자 → 저자 묶음(글자 `JaneAusten`) → `10.6M Reads`·`61 parts` → Summary/Parts 탭 → 아래 `Start reading`·`story_details_add_button`.
+  - 읽는 화면: 툴바 `wattpad_activity_toolbar` 의 글자(이야기 제목 `Pride and Prejudice (1813)`, 뒤로·받기·글자 설정·목차 `reader_story_drawer` 단추), 화마다 머리 `reader_part_title`(`Chapter I`)·`dedication_label`·읽은 수, 본문 `content` TextView 들, 아래 `progress_seek_bar`(SeekBar, 값이 dump 에 없음). 넘기면 툴바가 숨어 요소가 없어지고, 앱을 다시 열어도 툴바가 숨은 채 돌아온다. 다음 화로 넘어가면 그 화의 머리부터 다시 보인다(`Chapter IV`). 목차 서랍은 표지·제목·저자·화 목록인데 지금 화는 주황 글자로만 표시된다(`selected` 아님). 읽는 화면을 뒤로 나오면 서재에 없는 이야기는 `Add to Library` 창이 뜬다. 아래 광고 띠를 누르면 Chrome 이 열린다.
+- **Pebble Desk**(`readers/Wattpad.kt`, 바탕 `ScreenReader`): 서재 칸(누른 칸은 읽는 화면이 열릴 때 편 것으로, `openOnViewer`: 칸 안의 오프라인·메뉴 단추도 칸 클릭으로 온다)·상세(표지·저자, `Wattpad.detail`)·읽는 화면 툴바 제목·화 머리(창 위쪽 반에서 가장 아래, `Wattpad.currentPart`).
+  - 에뮬레이터에서 확인: 서재 목록 보기에서 `Pride and Prejudice (1813)` 을 눌러 읽는 화면을 열자 저자 `JaneAusten`·서재 칸에서 자른 표지·읽는 화 `Chapter IV`(이어 읽던 화)로 들어왔다.
+    다시 서재에서 열자 Wattpad 가 Chapter VI 중간에서 툴바 없이 이어 열었고(누른 칸으로 그 책), 넘겨 Chapter VII 머리가 지나가자 읽는 화가 `Chapter VII` 로 바뀌었다(빠르게 넘긴 Chapter VIII 머리는 잠잠해지기 전에 지나가 놓쳤다).
+    홈 탭 추천 → 상세 `Don't Give Up` → `Start reading`(Chapter 1 처음, 툴바 보임)으로 새 책이 들어왔다(처음 판은 상세를 서재 칸으로만 읽어 저자가 비었다 → `WattpadReader` 로 상세에서 연 이야기·목록에 있는 이야기의 저자 `RiceLover` 를 채움).
+    서재에서 P&P 를 연 뒤 홈 탭 → 상세 `Don't Give Up` → `Start reading`(화 중간, 툴바 없음)으로 열자 편 책이 `Don't Give Up` 으로 바뀌었다. 홈으로 나갔다 앱을 다시 열어 이어 읽어도 '책 모름' 없이 그대로였다.
+  - **책 바로 열기**: `wattpad://story/<이야기 번호>`(매니페스트에 `www.wattpad.com/story/…` 도)가 상세 없이 읽는 화면을 읽던 자리에서 연다(툴바 없음). 이야기 번호는 화면에 없고, 공개 검색 `https://www.wattpad.com/api/v3/stories?query=<제목>&fields=stories(id,title,user(name))` 이 로그인 없이 제목·사용자 이름과 함께 준다(`Pride and Prejudice (1813)`·`JaneAusten` → 6630775, `Don't Give Up`·`RiceLover` → 1536667. 같은 제목이 많아 저자까지 맞춰야 한다). 넣었다(`WattpadReader.findStory`·`Wattpad.open`): 서재에서 P&P 를 다시 열자 번호 6630775, 상세로 연 `The Cellar`(natashapreston) 는 73997 이 찾아졌고, The Cellar 를 마지막으로 편 뒤 Pebble Desk 홈에서 P&P 를 누르자 Wattpad 가 읽던 자리(툴바 없음)로 열리고 편 책이 P&P 로 바뀌었다(`HomeSignals.bookOpened`). 바로 열기 전 판에서 넣은 책은 Wattpad 에서 한 번 다시 열어야 번호가 찾아진다.

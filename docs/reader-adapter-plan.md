@@ -103,12 +103,12 @@ ReaderApp (앱마다, 서비스와 상관없는 선언: 화면 역할·읽은 �
 | 여러 흐름이 같이 쓰는 기억 | `WatchCore`(앱마다) | 서비스 연결 한 번 | 지금 화면, 읽는 화면이 앞에 온 때, 책 모름이 된 때 `unknownOpen`, 책을 편 때 `lastOpenedAt` |
 | 오래 남는 값 | `ctx.prefs`(지금 `reader_watch` prefs 의 같은 키) | 기기 | 열쇠 ↔ 책, 탭 ↔ 책, 서재에서 마지막으로 편 파일 |
 | 바깥 데이터 캐시 | 앱 파일의 `object` 안 캐시(지금처럼) | 프로세스 | Readest 데이터·전체 쪽 수(`totals`), 우주 기록 파일, KOReader Lua |
-| 홈 → 서비스 신호 | `HomeSignals`(프로세스, 지금 `homeOpened` 를 옮김) | 프로세스 | 홈에서 연 파일(이지뷰어) |
+| 홈 → 서비스 신호 | `HomeSignals`(프로세스, 지금 `homeOpened` 를 옮김) | 프로세스 | 홈에서 연 파일(이지뷰어)·링크로 연 책(Wattpad, `bookOpened`) |
 
 - **판단 기억은 인스턴스에만** 둔다(서비스가 다시 붙으면 사라지는 지금 동작 그대로).
 - **바깥 데이터 캐시는 프로세스 `object` 에 남겨도 된다**: 판단이 아니라 다른 앱 파일을 읽은 결과이고, 바뀌었는지(시각·크기)로 다시 읽는다.
   Readest `totals`(책마다 전체 쪽)는 지금도 서비스가 다시 붙어도 남아 쪽 진행률을 이어 셈한다 — 그대로 둔다(동작 보존).
-- `HomeSignals` 는 지금 `ReaderWatchService.homeOpened`(companion)와 같은 프로세스 수명이다. 이지뷰어 어댑터만 읽는다.
+- `HomeSignals` 는 지금 `ReaderWatchService.homeOpened`(companion)와 같은 프로세스 수명이다. 이지뷰어(파일)·Wattpad(링크로 연 책) 어댑터만 읽는다.
 - 지금 서비스 전체에 하나인 간격 기억(`lastWebRead`·`lastEagerRead`·`eagerTries`)은 그 일을 하는 어댑터로 간다. 다른 앱으로 넘어가면 그 앱 화면 알림(창 바뀜, `force`)이 먼저 와
   지금도 그때 다시 정해지므로 앱마다 두어도 결과가 같다. 화면 캡처 간격 `lastShot` 은 서비스에 남는다(캡처는 서비스 일).
 
@@ -488,7 +488,7 @@ enum class Fallback { LAUNCH, FIND_FILE }
   `HomeActivity` 가 지금처럼 뒤에서 찾고 못 찾으면 안내한다(지금 네오리더의 `return openFile(…)`, 2차 B2).
   찾은 파일은 `openFoundFile` 그대로(같은 파일로 넣은 다른 책이 있으면 적지 않고 열기만).
 - 파일을 고르는 규칙(파일을 알고, 읽을 수 없거나 그 파일이 있으면)은 지금 그대로 각 앱의 `open` 안에서 `HomeContext` 의 도우미로 한다.
-- 앱별: Readest `Start(readest://book/<해시>)`(얼린 앱이면 `Launch`), KOReader `File(실행 화면, 경로)`, 우주 `File(OpenerActivity, 경로)`, 이지뷰어 `File(실행 화면, 경로, started = HomeSignals)`,
+- 앱별: Readest `Start(readest://book/<해시>)`(얼린 앱이면 `Launch`), KOReader `File(실행 화면, 경로)`, 우주 `File(OpenerActivity, 경로)`, 이지뷰어 `File(실행 화면, 경로, started = HomeSignals)`, Wattpad `Start(wattpad://story/<이야기 번호>, started = HomeSignals.bookOpened)`(번호를 모르면 `Launch`),
   네오리더 `File(ReaderHomeActivity, onFail = FIND_FILE)` 또는 파일 모르면 `FindFile`, 나머지 `Launch`.
 
 ## 앱별 계획
