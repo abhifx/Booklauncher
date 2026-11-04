@@ -124,7 +124,7 @@ open class ScreenReader(val app: ReaderApp) : ReaderAdapter {
     }
 
     /**
-     * 서재를 잠깐만 보고 책으로 넘어가는 앱(알라딘·북커스·YES24 전자도서관)은 멈추기를 기다리지 않고 표지가 보이는 대로 잘라 둔다.
+     * 서재를 잠깐만 보고 책으로 넘어가는 앱(알라딘·부커스·YES24 전자도서관)은 멈추기를 기다리지 않고 표지가 보이는 대로 잘라 둔다.
      * 화면이 막 바뀐 때(읽는 화면에서 돌아오는 중이면 화면 캡처가 막힌 읽는 화면이 검게 찍힌다)와 아직 찍을 수 없을 때는 건너뛴다.
      */
     override fun onShelfLive(ctx: AppContext, force: Boolean) {

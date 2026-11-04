@@ -175,6 +175,7 @@ class HomeActivity : EinkActivity() {
             warnDensity()
             if (densityDialog?.isShowing != true) warnAutoOff()
             if (densityDialog?.isShowing != true && autoOffDialog?.isShowing != true) warnFileAccess()
+            if (densityDialog?.isShowing != true && autoOffDialog?.isShowing != true && fileDialog?.isShowing != true) askSameBook()
         }
         Update.onChange = { updates.onChange(); offerUpdate() }
         updates.onChange()
@@ -299,6 +300,43 @@ class HomeActivity : EinkActivity() {
         fileDialog = Sheet(this).header(keepWords(getString(R.string.file_notice_title, name)), getString(R.string.file_notice_desc)).centered().keepOnChange()
             .item(getString(R.string.open_file_access), bold = true) { BookFiles.request(this) }
             .item(getString(R.string.dont_show_again)) { prefs.fileNoticeSkip = prefs.fileNoticeSkip + pkg }
+            .show()
+    }
+
+    /** 떠 있는 '같은 책인가요?' 창 */
+    private var sameBookDialog: Dialog? = null
+
+    /**
+     * 같은 책인지 묻기: 이북 앱의 서재 제목과 읽는 화면 제목이 달랐던 짝([HomePrefs.sameBookAsk])을 홈으로 돌아올 때 하나씩 묻는다(아래 메뉴, `같은 책` / `다른 책`).
+     * 답하면 [HomePrefs.sameBooks]·[HomePrefs.otherBooks] 로 옮기고, 답하지 않고 닫으면 다음에 다시 묻는다. 읽는 화면 제목의 책이 없으면(지움) 묻지 않고 버린다
+     */
+    private fun askSameBook() {
+        if (sameBookDialog?.isShowing == true) return
+        val keys = prefs.sameBookAsk
+        val key = keys.firstOrNull() ?: return
+        val pair = TitlePair.of(key)
+        if (pair == null || (BookShelf.findByTitle(this, pair.read) == null && BookShelf.findLivePast(this, pair.read) == null)) {
+            prefs.sameBookAsk = keys - key
+            return
+        }
+        val app = AppStore.readerLabel(this, pair.pkg) ?: pair.pkg
+        fun answer(same: Boolean) {
+            prefs.sameBookAsk = prefs.sameBookAsk - key
+            if (same) prefs.sameBooks = prefs.sameBooks + key else prefs.otherBooks = prefs.otherBooks + key
+        }
+        val titles = vbox().apply {
+            fun row(label: Int, title: String, top: Int) {
+                addView(text(getString(label), 15f, color = Ui.LIGHT_GRAY), lp(MATCH, WRAP).apply { topMargin = dp(top) })
+                addView(text(title, 19f, Ui.bold, lines = 2), lp(MATCH, WRAP).apply { topMargin = dp(4) })
+            }
+            row(R.string.same_book_read, pair.read, 0)
+            row(R.string.same_book_shelf, pair.shelf, 14)
+            addView(text(getString(R.string.same_book_note), 14f, color = Ui.LIGHT_GRAY, lines = 3), lp(MATCH, WRAP).apply { topMargin = dp(16) })
+        }
+        sameBookDialog = Sheet(this).header(getString(R.string.same_book_title), getString(R.string.same_book_desc, app)).noClose().keepOnChange()
+            .note(titles)
+            .item(getString(R.string.same_book_yes), bold = true) { answer(true) }
+            .item(getString(R.string.same_book_no)) { answer(false) }
             .show()
     }
 

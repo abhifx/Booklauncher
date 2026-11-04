@@ -41,17 +41,17 @@ open class ReaderApp(
     val viewerLoading: String? = null,
     /** 읽는 화면 메뉴의 책 제목(메뉴를 띄웠을 때만 보인다) */
     val viewerTitle: String? = null,
-    /** 쪽 번호가 지금 쪽·전체 쪽 두 요소로 나뉜 읽는 화면(북커스 메뉴) */
+    /** 쪽 번호가 지금 쪽·전체 쪽 두 요소로 나뉜 읽는 화면(부커스 메뉴) */
     val viewerPages: Pair<String, String>? = null,
-    /** 쪽으로 셈한 진행률을 올림한다(서재에 보이는 % 와 맞추려고. 북커스는 1/368쪽을 1% 로 보인다) */
+    /** 쪽으로 셈한 진행률을 올림한다(서재에 보이는 % 와 맞추려고. 부커스는 1/368쪽을 1% 로 보인다) */
     val pagesRoundUp: Boolean = false,
     /**
-     * 서재를 잠깐만 보고 책으로 넘어가는 앱(알라딘·북커스): 멈추기를 기다리지 않고 표지를 잘라 둔다(멈췄을 때는 모든 앱이 자른다).
+     * 서재를 잠깐만 보고 책으로 넘어가는 앱(알라딘·부커스): 멈추기를 기다리지 않고 표지를 잘라 둔다(멈췄을 때는 모든 앱이 자른다).
      * 밀리는 앱을 다시 열 때 잠깐 칸을 다른 책으로 채우므로 쓰지 않는다.
      */
     val eagerCovers: Boolean = false,
     /**
-     * 칸을 눌러도 읽는 화면이 열려야 편 것으로 본다(my YES: 누르면 내려받기·기간 만료 안내가 먼저 뜬다. 밀리·교보도서관·북커스: 받지 않은 책은 누르면 받기만 한다.
+     * 칸을 눌러도 읽는 화면이 열려야 편 것으로 본다(my YES: 누르면 내려받기·기간 만료 안내가 먼저 뜬다. 밀리·교보도서관·부커스: 받지 않은 책은 누르면 받기만 한다.
      * YES24 도서관·YES24 eBook: 칸 안의 받기·반납 단추도 칸 클릭으로 온다). 그 사이 서재 화면에서 책 칸이 아닌 것을 누르면 그 칸은 버린다([ScreenReader.onClick])
      */
     val openOnViewer: Boolean = false,
@@ -166,7 +166,7 @@ open class ReaderApp(
     open fun newAdapter(): ReaderAdapter = ScreenReader(this)
 
     /**
-     * 깔린 판을 이 앱 파일이 맡는가. 한 패키지가 판에 따라 전혀 다른 앱이 되면(북커스 2.0.0) 판마다 앱 파일을 따로 두고,
+     * 깔린 판을 이 앱 파일이 맡는가. 한 패키지가 판에 따라 전혀 다른 앱이 되면(부커스 2.0.0) 판마다 앱 파일을 따로 두고,
      * [ReaderApps.ALL] 에 적은 순서로 이것을 물어 고른다([installed]). 기본: 맡는다
      */
     open fun handles(context: Context): Boolean = true
@@ -273,7 +273,7 @@ open class ReaderApp(
 
     /**
      * [n] 안의 제목이 누른 곳([at])을 품지 않는 목록 속에 있는가: 그러면 [n] 은 책 칸이 아니라 목록 밖까지 품은 묶음이다
-     * (서재에 책이 한 권뿐일 때 위 탭을 누르면 화면 전체가 그 한 권의 칸으로 보였다, 북커스 내서재).
+     * (서재에 책이 한 권뿐일 때 위 탭을 누르면 화면 전체가 그 한 권의 칸으로 보였다, 부커스 내서재).
      */
     private fun titleInOtherList(n: AccessibilityNodeInfo, at: Rect): Boolean {
         fun walk(c: AccessibilityNodeInfo, depth: Int): Boolean {
@@ -312,7 +312,7 @@ open class ReaderApp(
         val items = list.map(::plain).filter { it.isNotEmpty() }
         val clickProgress = items.firstNotNullOfOrNull { percent(it).takeIf { p -> p >= 0 } } ?: return null
         val title = items.firstOrNull()?.takeIf { percent(it) < 0 && !STATUS_ONLY.matches(it) } ?: return null
-        // 반납 문구: `반납 4일 남음`, 북커스 격자 보기 칸은 저자 없이 `9일 남음`
+        // 반납 문구: `반납 4일 남음`, 부커스 격자 보기 칸은 저자 없이 `9일 남음`
         fun isDue(t: String) = "반납" in t || "만료" in t || STATUS_ONLY.matches(t)
         val dueDay = if (due != null) items.firstOrNull(::isDue)?.let(::dueDate) ?: -1 else -1
         val author = if (authors.isNotEmpty()) authorName(items.getOrNull(1)?.takeIf { "%" !in it && !isDue(it) }.orEmpty()) else ""
@@ -321,7 +321,7 @@ open class ReaderApp(
     }
 
     /**
-     * 누른 순간 화면이 이미 읽는 화면으로 넘어가 칸을 못 읽었을 때(북커스·YES24 도서관): 누른 글자 가운데 하나가 방금 본 서재 칸의
+     * 누른 순간 화면이 이미 읽는 화면으로 넘어가 칸을 못 읽었을 때(부커스·YES24 도서관): 누른 글자 가운데 하나가 방금 본 서재 칸의
      * 제목과 똑같으면 그 칸(YES24 도서관은 도서관 이름이 제목보다 앞에 온다). 탭·단추 글자는 책 제목과 같을 일이 없어 책으로 들어가지 않는다.
      */
     private fun shelfCellByText(list: List<CharSequence>, last: List<Cell>?): Cell? {
@@ -329,7 +329,7 @@ open class ReaderApp(
         return last?.firstOrNull { it.title in texts }?.copy(stale = true)
     }
 
-    /** 글자가 없는 묶음이면 바로 아래 글자들을 이어 붙인다(북커스 아래 줄: `8` ` / ` `371` 세 조각). */
+    /** 글자가 없는 묶음이면 바로 아래 글자들을 이어 붙인다(부커스 아래 줄: `8` ` / ` `371` 세 조각). */
     private fun textOf(n: AccessibilityNodeInfo): String? = n.text?.toString()
         ?: (0 until n.childCount).mapNotNull { n.getChild(it)?.text?.toString() }.joinToString("").ifEmpty { null }
 }
