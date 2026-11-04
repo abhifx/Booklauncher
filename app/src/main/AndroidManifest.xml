@@ -105,6 +105,12 @@
             android:exported="false" />
 
         <activity
+            android:name=".CategoriesActivity"
+            android:screenOrientation="locked"
+            android:excludeFromRecents="true"
+            android:exported="false" />
+
+        <activity
             android:name=".RecapActivity"
             android:screenOrientation="locked"
             android:excludeFromRecents="true"

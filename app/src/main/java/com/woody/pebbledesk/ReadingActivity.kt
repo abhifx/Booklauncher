@@ -35,6 +35,10 @@ class ReadingActivity : EinkActivity() {
     private lateinit var body: LinearLayout
     /** 이번 주 읽은 책(다섯 권이 넘으면 쪽을 넘긴다). 읽은 책이 없으면 null. */
     private var bookRows: PagedRows? = null
+    /** 제목 옆 보기 거르기 `전체 ▾`(카테고리가 있을 때만), 제목 줄과 오른쪽 `올해 읽은 책 ›`(다 들지 않으면 줄인다) */
+    private lateinit var filterText: TextView
+    private lateinit var titleBar: LinearLayout
+    private lateinit var yearLink: TextView
 
     /**
      * 가로 화면: 왼쪽 요약 칸(연속일·오늘 링, 읽은 시간, 이번 주 읽은 책)과 오른쪽 달력·그래프(남는 높이를 채운다).
@@ -46,6 +50,8 @@ class ReadingActivity : EinkActivity() {
         super.onCreate(savedInstanceState)
         val root = vbox()
         root.addView(titleRow(getString(R.string.reading_stats), Palette.Area.READING) { finish() }.apply {
+            filterText = text("", 21f, color = Ui.GRAY).apply { setPadding(dp(14), dp(20), dp(8), dp(20)) }
+            addView(filterText, lp(WRAP, WRAP).apply { topMargin = dp(6) })
             addView(View(context), lp(0, 0, 1f))
             // 올해 읽은 책
             val link = text(getString(R.string.year_books_link), 17f, Ui.bold).apply {
@@ -53,6 +59,8 @@ class ReadingActivity : EinkActivity() {
                 setOnClickListener { startActivity(YearBooksActivity.intent(this@ReadingActivity)) }
             }
             addView(link, lp(WRAP, WRAP))
+            yearLink = link
+            titleBar = this
             fitTitleLink(this, link)
         })
         root.addView(hline(2))
@@ -81,12 +89,16 @@ class ReadingActivity : EinkActivity() {
     private var shown: List<Any?>? = null
 
     private fun render() {
-        val days = ReadingLog.days(this, ReadingLog.readerPackages(this))
+        val raw = ReadingLog.days(this, ReadingLog.readerPackages(this))
         val today = LocalDate.now()
+        // 보기 거르기(고른 카테고리의 책만, `전체`면 통계에서 뺀 카테고리의 책만 빼고). 화면 전체(연속일·링·달력·합계·이번 주 읽은 책)가 거른 기록으로 센다.
+        val filter = StatsFilter.of(this, prefs.statsPicked(HomePrefs.StatsScreen.READING))
+        val days = raw?.let(filter::days)
         // 지난날이 저장되거나 기록을 고치면 DB 순번이 바뀐다(세기가 날이 바뀐 지난날을 저장하므로 DB 순번은 센 뒤에 본다)
-        val state = listOf(days?.get(today), today, Db.changes(), prefs.readingGoalMin, prefs.firstDayOfWeek, both, days == null)
+        val state = listOf(raw?.get(today), today, Db.changes(), prefs.readingGoalMin, prefs.firstDayOfWeek, both, raw == null, filter.picked)
         if (state == shown) return
         shown = state
+        showFilter(filter, raw, today)
         body.removeAllViews()
         hasCalendar = days != null
         if (days == null) {
@@ -136,6 +148,23 @@ class ReadingActivity : EinkActivity() {
             val page = text("", 13f, Ui.bold, Ui.GRAY)
             addView(section(getString(R.string.books_this_week), byBook(days, today, page), page), lp(0, WRAP, 1f).apply { marginStart = dp(BOOKS_GAP) })
         })
+    }
+
+    /**
+     * 제목 옆 `전체 ▾`(카테고리를 하나도 만들지 않았으면 두지 않는다). 누르면 보기 메뉴(줄마다 그것만 골랐을 때 올해 읽은 시간).
+     * 제목 줄에 다 들지 않으면 `올해 읽은 책 ›` 을 줄인다(처음 크기부터 다시 잰다).
+     */
+    private fun showFilter(filter: StatsFilter, raw: ReadingDays?, today: LocalDate) {
+        filterText.visibility = if (filter.categories.isEmpty()) View.GONE else View.VISIBLE
+        filterText.text = "${filterName(filter)} ▾"
+        filterText.setOnClickListener {
+            showStatsFilter(filter, getString(R.string.filter_reading_sub), { f ->
+                val d = raw?.let(f::days).orEmpty()
+                duration(d.filterKeys { it.year == today.year && it <= today }.keys.sumOf { d.total(it) })
+            }) { prefs.setStatsPicked(HomePrefs.StatsScreen.READING, it); render() }
+        }
+        yearLink.setSp(17f)
+        fitTitleLink(titleBar, yearLink)
     }
 
     /** 좌우 여백만큼 들인다 */
