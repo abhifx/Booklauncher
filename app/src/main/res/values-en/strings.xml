@@ -372,7 +372,7 @@
     <string name="guide_n_moon_title">For books opened from the Home tab or bookshelf view, added when you open the menu</string>
     <string name="guide_n_kindle_cover">For Send to Kindle documents, added when you return to the library after reading</string>
     <string name="guide_n_kindle_title">For books not yet downloaded, added when you open the menu</string>
-    <string name="guide_n_bookers2_cover">Added only for books whose details you viewed</string>
+    <string name="guide_n_bookers2_cover">Added only for books whose details you viewed (My library ⋮ › 상세 보기)</string>
     <string name="guide_n_epub">EPUB only</string>
     <string name="guide_r_kyobo_shelf">Cannot be read from the Kyobo eBook app</string>
     <string name="guide_r_myyes_capture">my YES blocks screen capture</string>
@@ -452,6 +452,13 @@
     <string name="comic_archives_failed">Couldn\'t download. Please try again later.</string>
     <string name="file_notice_title">Turn on Read\u00A0book\u00A0files to get %s book info</string>
     <string name="file_notice_desc">Info such as book covers and titles is read from the files.</string>
+    <string name="same_book_title">Same book?</string>
+    <string name="same_book_desc">%s · The library and the reader show different titles</string>
+    <string name="same_book_read">Reader</string>
+    <string name="same_book_shelf">Library</string>
+    <string name="same_book_note">If it is the same book, its due date from the library and its cover from the details are added to this book.</string>
+    <string name="same_book_yes">Same book</string>
+    <string name="same_book_no">Different book</string>
     <string name="book_file_missing_title">Couldn\'t find this book\'s file</string>
     <string name="book_file_missing_desc">The file may have been deleted or moved. Open this book once in %s, and it will open from here next time.</string>
     <string name="app_neoreader">NeoReader (BOOX)</string>

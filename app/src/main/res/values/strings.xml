@@ -313,8 +313,8 @@
     <string name="guide_millie">밀리의서재(e-ink)</string>
     <string name="guide_millie_mobile">밀리의서재</string>
     <string name="guide_aladin">알라딘</string>
-    <string name="guide_bookers">북커스(1.x)</string>
-    <string name="guide_bookers2">북커스(2.0 부터)</string>
+    <string name="guide_bookers">부커스(1.x)</string>
+    <string name="guide_bookers2">부커스(2.0 부터)</string>
     <string name="guide_ridi">리디</string>
     <string name="guide_ridi_onestore">리디(원스토어)</string>
     <string name="guide_yes24lib">YES24 전자도서관(e-ink)</string>
@@ -376,7 +376,7 @@
     <string name="guide_n_moon_title">홈 탭·책장 보기로 연 책은 메뉴를 띄우면 들어옵니다</string>
     <string name="guide_n_kindle_cover">Send to Kindle 문서는 읽고 서재로 돌아가면 들어옵니다</string>
     <string name="guide_n_kindle_title">받지 않았던 책은 메뉴를 띄우면 들어옵니다</string>
-    <string name="guide_n_bookers2_cover">책 상세를 본 책만 들어옵니다</string>
+    <string name="guide_n_bookers2_cover">책 상세(내 서재의 ⋮ › 상세 보기)를 본 책만 들어옵니다</string>
     <string name="guide_n_epub">EPUB 만 들어옵니다</string>
     <string name="guide_r_kyobo_shelf">교보eBook 앱에서 읽을 수 없습니다</string>
     <string name="guide_r_myyes_capture">my YES 가 화면 캡처를 막습니다</string>
@@ -458,6 +458,13 @@
     <!-- 홈의 책 파일 읽기 안내 창(%s = 이북 앱 이름). '책 파일 읽기'는 줄에서 나뉘지 않게 붙인다 -->
     <string name="file_notice_title">%s 책 정보를 가져오려면 책\u00A0파일\u00A0읽기를 켜 주세요</string>
     <string name="file_notice_desc">책 표지, 책 이름 등의 정보를 파일에서 읽어 옵니다.</string>
+    <string name="same_book_title">같은 책인가요?</string>
+    <string name="same_book_desc">%s · 서재와 읽는 화면의 제목이 다릅니다</string>
+    <string name="same_book_read">읽는 화면</string>
+    <string name="same_book_shelf">내 서재</string>
+    <string name="same_book_note">같은 책이면 서재의 반납일과 상세의 표지가 이 책에 붙습니다.</string>
+    <string name="same_book_yes">같은 책</string>
+    <string name="same_book_no">다른 책</string>
     <string name="book_file_missing_title">이 책의 파일을 찾지 못했습니다</string>
     <string name="book_file_missing_desc">파일이 지워졌거나 옮겨졌을 수 있습니다. %s에서 이 책을 한 번 열면 다음부터 여기서 바로 열립니다.</string>
     <string name="app_neoreader">네오리더(BOOX)</string>

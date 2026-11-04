@@ -123,7 +123,7 @@ internal fun sameFileName(a: String, b: String) =
 internal fun percent(text: CharSequence): Int =
     PERCENT.find(text)?.groupValues?.get(1)?.toInt()?.coerceIn(0, 100) ?: -1
 
-/** 읽는 화면의 진행률: `2% (4/226p)` 처럼 % 가 있으면 그것, 없으면 쪽 `6 / 368` 로 계산(알라딘·북커스). 모르면 -1 */
+/** 읽는 화면의 진행률: `2% (4/226p)` 처럼 % 가 있으면 그것, 없으면 쪽 `6 / 368` 로 계산(알라딘·부커스). 모르면 -1 */
 internal fun viewerPercent(text: CharSequence, roundUp: Boolean): Int {
     percent(text).takeIf { it >= 0 }?.let { return it }
     val m = PAGES.find(text) ?: return -1
