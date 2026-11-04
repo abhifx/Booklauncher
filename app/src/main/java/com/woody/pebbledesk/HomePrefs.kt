@@ -161,6 +161,15 @@ class HomePrefs(context: Context) {
         get() = sp.getBoolean("year_finished_only", false)
         set(v) = sp.edit().putBoolean("year_finished_only", v).apply()
 
+    /** 통계 화면마다(독서 기록·올해 읽은 책·결산) 보기에서 고른 카테고리([Categories.NONE] = 분류 없음). 비면 `전체`. */
+    enum class StatsScreen(val key: String) { READING("filter_reading"), YEAR("filter_year"), RECAP("filter_recap") }
+
+    fun statsPicked(screen: StatsScreen): Set<Long> =
+        sp.getStringSet(screen.key, emptySet())!!.mapNotNull { it.toLongOrNull() }.toSet()
+
+    fun setStatsPicked(screen: StatsScreen, picked: Set<Long>) =
+        sp.edit().putStringSet(screen.key, picked.map { it.toString() }.toSet()).apply()
+
     // 읽는 책 자동 추가·오늘 읽은 시간은 따로 켜짐 값을 두지 않는다. 시스템의 접근성(ReaderWatchService.isEnabled)·
     // 사용 기록 액세스(ReadingLog.hasAccess)가 곧 켜짐이다(1.3.1 까지의 `auto_books`·`reading_time` 은 읽지 않는다).
 

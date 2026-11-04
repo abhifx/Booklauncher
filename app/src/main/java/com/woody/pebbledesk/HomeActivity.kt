@@ -666,7 +666,7 @@ class HomeActivity : EinkActivity() {
 
     /** 하단 가운데의 `오늘 42분 · 5일째`(바형 화면은 `오늘` 없이). 사용 기록 액세스가 없으면(= 오늘 읽은 시간 꺼짐) 비운다. */
     private fun updateReading() {
-        // 어느 책인지는 알 수 없어 하루 합계만 센다. 권한이 없으면 null.
+        // 하루 합계(통계에서 뺀 카테고리의 책은 빼고). 권한이 없으면 null.
         val summary = ReadingLog.summary(this, ReadingLog.readerPackages(this))
         // 긴 것부터: `오늘 42분 · 5일째` → `42분 · 5일째` → `42분`(연속일은 이틀째부터). 바형은 `42분 · 5일째` 부터
         val lines = summary?.let {

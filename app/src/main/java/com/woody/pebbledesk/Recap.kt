@@ -36,10 +36,11 @@ object Recap {
     /**
      * 한 달: [dayMs] 는 어떤 책인지 모르는 시간까지 더한 날마다의 합계(1일부터). [books] 는 처음 읽은 날 순.
      * [yearDayMs] 는 그해 날마다 합계(올해 잔디), [goalMin] 은 잔디 단계의 기준(하루 목표, 없으면 30분).
+     * [filter] 는 보기에서 고른 카테고리 이름(`소설`, `전체`면 null). 그림 머리에 붙인다.
      */
     class Month(
         val month: YearMonth, val dayMs: LongArray, val books: List<Book>, val yearDayMs: Map<LocalDate, Long>,
-        val goalMin: Int, val firstDayOfWeek: DayOfWeek,
+        val goalMin: Int, val firstDayOfWeek: DayOfWeek, val filter: String?,
     ) {
         val totalMs = dayMs.sum()
 
@@ -51,15 +52,25 @@ object Recap {
         val bestDay: Int? = dayMs.indices.maxByOrNull { dayMs[it] }?.takeIf { dayMs[it] > 0 }?.plus(1)
     }
 
-    /** [month] 의 결산. 사용 기록 권한이 없으면(꺼 둠·잠금 해제 전) 저장해 둔 지난 기록으로. */
-    fun load(context: Context, month: YearMonth, prefs: HomePrefs): Month {
-        val days = ReadingLog.days(context, ReadingLog.readerPackages(context)) ?: ReadingLog.savedDays(context)
-        val records = BookRecord.all(context, days).filter { !it.hidden }
-        return build(month, days, records, prefs.readingGoalMin, prefs.firstDayOfWeek)
+    /**
+     * [month] 의 결산. 사용 기록 권한이 없으면(꺼 둠·잠금 해제 전) 저장해 둔 지난 기록으로.
+     * [filter] 로 거른다(고른 카테고리의 책과 그 시간만, `전체`면 통계에서 뺀 카테고리의 책만 빼고). 책 기록은 거르지 않은 기록으로 모은 뒤 책으로 거른다.
+     */
+    fun load(context: Context, month: YearMonth, prefs: HomePrefs, filter: StatsFilter, filterName: String?): Month {
+        val days = days(context)
+        return build(month, days, BookRecord.all(context, days), prefs.readingGoalMin, prefs.firstDayOfWeek, filter, filterName)
     }
 
-    /** [load] 의 몸통(테스트는 읽은 시간과 기록을 직접 넣는다) */
-    internal fun build(month: YearMonth, days: ReadingDays, records: List<BookRecord>, goalMin: Int, firstDayOfWeek: DayOfWeek): Month {
+    /** [load] 의 거르기(테스트는 읽은 시간과 기록을 직접 넣는다): 기록에서 지운 책과 [filter] 에 들지 않는 책을 빼고, 날마다 시간도 [filter] 로 거른다 */
+    internal fun build(
+        month: YearMonth, days: ReadingDays, records: List<BookRecord>, goalMin: Int, firstDayOfWeek: DayOfWeek, filter: StatsFilter, filterName: String?,
+    ): Month = build(month, filter.days(days), records.filter { !it.hidden && filter.keepsBook(it.book.id) }, goalMin, firstDayOfWeek, filterName)
+
+    /** 결산이 세는 읽은 기록(사용 기록 권한이 없으면 저장해 둔 지난 기록). 보기 메뉴의 줄마다 시간도 이것으로. */
+    fun days(context: Context): ReadingDays = ReadingLog.days(context, ReadingLog.readerPackages(context)) ?: ReadingLog.savedDays(context)
+
+    /** [load] 의 몸통(거른 뒤의 읽은 시간과 기록으로) */
+    internal fun build(month: YearMonth, days: ReadingDays, records: List<BookRecord>, goalMin: Int, firstDayOfWeek: DayOfWeek, filter: String? = null): Month {
         val n = month.lengthOfMonth()
         val dayMs = LongArray(n) { days.total(month.atDay(it + 1)) }
         val books = records.mapNotNull { r ->
@@ -75,7 +86,7 @@ object Recap {
             Book(r.book, per, finish?.dayOfMonth, round?.review?.halves ?: 0, round?.review?.text.orEmpty(), start?.dayOfMonth)
         }.sortedWith(compareBy<Book> { it.firstDay }.thenByDescending { it.ms })
         val year = days.keys.filter { it.year == month.year }.associateWith { days.total(it) }
-        return Month(month, dayMs, books, year, goalMin.takeIf { it > 0 } ?: DEFAULT_GOAL_MIN, firstDayOfWeek)
+        return Month(month, dayMs, books, year, goalMin.takeIf { it > 0 } ?: DEFAULT_GOAL_MIN, firstDayOfWeek, filter)
     }
 
     private const val DEFAULT_GOAL_MIN = 30
