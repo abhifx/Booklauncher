@@ -36,6 +36,7 @@ import com.woody.pebbledesk.readers.ReaderApp
 import com.woody.pebbledesk.readers.Readest
 import com.woody.pebbledesk.readers.Ridi
 import com.woody.pebbledesk.readers.RidiOneStore
+import com.woody.pebbledesk.readers.Wattpad
 import com.woody.pebbledesk.readers.Woojoo
 import com.woody.pebbledesk.readers.Yes24Ebook
 import com.woody.pebbledesk.readers.Yes24Library
@@ -218,6 +219,11 @@ internal object ReaderGuide {
             cover = YES, title = YES, author = YES, progress = READING_MENU, due = OWN_FILE,
             bookFiles = R.string.guide_files_librera, note = R.string.guide_note_librera,
             coverBefore11 = Field(R.string.guide_added_book_files, R.string.guide_n_librera_cover_files),
+        )),
+        App(listOf(R.string.guide_wattpad), listOf(Wattpad), Info(
+            listOf(R.string.guide_t_wattpad_open),
+            cover = YES, title = YES, author = yes(R.string.guide_n_wattpad_author),
+            progress = yes(R.string.guide_n_wattpad_chapter), due = NO, note = R.string.guide_note_wattpad,
         )),
     )
 }
