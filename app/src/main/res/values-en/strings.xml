@@ -181,6 +181,8 @@
     <string name="finish_nth">#%1$d</string>
     <string name="edit_book">Edit book info ›</string>
     <string name="forget_confirm">Remove from your books read?</string>
+    <string name="forget_on_home">Remove it from home first</string>
+    <string name="forget_on_home_note">A book on your home can\'t be removed from the log.</string>
     <string name="forget_round_confirm">Remove read %1$s?</string>
     <string name="forget_round">Remove this read</string>
     <string name="since_date">Since %1$s</string>
@@ -203,8 +205,8 @@
     <string name="all_history">All records ›</string>
     <string name="total_time">%1$s in all</string>
     <string name="since_year">since %1$d</string>
-    <string name="remove_confirm">Remove from your reading list?</string>
-    <string name="remove_book">Remove book</string>
+    <string name="remove_confirm">Remove from home?</string>
+    <string name="remove_book">Remove from home</string>
     <string name="review_stars_hint">Tap or slide to rate · optional</string>
     <string name="review_stars_set">%1$s / 5 · tap again to clear</string>
     <string name="review_text_hint">Your thoughts, or a line that stayed with you</string>

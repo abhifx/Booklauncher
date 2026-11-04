@@ -990,7 +990,7 @@ class HomeActivity : EinkActivity() {
     private fun coverView(book: ShelfBook, widthPx: Int): View = coverImage(BookShelf.cover(this, book, widthPx))
 
     /** 책을 길게 누르면 올해 읽은 책과 같은 책 상세([showBookDetail]) */
-    private fun showBookMenu(book: ShelfBook) = showBookDetail(BookRecord.of(this, book)) { refresh() }
+    private fun showBookMenu(book: ShelfBook) = showBookDetail(BookRecord.of(this, book), onHome = true) { refresh() }
 
     companion object {
         /** 하단 가운데 글자와 양쪽(`모든 앱 ›`·설정 아이콘) 사이 최소 간격 */

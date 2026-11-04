@@ -59,7 +59,7 @@ class BookRecord(
     val inYearBooks get() = finished || readYears.isNotEmpty()
 
     /**
-     * 지금 회차에 별점·감상을 남길 수 있다(상세의 별점 칸·`책 빼기`의 별점·감상 메뉴): 올해 읽은 책에 보이는 책이거나 이미 남긴 것이 있다
+     * 지금 회차에 별점·감상을 남길 수 있다(상세의 별점 칸·`홈에서 빼기`의 별점·감상 메뉴): 올해 읽은 책에 보이는 책이거나 이미 남긴 것이 있다
      * (읽은 시간 없이 감상만 있는 1.5.3 이전 기록도 고칠 수 있게). 아니면 남긴 것을 볼 곳이 없어 막는다.
      */
     val canReview get() = inYearBooks || lastRound.review != null
