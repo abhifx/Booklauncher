@@ -12,8 +12,8 @@ README 는 영어(`README.md`)와 한국어(`README.ko.md`) 두 벌이다. 하�
 
 ```bash
 export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
-./gradlew -q assembleRelease          # app/build/outputs/apk/release/PebbleDesk-1.7.5-release.apk
-adb install -r app/build/outputs/apk/release/PebbleDesk-1.7.5-release.apk </dev/null
+./gradlew -q assembleRelease          # app/build/outputs/apk/release/PebbleDesk-1.7.6-release.apk
+adb install -r app/build/outputs/apk/release/PebbleDesk-1.7.6-release.apk </dev/null
 ```
 
 - 릴리스는 R8 축소(약 740KB, 1.6.5 는 720KB·1.6.4 는 705KB·1.6.1 은 734KB·1.5.3 은 480KB. HTML 라이브러리 없이 YES24 검색 결과를 직접 읽는다. 릴리스만 Kotlin 널 검사 호출을 빼고(`-Xno-*-assertions`) `-repackageclasses`, 도장 그림은 16단계 투명도 4비트 PNG). dex 는 minSdk 28 이라 압축하지 않고 넣는다(설치 뒤 풀어 두지 않아 저장 공간·실행이 낫다). 덮어 설치하면 앱 데이터가 남는다.
