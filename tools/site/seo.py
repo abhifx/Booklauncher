@@ -150,7 +150,7 @@ LAUNCHERS = [("토탈 런처", "Total Launcher"), ("노바 런처", "Nova Launch
 # keywords 에 넣는 기기 회사 이름(우리말로 흔히 부르는 이름 포함: BOOX = 부크·오닉스)
 BRANDS = {"ko": ["크레마", "부크", "오닉스 BOOX", "메이북", "아이리더", "교보 sam", "빅미"], "en": ["Crema", "Onyx BOOX", "Meebook", "iReader", "Bigme"]}
 # keywords 에 넣는 이북 앱(자동 추가를 지원하는 앱 가운데 많이 쓰는 것. 킨들은 앱만: 킨들 기기는 안드로이드 앱을 깔 수 없다)
-KEY_APPS = {"ko": ["교보도서관", "밀리의서재", "리디", "YES24 전자도서관", "킨들 앱", "KOReader"], "en": ["Kindle app", "Libby", "KOReader", "Moon+ Reader", "Google Play Books"]}
+KEY_APPS = {"ko": ["교보도서관", "밀리의서재", "리디", "YES24 전자도서관", "킨들 앱", "KOReader"], "en": ["Kindle app", "Libby", "KOReader", "Moon+ Reader", "Google Play Books", "Wattpad"]}
 
 
 def keywords(lang):
@@ -278,7 +278,7 @@ Latest version: {VERSION} ({RELEASED}), first released {FIRST}.
 ## Features
 
 {chr(10).join("- " + f for f in en["features"])}
-- Supported reading apps (auto-add): Kindle, Kobo Books, Libby, KOReader, Readest, BookFusion, Moon+ Reader, EzViewer (이지뷰어), CherieViewer (채리뷰어), Woojoo (우주뷰어), Google Play Books, Mihon, Kahon, Futon, Kotatsu, Librera, Kyobo Library, Kyobo eBook, millie (밀리의서재), Aladin, Bookers, RIDI, YES24 Library, my YES, YES24 eBook, the built-in readers of BOOX (NeoReader) and iReader devices
+- Supported reading apps (auto-add): Kindle, Kobo Books, Libby, KOReader, Readest, BookFusion, Moon+ Reader, EzViewer (이지뷰어), CherieViewer (채리뷰어), Woojoo (우주뷰어), Google Play Books, Mihon, Kahon, Futon, Kotatsu, Librera, Wattpad, Kyobo Library, Kyobo eBook, millie (밀리의서재), Aladin, Bookers, RIDI, YES24 Library, my YES, YES24 eBook, the built-in readers of BOOX (NeoReader) and iReader devices
 
 ## Compared with other launchers
 
