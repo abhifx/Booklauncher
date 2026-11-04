@@ -32,6 +32,8 @@ import java.time.LocalDate
  *   완독하면 그 완독 줄로 옮긴다). 앞 회차 완독한 날부터 끝 날(진행 중이면 오늘)까지 고친다([BookRecord.startDayRange]). 버전 6에서 더했다.
  * - `category`·`book_category`: 사용자가 만든 카테고리(이름·순서 `pos`·통계에서 빼기 `excluded`, 기기를 옮겨도 그대로인 `uid`)와 책(id)마다 붙인 카테고리
  *   (없으면 줄이 없다, 책 하나에 하나). [Categories]. 버전 7에서 더했다.
+ * - `round_drop`: 지운 회차(전체 기록의 회차 줄 휴지통, [BookShelf.forgetRound]). 그 책의 `after_day` 다음 날(null 이면 처음)부터
+ *   `until_day` 까지 읽은 시간은 그 책의 기록·회차에 넣지 않는다(하루 합계·연속일에는 그대로). 버전 7에서 더했다.
  * 처음 열 때 1.2.1 까지의 JSON 파일을 옮기고 `<이름>.migrated` 로 바꿔 둔다([importFiles]).
  * 낮은 버전으로 되돌리기(새 판 DB 위에 옛 판을 까는 것)는 지원하지 않는다. 안드로이드가 낮은 판 덮어 설치를 막고, 억지로 깔면 DB 를 열지 못한다.
  */
@@ -91,6 +93,7 @@ object Db {
         createBookFile(db)
         addBegan(db)
         createCategory(db)
+        createRoundDrop(db)
     }
 
     /** [oldVersion] 의 DB 를 지금 버전으로(SQLiteOpenHelper 가 한 트랜잭션으로 돌린다. 마이그레이션 테스트도 쓴다) */
@@ -133,6 +136,8 @@ object Db {
         if (oldVersion < 6) addBegan(db)
         // 카테고리와 책에 붙인 카테고리
         if (oldVersion < 7) createCategory(db)
+        // 지운 회차
+        if (oldVersion < 7) createRoundDrop(db)
     }
 
     /** 버전 7: 카테고리(이름·순서·통계에서 빼기)와 책마다 붙인 카테고리 */
@@ -200,6 +205,12 @@ object Db {
 
     private fun createBookFile(db: SQLiteDatabase) =
         db.execSQL("CREATE TABLE book_file (book_id TEXT PRIMARY KEY, path TEXT NOT NULL)")
+
+    /** 지운 회차: 책 id, 그 회차 앞 회차가 끝난 날(`after_day`, 첫 회차면 null), 그 회차가 끝난 날(`until_day`). 한 책에 여러 줄 */
+    private fun createRoundDrop(db: SQLiteDatabase) {
+        db.execSQL("CREATE TABLE round_drop (id INTEGER PRIMARY KEY AUTOINCREMENT, book_id TEXT NOT NULL, after_day INTEGER, until_day INTEGER NOT NULL)")
+        db.execSQL("CREATE INDEX round_drop_book ON round_drop (book_id)")
+    }
 
     private fun createRoundStart(db: SQLiteDatabase) =
         db.execSQL("CREATE TABLE round_start (book_id TEXT PRIMARY KEY, day INTEGER)")

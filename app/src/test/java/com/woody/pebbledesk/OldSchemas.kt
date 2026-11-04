@@ -18,14 +18,15 @@ object OldSchemas {
         db.execSQL("CREATE TABLE review (book_id TEXT PRIMARY KEY, stars INTEGER NOT NULL, text TEXT NOT NULL, updated_at INTEGER NOT NULL)")
     }
 
-    /** 버전 6: 지금 표에서 버전 7 의 `category`·`book_category` 만 없다 */
+    /** 버전 6: 지금 표에서 버전 7 의 `category`·`book_category`·`round_drop` 만 없다 */
     fun v6(db: SQLiteDatabase) = with(db) {
         Db.create(this)
         execSQL("DROP TABLE category")
         execSQL("DROP TABLE book_category")
+        execSQL("DROP TABLE round_drop")
     }
 
-    /** 버전 5: 지금 표에서 버전 6 의 `finish.began`·`round_began` 만 없다 */
+    /** 버전 5: 버전 6 에서 `finish.began`·`round_began` 이 없다 */
     fun v5(db: SQLiteDatabase) = with(db) {
         v6(this)
         execSQL("DROP TABLE round_began")
