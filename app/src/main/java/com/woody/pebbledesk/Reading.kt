@@ -54,7 +54,7 @@ object ReadingLog {
     /**
      * 읽는 화면(클래스의 마지막 이름). 서재·스토어 화면과 구분한다.
      * 밀리 EPubViewActivity · 교보 ViewerEpubMainActivity · 알라딘 ViewerActivity, ReadONBookRenderActivity ·
-     * 리디 EPubReaderActivity · YES24 CremaEPUBActivity · 북커스 EpubActivity 등. 리디의 WebViewActivity 같은 웹 화면은 뺀다.
+     * 리디 EPubReaderActivity · YES24 CremaEPUBActivity · 부커스 EpubActivity 등. 리디의 WebViewActivity 같은 웹 화면은 뺀다.
      * 자동 추가가 받는 앱은 앱 파일에 적은 읽는 화면([ReaderApps.isViewer], 문리더 ActivityTxt 처럼 이 규칙에 안 맞는 것도)으로 센다.
      */
     private val READER = Regex(

@@ -10,7 +10,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
-/** 누른 책 칸: 탭·단추를 누른 것이 서재의 한 권으로 잡히지 않는다(북커스 내서재, 책이 한 권일 때). 요소 나무 때문에 Robolectric */
+/** 누른 책 칸: 탭·단추를 누른 것이 서재의 한 권으로 잡히지 않는다(부커스 내서재, 책이 한 권일 때). 요소 나무 때문에 Robolectric */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
 class ClickedCellTest {
@@ -32,7 +32,7 @@ class ClickedCellTest {
         node("android.widget.TextView", 20, top + 370, 200, top + 400, "tv_percent", "1%"),
     )
 
-    /** 북커스 내서재: 위에 탭 줄, 아래 목록(RecyclerView)에 책 칸들 */
+    /** 부커스 내서재: 위에 탭 줄, 아래 목록(RecyclerView)에 책 칸들 */
     private fun shelf(vararg cells: AccessibilityNodeInfo): Triple<AccessibilityNodeInfo, AccessibilityNodeInfo, AccessibilityNodeInfo> {
         val tab = node("android.widget.TextView", 214, 180, 428, 270, null, "다운로드")
         val tabs = node("android.widget.LinearLayout", 0, 180, 1072, 270, null, null, node("android.widget.TextView", 0, 180, 214, 270, null, "읽고 싶은 책"), tab)

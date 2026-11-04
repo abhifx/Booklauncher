@@ -5,7 +5,7 @@ import android.content.Context
 /**
  * 읽는 책 자동 추가가 받는 이북 앱들(앱마다 파일 하나). 앱을 더하면 여기와
  * `res/xml/reader_watch.xml` 의 packageNames(시스템이 이 앱들의 화면만 보낸다), 설정 › 독서 › 자동 추가 안내의 앱(`ReaderGuide.APPS`,
- * 빠지면 단위 테스트가 알린다)을 함께 고친다. 한 패키지가 판에 따라 다른 앱이면(북커스 2.0.0 · 1.x) 새 판의 앱 파일을 앞에 둔다([ReaderApp.handles]).
+ * 빠지면 단위 테스트가 알린다)을 함께 고친다. 한 패키지가 판에 따라 다른 앱이면(부커스 2.0.0 · 1.x) 새 판의 앱 파일을 앞에 둔다([ReaderApp.handles]).
  */
 object ReaderApps {
     val ALL = listOf(
@@ -38,7 +38,7 @@ object ReaderApps {
 
     /**
      * 표시로 읽은 시간을 자르는 앱마다 지켜보지 않을 때의 상태: [ViewerTime.MARKS_OPEN](KOReader)은 열림(앞에 있던 동안을 다 센다),
-     * [ViewerTime.MARKS_CLOSED](Libby·Readest·북커스 2.0)는 닫힘. 적힌 것이 없을 때와 서비스가 없는 동안([com.woody.pebbledesk.ReadingLog.watchStopped])
+     * [ViewerTime.MARKS_CLOSED](Libby·Readest·부커스 2.0)는 닫힘. 적힌 것이 없을 때와 서비스가 없는 동안([com.woody.pebbledesk.ReadingLog.watchStopped])
      */
     val unwatchedShown: Map<String, Boolean> =
         ALL.filter { it.viewerTime != ViewerTime.SCREEN }.associate { it.pkg to (it.viewerTime == ViewerTime.MARKS_OPEN) }
