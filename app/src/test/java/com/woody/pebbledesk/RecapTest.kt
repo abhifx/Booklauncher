@@ -211,4 +211,35 @@ class RecapTest {
         assertEquals(listOf(8, 10, 12), b.days)
         assertNull(b.startDay)
     }
+    @Test fun `카테고리로 거르면 책과 시간을 함께 거르고, 전체는 통계에서 뺀 카테고리와 기록에서 지운 책만 뺀다`() {
+        val novel = rec("novel", mapOf("2026-10-02" to 10))
+        val comic = rec("comic", mapOf("2026-10-03" to 20))
+        val plain = rec("plain", mapOf("2026-10-04" to 40))
+        val gone = BookRecord(ShelfBook("gone", "gone", "", null, 0), State.PAST, true, emptyList(), mapOf(d("2026-10-05") to 30 * 60_000L))
+        val records = listOf(novel, comic, plain, gone)
+        // 모르는 시간 15분(9월에도 60분: 올해 잔디)
+        val all = days(records, mapOf("2026-10-06" to 15, "2026-09-01" to 60))
+        val cats = listOf(Category(1, "소설", false), Category(2, "만화", true))
+        val books = mapOf("novel" to 1L, "comic" to 2L)
+        fun month(picked: Set<Long>, name: String? = null) =
+            Recap.build(oct, all, records, 30, DayOfWeek.MONDAY, StatsFilter(picked, cats, books), name)
+
+        // 전체: 만화(통계에서 뺌)와 기록에서 지운 책은 빠지고, 지운 책의 시간·모르는 시간은 합계에 든다
+        val whole = month(emptySet())
+        assertEquals(listOf("novel", "plain"), whole.books.map { it.book.id })
+        assertEquals((10 + 40 + 30 + 15) * 60_000L, whole.totalMs)
+        assertNull(whole.filter)
+
+        // 만화만 고르면 만화 책과 그 시간만, 올해 잔디도 만화 시간만, 이름은 그림 머리에
+        val comicOnly = month(setOf(2L), "만화")
+        assertEquals(listOf("comic"), comicOnly.books.map { it.book.id })
+        assertEquals(20 * 60_000L, comicOnly.totalMs)
+        assertEquals(20 * 60_000L, comicOnly.yearDayMs.values.sum())
+        assertEquals("만화", comicOnly.filter)
+
+        // 분류 없음: 카테고리 없는 책만(모르는 시간은 빠진다)
+        val none = month(setOf(Categories.NONE))
+        assertEquals(listOf("plain"), none.books.map { it.book.id })
+        assertEquals((40 + 30) * 60_000L, none.totalMs)
+    }
 }

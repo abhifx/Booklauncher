@@ -30,6 +30,8 @@ import java.time.LocalDate
  * - `shelf.chapter`: 이북 앱이 보여 준 읽는 화(Mihon 의 화 이름 `Ch. 12` 등, 모르면 ""). 버전 5에서 더했다. 나간 책에는 남기지 않는다(반납일처럼).
  * - `finish.began`·`round_began`: 사용자가 고친 그 회차의 읽기 시작한 날(완독한 회차는 그 완독 줄에, 진행 중 회차는 책(id)마다 `round_began` 에.
  *   완독하면 그 완독 줄로 옮긴다). 앞 회차 완독한 날부터 끝 날(진행 중이면 오늘)까지 고친다([BookRecord.startDayRange]). 버전 6에서 더했다.
+ * - `category`·`book_category`: 사용자가 만든 카테고리(이름·순서 `pos`·통계에서 빼기 `excluded`, 기기를 옮겨도 그대로인 `uid`)와 책(id)마다 붙인 카테고리
+ *   (없으면 줄이 없다, 책 하나에 하나). [Categories]. 버전 7에서 더했다.
  * - `round_drop`: 지운 회차(전체 기록의 회차 줄 휴지통, [BookShelf.forgetRound]). 그 책의 `after_day` 다음 날(null 이면 처음)부터
  *   `until_day` 까지 읽은 시간은 그 책의 기록·회차에 넣지 않는다(하루 합계·연속일에는 그대로). 버전 7에서 더했다.
  * 처음 열 때 1.2.1 까지의 JSON 파일을 옮기고 `<이름>.migrated` 로 바꿔 둔다([importFiles]).
@@ -90,6 +92,7 @@ object Db {
         createViewerMark(db)
         createBookFile(db)
         addBegan(db)
+        createCategory(db)
         createRoundDrop(db)
     }
 
@@ -131,8 +134,19 @@ object Db {
         if (oldVersion < 5) db.execSQL("ALTER TABLE shelf ADD COLUMN chapter TEXT NOT NULL DEFAULT ''")
         // 사용자가 고친 회차의 읽기 시작한 날
         if (oldVersion < 6) addBegan(db)
+        // 카테고리와 책에 붙인 카테고리
+        if (oldVersion < 7) createCategory(db)
         // 지운 회차
         if (oldVersion < 7) createRoundDrop(db)
+    }
+
+    /** 버전 7: 카테고리(이름·순서·통계에서 빼기)와 책마다 붙인 카테고리 */
+    private fun createCategory(db: SQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE category (id INTEGER PRIMARY KEY AUTOINCREMENT, uid TEXT NOT NULL UNIQUE, name TEXT NOT NULL, pos INTEGER NOT NULL, " +
+                "excluded INTEGER NOT NULL DEFAULT 0)"
+        )
+        db.execSQL("CREATE TABLE book_category (book_id TEXT PRIMARY KEY, category_id INTEGER NOT NULL)")
     }
 
     /**

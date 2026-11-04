@@ -26,6 +26,8 @@ import java.time.format.DateTimeFormatter
 class RecapActivity : EinkActivity() {
     private var month: YearMonth = YearMonth.now()
     private lateinit var titleText: TextView
+    /** 제목 옆 보기 거르기 `전체 ▾`(카테고리가 있을 때만) */
+    private lateinit var filterText: TextView
     private lateinit var preview: PictureView
     /** 그림 크게 보기(화면 전체를 덮는다, 그림의 바깥 여백을 잘라 [RecapImage.content]) */
     private lateinit var full: PictureView
@@ -45,7 +47,11 @@ class RecapActivity : EinkActivity() {
         month = (savedInstanceState?.getString(EXTRA_MONTH) ?: intent.getStringExtra(EXTRA_MONTH))
             ?.let { runCatching { YearMonth.parse(it) }.getOrNull() } ?: YearMonth.now()
         val root = vbox()
-        root.addView(titleRow("", Palette.Area.LIBRARY) { finish() }.apply { titleText = getChildAt(1) as TextView })
+        root.addView(titleRow("", Palette.Area.LIBRARY) { finish() }.apply {
+            titleText = getChildAt(1) as TextView
+            filterText = text("", 21f, color = Ui.GRAY).apply { setPadding(dp(14), dp(20), dp(8), dp(20)) }
+            addView(filterText, lp(WRAP, WRAP).apply { topMargin = dp(6) })
+        })
         root.addView(hline(2))
         preview = PictureView(this).apply {
             setPadding(dp(Ui.MARGIN), dp(14), dp(Ui.MARGIN), dp(14))
@@ -120,10 +126,13 @@ class RecapActivity : EinkActivity() {
     }
 
     private fun state(): List<Any?> = listOf(month, Db.changes(), YearMonth.now(),
-        ReadingLog.days(this, ReadingLog.readerPackages(this))?.get(LocalDate.now()))
+        ReadingLog.days(this, ReadingLog.readerPackages(this))?.get(LocalDate.now()), prefs.statsPicked(HomePrefs.StatsScreen.RECAP))
 
     private fun render() {
-        val data = Recap.load(this, month, prefs)
+        // 보기 거르기: 고른 카테고리의 책과 그 시간만(`전체`면 통계에서 뺀 카테고리의 책만 빼고). 고른 이름은 그림 머리에도.
+        val filter = StatsFilter.of(this, prefs.statsPicked(HomePrefs.StatsScreen.RECAP))
+        showFilter(filter)
+        val data = Recap.load(this, month, prefs, filter, filterName(filter).takeUnless { filter.all })
         this.data = data
         shown = state()
         // 화면에는 화면 색 설정대로. 컬러면 그 그림을 그대로 저장·보내기에 쓴다.
@@ -141,6 +150,21 @@ class RecapActivity : EinkActivity() {
         next.text = getString(R.string.recap_next, month.plusMonths(1).format(monthFmt))
         prev.setTextColor(if (canPrev) Ui.BLACK else Ui.DIVIDER)
         next.setTextColor(if (canNext) Ui.BLACK else Ui.DIVIDER)
+    }
+
+    /** 제목 옆 `전체 ▾`(카테고리가 없으면 두지 않는다). 누르면 보기 메뉴(줄마다 그것만 골랐을 때 그달 읽은 시간). */
+    private fun showFilter(filter: StatsFilter) {
+        filterText.visibility = if (filter.categories.isEmpty()) View.GONE else View.VISIBLE
+        filterText.text = "${filterName(filter)} ▾"
+        filterText.setOnClickListener {
+            val raw = Recap.days(this)
+            val shown = month
+            val monthName = shown.format(DateTimeFormatter.ofPattern(getString(R.string.month_fmt), resources.configuration.locales[0]))
+            showStatsFilter(filter, getString(R.string.filter_recap_sub, monthName), { f ->
+                val d = f.days(raw)
+                duration((1..shown.lengthOfMonth()).sumOf { d.total(shown.atDay(it)) })
+            }) { prefs.setStatsPicked(HomePrefs.StatsScreen.RECAP, it); render() }
+        }
     }
 
     /** 파일 이름 `PebbleDesk-2026-10.png` */

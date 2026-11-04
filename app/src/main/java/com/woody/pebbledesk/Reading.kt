@@ -432,8 +432,9 @@ object ReadingLog {
     /** 기록이 시작된 날. 그 전 날은 읽었는지 알 수 없다. 아직 기록이 없으면 null. */
     fun since(context: Context): LocalDate? = load(context).since?.let { minOf(it, LocalDate.now()) }  // 기기 날짜가 뒤로 가면 오늘까지(오늘이 범위 밖이 되지 않게)
 
+    /** 홈 하단: 오늘 읽은 시간·연속일. 통계에서 뺀 카테고리의 책은 빼고 센다(독서 기록의 `전체`와 같게, [StatsFilter]). */
     fun summary(context: Context, packages: Set<String>): ReadingSummary? =
-        days(context, packages)?.let { ReadingSummary(it.total(LocalDate.now()), streak(it)) }
+        days(context, packages)?.let(StatsFilter.of(context)::days)?.let { ReadingSummary(it.total(LocalDate.now()), streak(it)) }
 
     /** 하루 [MIN_DAY_MS] 이상 읽은 날이 이어진 수. 오늘 아직 안 읽었으면 어제까지. */
     fun streak(days: ReadingDays, today: LocalDate = LocalDate.now()): Int {

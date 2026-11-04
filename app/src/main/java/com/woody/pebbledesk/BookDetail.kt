@@ -18,8 +18,8 @@ import java.time.format.DateTimeFormatter
 /**
  * 책 상세: 홈에서 책을 길게 누를 때와 올해 읽은 책에서 책을 누를 때 같은 화면. 머리·기록 칸·별점·감상 칸([bookSheet]) 아래
  * 메뉴는 책 상태에 따라
- * - 읽고 있는 책(다시 읽는 책 포함): `완독` / `책 정보 고치기 ›` / `책 빼기`
- * - 나간 책·목록에 없던 책: `완독`(마지막 회차가 진행 중이면) / `다시 읽기` / `책 정보 고치기 ›` / `기록에서 지우기`
+ * - 읽고 있는 책(다시 읽는 책 포함): `카테고리  소설 ›` / `완독` / `책 정보 고치기 ›` / `책 빼기`
+ * - 나간 책·목록에 없던 책: `카테고리  소설 ›` / `완독`(마지막 회차가 진행 중이면) / `다시 읽기` / `책 정보 고치기 ›` / `기록에서 지우기`
  * `완독`·`책 빼기`는 확인 대신 별점·감상 메뉴([reviewSheet], 지금 회차의 것을 채워 띄우고 비워 두고 눌러도 된다), `기록에서 지우기`는 한 번 더 묻는다.
  * `완독`은 늘 오늘로 남긴다(완독한 날은 전체 기록의 회차 메뉴에서 고친다, [editRound]). 무엇이든 바뀌면 [onChange].
  */
@@ -60,6 +60,9 @@ private fun Context.detailSheet(r: BookRecord, sub: String?, lines: Int, onChang
             }
         }
     }
+    // 카테고리(붙이지 않았으면 `없음`): 누르면 고르기([pickCategory])
+    val category = Categories.of(this, r.book.id)?.name ?: getString(R.string.category_none)
+    sheet.item(getString(R.string.category), right = "$category  ›", action = current { pickCategory(r, onChange, reopen) })
     if (r.state == State.READING) {
         sheet.item(getString(R.string.finish_book), action = current { finish() })
         sheet.item(getString(R.string.edit_book), action = current { showEditMenu(r, onChange) })
@@ -82,6 +85,28 @@ private fun Context.detailSheet(r: BookRecord, sub: String?, lines: Int, onChang
         }
     })
     return sheet
+}
+
+/**
+ * 카테고리 고르기: `없음` / 카테고리들(지금 것 ✓) / `+ 새 카테고리`, 맨 아래 왼쪽 `카테고리 관리 ›`. 고르면 붙이고 상세를 다시 띄운다.
+ * 목록에 없던 책은 고르는 순간 나간 책으로 적어 둔다([bookId]).
+ */
+private fun Context.pickCategory(r: BookRecord, onChange: () -> Unit, reopen: () -> Unit) {
+    val now = Categories.of(this, r.book.id)?.id
+    fun assign(id: Long?) {
+        withBook(r) { Categories.assign(this, it, id) }
+        onChange()
+        if (alive()) reopen()
+    }
+    val sheet = Sheet(this).header(getString(R.string.category), r.book.title)
+    sheet.item(getString(R.string.category_none) + if (now == null) "  ✓" else "", bold = now == null) { assign(null) }
+    Categories.list(this).forEach { c ->
+        sheet.item(c.name + if (c.id == now) "  ✓" else "", bold = c.id == now,
+            right = if (c.excluded) getString(R.string.category_excluded_tag) else null) { assign(c.id) }
+    }
+    sheet.item(getString(R.string.category_new)) { askNew { assign(it.id) } }
+        .footer(getString(R.string.category_manage)) { startActivity(CategoriesActivity.intent(this)) }
+        .show()
 }
 
 /**
