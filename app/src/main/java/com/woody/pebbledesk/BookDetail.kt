@@ -18,23 +18,24 @@ import java.time.format.DateTimeFormatter
 /**
  * 책 상세: 홈에서 책을 길게 누를 때와 올해 읽은 책에서 책을 누를 때 같은 화면. 머리·기록 칸·별점·감상 칸([bookSheet]) 아래
  * 메뉴는 책 상태에 따라
- * - 읽고 있는 책(다시 읽는 책 포함): `카테고리  소설 ›` / `완독` / `책 정보 고치기 ›` / `책 빼기`
+ * - 읽고 있는 책(다시 읽는 책 포함): `카테고리  소설 ›` / `완독` / `책 정보 고치기 ›` / 홈에서 열면([onHome]) `홈에서 빼기`, 올해 읽은 책에서 열면
+ *   `기록에서 지우기`(홈에 있는 책은 지우지 않고 `홈에서 먼저 빼 주세요` 안내, [askRemoveFirst])
  * - 나간 책·목록에 없던 책: `카테고리  소설 ›` / `완독`(마지막 회차가 진행 중이면) / `다시 읽기` / `책 정보 고치기 ›` / `기록에서 지우기`
- * `완독`·`책 빼기`는 확인 대신 별점·감상 메뉴([reviewSheet], 지금 회차의 것을 채워 띄우고 비워 두고 눌러도 된다), `기록에서 지우기`는 한 번 더 묻는다.
+ * `완독`·`홈에서 빼기`는 확인 대신 별점·감상 메뉴([reviewSheet], 지금 회차의 것을 채워 띄우고 비워 두고 눌러도 된다), `기록에서 지우기`는 한 번 더 묻는다.
  * `완독`은 늘 오늘로 남긴다(완독한 날은 전체 기록의 회차 메뉴에서 고친다, [editRound]). 무엇이든 바뀌면 [onChange].
  */
-fun Context.showBookDetail(r: BookRecord, onChange: () -> Unit) {
+fun Context.showBookDetail(r: BookRecord, onHome: Boolean, onChange: () -> Unit) {
     val sub = detailSub(r)
-    val reopen = { showBookDetail(r.reload(this), onChange) }
+    val reopen = { showBookDetail(r.reload(this), onHome, onChange) }
     // 별점·감상 칸은 메뉴가 화면을 넘지 않는 만큼: 감상 5줄부터 줄여 보고(글자·줄 간격을 키우면 줄어든다), 별 줄도 안 들어가면 칸을 두지 않는다.
     val text = r.lastRound.review?.text?.isNotBlank() == true
-    val fit = (if (text) (5 downTo 0) else listOf(5)).asSequence().map { detailSheet(r, sub, it, onChange, reopen) }
+    val fit = (if (text) (5 downTo 0) else listOf(5)).asSequence().map { detailSheet(r, sub, it, onHome, onChange, reopen) }
         .firstOrNull { it.height() <= screenHeight() }
-    (fit ?: detailSheet(r, sub, -1, onChange, reopen)).show()
+    (fit ?: detailSheet(r, sub, -1, onHome, onChange, reopen)).show()
 }
 
 /** 상세 메뉴 하나(감상 [lines] 줄, -1 이면 별점·감상 칸 없이). 동작은 누르는 순간 책 id 로 저장소가 지금 상태를 보고 한다([BookShelf]). */
-private fun Context.detailSheet(r: BookRecord, sub: String?, lines: Int, onChange: () -> Unit, reopen: () -> Unit): Sheet {
+private fun Context.detailSheet(r: BookRecord, sub: String?, lines: Int, onHome: Boolean, onChange: () -> Unit, reopen: () -> Unit): Sheet {
     val book = r.book
     val sheet = bookSheet(r, sub, lines, onChange, reopen)
     // 메뉴는 누르는 순간의 상태로: 상세를 열어 둔 사이 책이 바뀌었으면(이북 앱에서 다시 펴 되살아남·다른 화면에서 완독 등) 그 동작 대신
@@ -44,7 +45,7 @@ private fun Context.detailSheet(r: BookRecord, sub: String?, lines: Int, onChang
         val now = r.reload(this)
         val changed = now.state != r.state || now.hidden != r.hidden || now.rounds.size != r.rounds.size ||
             now.lastRound.finished != r.lastRound.finished || now.lastRound.review != r.lastRound.review
-        if (changed) { onChange(); if (alive()) showBookDetail(now, onChange) }
+        if (changed) { onChange(); if (alive()) showBookDetail(now, onHome, onChange) }
         else act()
     }
     // 완독하면 지금(완독하지 않은) 회차의 별점·감상이 그 회차의 것이 된다.
@@ -66,7 +67,8 @@ private fun Context.detailSheet(r: BookRecord, sub: String?, lines: Int, onChang
     if (r.state == State.READING) {
         sheet.item(getString(R.string.finish_book), action = current { finish() })
         sheet.item(getString(R.string.edit_book), action = current { showEditMenu(r, onChange) })
-        sheet.item(getString(R.string.remove_book), action = current { removeBook(r, sub, onChange) })
+        if (onHome) sheet.item(getString(R.string.remove_book), action = current { removeBook(r, sub, onChange) })
+        else sheet.item(getString(R.string.forget_book), action = current { askRemoveFirst(book) })
         return sheet
     }
     // 나간 책도 마지막 회차가 진행 중이면(완독한 적 없거나 다시 읽다 뺀 책) 완독할 수 있다.
@@ -123,9 +125,9 @@ private fun <T> Context.withBook(r: BookRecord, act: (String) -> T): T = BookShe
 private fun Context.detailSub(r: BookRecord): String? = bookSubtitle(r.book, r.state == State.READING)
 
 /**
- * `책 빼기`(홈 책 상세·읽고 있는 책 목록의 `빼기`): 올해 읽은 책에 남는 책([BookRecord.inYearBooks])이거나 지금 회차에 이미 별점·감상이 있으면
- * (상세의 별점 칸과 같은 조건) 확인 대신 별점·감상 메뉴(지금 회차의 것, 맨 아래 `취소` / `책 빼기`), 아니면(거의 읽지 않은 책. 남긴 별점을 볼 곳이 없다)
- * 확인만 `읽고 있는 책에서 뺄까요?`.
+ * `홈에서 빼기`(홈 책 상세·읽고 있는 책 목록의 `빼기`): 올해 읽은 책에 남는 책([BookRecord.inYearBooks])이거나 지금 회차에 이미 별점·감상이 있으면
+ * (상세의 별점 칸과 같은 조건) 확인 대신 별점·감상 메뉴(지금 회차의 것, 맨 아래 `취소` / `홈에서 빼기`. 완독하지 않아도 그 회차에 남긴다),
+ * 아니면(거의 읽지 않은 책. 남긴 별점을 볼 곳이 없다) 확인만 `홈에서 뺄까요?`. 기록·올해 읽은 책에는 남는다.
  */
 fun Context.removeBook(shown: BookRecord, sub: CharSequence?, onChange: () -> Unit) {
     // 누르는 순간의 기록으로(상세를 열어 둔 사이 더 읽어 5분을 넘겼을 수 있다)
@@ -137,6 +139,11 @@ fun Context.removeBook(shown: BookRecord, sub: CharSequence?, onChange: () -> Un
     }
     // 읽고 있는 책의 마지막 회차는 늘 완독하지 않은 회차다.
     reviewSheet(book, sub, getString(R.string.remove_book), r.lastRound.review) { review -> BookShelf.remove(this, book.id, review); onChange() }
+}
+
+/** 올해 읽은 책에서 홈에 있는 책의 `기록에서 지우기`: 지우지 않고 홈에서 먼저 빼 달라고 한다(홈에 있는 책은 기록이 있어야 한다) */
+private fun Context.askRemoveFirst(book: ShelfBook) {
+    Sheet(this).header(getString(R.string.forget_on_home), "${book.title}\n${getString(R.string.forget_on_home_note)}").show()
 }
 
 /**
@@ -193,7 +200,7 @@ private fun Context.bookSheet(r: BookRecord, sub: String?, lines: Int, onChange:
         sheet.note(text("${getString(R.string.review_title)}  ›", 18f, color = Ui.GRAY), if (open) history else { { reviewLocked(r, sub, onChange, reopen) } })
     }
     if (lines >= 0) sheet.note(reviewBlock(last.review, lines, enabled = open)) {
-        if (open) editLastReview(r, sub, onChange) else reviewLocked(r, sub, onChange, reopen)
+        if (open) editLastReview(r, sub, onChange, reopen) else reviewLocked(r, sub, onChange, reopen)
     }
     return sheet
 }
@@ -202,14 +209,14 @@ private fun Context.bookSheet(r: BookRecord, sub: String?, lines: Int, onChange:
 private fun Context.reviewLocked(shown: BookRecord, sub: String?, onChange: () -> Unit, reopen: () -> Unit) {
     // 상세를 열어 둔 사이 5분을 넘겼으면(누르는 순간의 기록으로) 그대로 별점·감상 메뉴
     val r = shown.reload(this)
-    if (r.canReview) { editLastReview(r, sub, onChange); return }
+    if (r.canReview) { editLastReview(r, sub, onChange, reopen); return }
     Sheet(this).header(getString(R.string.review_title), getString(R.string.review_locked)).onDismiss { if (alive()) reopen() }.show()
 }
 
 /** 마지막 회차의 별점·감상 메뉴(상세의 별점 칸). 저장은 [saveRoundReview], 그 뒤는 [afterSave] */
-private fun Context.editLastReview(r: BookRecord, sub: String?, onChange: () -> Unit) {
+private fun Context.editLastReview(r: BookRecord, sub: String?, onChange: () -> Unit, reopen: () -> Unit) {
     val last = r.lastRound
-    reviewSheet(r.book, sub, getString(R.string.save), last.review) { review -> afterSave(saveRoundReview(r, last, review), r, onChange) }
+    reviewSheet(r.book, sub, getString(R.string.save), last.review) { review -> afterSave(saveRoundReview(r, last, review), onChange, reopen) }
 }
 
 /** 화면이 끝나는 중이 아니어서 메뉴를 다시 띄울 수 있다(메뉴가 닫힌 뒤 다음 메뉴를 띄울 때) */
@@ -429,10 +436,10 @@ private fun Context.staleTitleOnly(r: BookRecord): Boolean =
     r.state == State.TITLE_ONLY && (BookShelf.findByTitle(this, r.book.title) != null || BookShelf.findLivePast(this, r.book.title) != null)
 
 /** 상세의 별점·감상 칸에서 저장한 뒤: 저장했으면 [onChange], 열어 둔 사이 책이 바뀌었으면 지금 상태로 상세를 다시 */
-private fun Context.afterSave(saved: Saved, r: BookRecord, onChange: () -> Unit) {
+private fun Context.afterSave(saved: Saved, onChange: () -> Unit, reopen: () -> Unit) {
     when (saved) {
         Saved.YES -> onChange()
-        Saved.STALE -> { onChange(); if (alive()) showBookDetail(r.reload(this), onChange) }
+        Saved.STALE -> { onChange(); if (alive()) reopen() }
         Saved.NO -> Unit
     }
 }

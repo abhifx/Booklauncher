@@ -153,7 +153,7 @@ class BookRecordRoundsTest {
         assertTrue(r.readYears.isEmpty())
         assertFalse(r.inYearBooks)
         assertEquals(Review(6, "예전 감상"), r.lastRound.review)
-        // 상세의 별점 칸·`책 빼기` 가 별점·감상 메뉴를 여는 조건
+        // 상세의 별점 칸·`홈에서 빼기` 가 별점·감상 메뉴를 여는 조건
         assertTrue(r.canReview)
         assertFalse(rec(State.READING, days = mapOf("09-01" to 4)).canReview)
         assertTrue(rec(State.READING, days = mapOf("09-01" to 5)).canReview)

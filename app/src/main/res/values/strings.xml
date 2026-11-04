@@ -185,6 +185,8 @@
     <string name="finish_nth">%1$d회</string>
     <string name="edit_book">책 정보 고치기 ›</string>
     <string name="forget_confirm">읽은 책 목록에서 지울까요?</string>
+    <string name="forget_on_home">홈에서 먼저 빼 주세요</string>
+    <string name="forget_on_home_note">홈에 있는 책은 기록에서 지울 수 없습니다.</string>
     <string name="forget_round_confirm">%1$s 기록을 지울까요?</string>
     <string name="forget_round">이 회차 지우기</string>
     <string name="since_date">%1$s부터</string>
@@ -207,8 +209,8 @@
     <string name="all_history">전체 기록 ›</string>
     <string name="total_time">모두 %1$s</string>
     <string name="since_year">%1$d년부터</string>
-    <string name="remove_confirm">읽고 있는 책에서 뺄까요?</string>
-    <string name="remove_book">책 빼기</string>
+    <string name="remove_confirm">홈에서 뺄까요?</string>
+    <string name="remove_book">홈에서 빼기</string>
     <string name="review_stars_hint">누르거나 밀어서 고릅니다 · 비워 둬도 됩니다</string>
     <string name="review_stars_set">%1$s점 · 다시 누르면 지웁니다</string>
     <string name="review_text_hint">감상이나 나에게 남은 한 문장을 적어 두세요</string>

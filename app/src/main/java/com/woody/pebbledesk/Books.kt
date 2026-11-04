@@ -1126,7 +1126,7 @@ object BookShelf {
         prefetchFileCover(context, id)
     }
 
-    /** 책 빼기: 읽고 있는 책에서 빼서 나간 책으로 남긴다. [review] 가 있으면(빼기 메뉴에서 고친 별점·감상) 진행 중 회차의 것으로 같이 저장한다. */
+    /** 홈에서 빼기: 읽고 있는 책에서 빼서 나간 책으로 남긴다. [review] 가 있으면(빼기 메뉴에서 고친 별점·감상) 진행 중 회차의 것으로 같이 저장한다. */
     @Synchronized fun remove(context: Context, id: String, review: Review? = null) = atomic(context) {
         // 읽고 있는 책일 때만(그사이 다른 화면에서 완독·빼기를 했으면 감상을 지금 회차에 적지 않는다)
         if (list(context).none { it.id == id }) return@atomic

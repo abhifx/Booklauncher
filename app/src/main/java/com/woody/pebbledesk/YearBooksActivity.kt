@@ -302,7 +302,7 @@ class YearBooksActivity : EinkActivity() {
     }
 
     /** 홈과 같은 책 상세(완독은 늘 오늘, 완독한 날은 전체 기록에서 고친다) */
-    private fun showMenu(r: Row) = showBookDetail(r.record) { render() }
+    private fun showMenu(r: Row) = showBookDetail(r.record, onHome = false) { render() }
 
     companion object {
         /** 목록 줄 표지 위아래 여백(dp). 표지는 나머지 높이를 채운다. */
