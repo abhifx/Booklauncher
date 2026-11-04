@@ -431,9 +431,13 @@ object RecapImage {
                 text(ellipsize(b.book.author, if (big) 18f else 16f, Ui.medium, w), x, y + 2, if (big) 18f else 16f, Ui.medium, k.gray)
                 y += if (big) 36 else 30
             } else y += 6
-            text(ctx.duration(b.ms), x, y, if (big) 24f else 21f, Ui.bold, k.accent)
-            text(dayRange(b, short = false), x, y + if (big) 34 else 29, if (big) 18f else 16f, Ui.medium, k.dark)
-            y += if (big) 70 else 60
+            // 그달 기간 안에 읽은 시간이 없으면(고친 기간에 완독만 있음) `0분` 대신 기간 줄만
+            if (b.ms > 0) {
+                text(ctx.duration(b.ms), x, y, if (big) 24f else 21f, Ui.bold, k.accent)
+                y += if (big) 34 else 29
+            }
+            text(dayRange(b, short = false), x, y, if (big) 18f else 16f, Ui.medium, k.dark)
+            y += if (big) 36 else 31
             var sx = x
             b.finishDay?.let { d ->
                 val s = ctx.getString(R.string.recap_finished_on, month.atDay(d).format(fmt(R.string.date_short_fmt)))
@@ -470,9 +474,12 @@ object RecapImage {
                 text(ellipsize(b.book.author, 15f, Ui.medium, tw), tx, yy + 2, 15f, Ui.medium, k.gray)
                 yy += 28
             } else yy += 4
-            text(ctx.duration(b.ms), tx, yy, 19f, Ui.bold, k.accent)
-            text(dayRange(b, short = true), tx, yy + 26, 15f, Ui.medium, k.dark)
-            yy += 54
+            if (b.ms > 0) {
+                text(ctx.duration(b.ms), tx, yy, 19f, Ui.bold, k.accent)
+                yy += 26
+            }
+            text(dayRange(b, short = true), tx, yy, 15f, Ui.medium, k.dark)
+            yy += 28
             b.finishDay?.let { d ->
                 val s = ctx.getString(R.string.recap_finished_short, month.monthValue, d)
                 val lw = width(s, 14f, Ui.bold) + 18

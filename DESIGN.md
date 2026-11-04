@@ -102,7 +102,7 @@
 3. `자주 쓰는 앱` 제목과 목록. 직접 정한 순서(⑪).
    - 높이는 책 수·보기와 상관없이 **늘 목록 한 줄**(격자는 그 높이 안에 한 줄)로 고정한다. 목록·격자를 바꾸거나 앱을 넣고 빼도 위쪽 책 자리가 움직이지 않게 하려는 것이다. 덜 차면 아래를 비운다.
    - 한 화면을 넘으면 제목 오른쪽 끝에 `‹ 1 / 2 ›`(제목과 같은 글자, 갈 수 없는 쪽 화살표는 흐리게). 왼쪽 절반을 누르면 앞 쪽, 오른쪽 절반은 다음 쪽(흐린 쪽을 누르면 그대로), 좌우로 밀어도(함께 읽는 책 줄에서 시작한 밀기는 빼고) 넘어간다. 처음·끝을 돌지 않는다.
-4. 하단 줄(56dp, 화면 맨 아래 12dp 띄움): 아이콘 네 칸을 같은 폭으로 나눈다. 왼쪽부터 **모든 앱**(격자 아이콘 → ③), **통계**(막대 아이콘 → ⑫ 독서 기록), **위젯**(위젯 아이콘 → ⑯), **설정**(톱니바퀴 → ⑧). 아이콘 24dp 아래에 11sp 회색 이름을 둔다. 오늘 읽은 시간은 하단 줄에서 빼고 통계 화면에서 본다.
+4. 하단 줄(56dp, 화면 맨 아래 12dp 띄움): 아이콘 다섯 칸을 같은 폭으로 나눈다. 왼쪽부터 **모든 앱**(격자 아이콘 → ③), **통계**(막대 아이콘 → ⑫ 독서 기록), **위젯**(위젯 아이콘 → ⑯), **미니 앱**(2×2 도구 격자 아이콘 → 계산기·메모·타이머), **설정**(톱니바퀴 → ⑧). 아이콘 24dp 아래에 11sp 회색 이름을 둔다. 오늘 읽은 시간은 하단 줄에서 빼고 통계 화면에서 본다.
 
 ### ② 홈 · 읽고 있는 책 없음
 - ①의 책 자리에 스켈레톤(회색으로 채우고 `+`를 넣은 점선 표지 상자 + 회색 막대, 자동 추가가 켜져 있으면 안내 한 줄). 누르면 책을 넣는 법 안내(위 ①). 책 없이 앱만 '읽고 있는 앱'으로 두는 상태는 없다.
@@ -313,11 +313,26 @@
 - `공유`는 아래 메뉴(제목은 화면 제목): `파일로 저장`(시스템 파일 고르기, 위치·이름을 고른다) · `다른 앱으로 보내기`(안드로이드 공유 창. 그림은 이 앱의 캐시 `recap/` 에 두고 `RecapFiles` 가 읽기로만 내준다). 파일 이름 `BookLauncher-2026-10.png`. 저장하면 `저장했습니다` 창.
 
 ### ⑯ 위젯
-- 홈 하단 줄의 위젯 아이콘으로 연다. 제목 `‹ 위젯`, 오른쪽에 추가한 위젯 수. 한 쪽에 하나씩 보여 주고 밀기·페이지 버튼·하단 `1 / 3` 으로 넘긴다. 첫 쪽은 늘 **미디어 조절**(오디오북·TTS), 그 뒤에 사용자가 고른 안드로이드 위젯이 붙는다.
-- 미디어 조절: 제목 `미디어 조절`, 회색 설명, 그 아래 한 줄에 테두리 버튼 다섯(이전 곡 · 되감기 · 재생/일시정지 · 빨리 감기 · 다음 곡, 높이 88dp). 누르면 `AudioManager.dispatchMediaKeyEvent` 로 미디어 키를 보낸다. 재생 상태는 읽지 않는다(알림 접근 권한 없이도 동작하게).
-- `위젯 추가 ›`(하단 왼쪽) → **위젯 고르기**(`WidgetPickerActivity`): 깔린 위젯을 `앱 이름 · 위젯 이름` 줄로, 아이콘과 함께 쪽으로 넘긴다. 고르면 `AppWidgetHost` 로 붙이고 이 화면 맨 뒤 쪽에 더한다. 처음 붙일 때 시스템이 허용을 물으면 그 창을 띄운다(`ACTION_APPWIDGET_BIND`).
-- 위젯 쪽: 위에 위젯 이름과 오른쪽 `이 위젯 빼기`, 가는 선, 아래에 위젯을 화면 폭·높이에 맞춰 그린다. 위젯을 길게 눌러도 뺄 수 있다(확인 창). 위젯이 사라졌으면(앱 삭제) 목록에서 지운다.
-- 위젯 id 는 기기 보호 저장소 `shared_prefs/widgets.xml` 에 순서대로 적는다. 애니메이션 없이 쪽을 다시 그린다.
+- Opens from the Widgets icon in the Home footer. Title `‹ Widgets`, the number of cards on the right, pages with swipe, page keys and `1 / N` at the bottom.
+- **Built-in desktop (first pages):** a two-column e-ink card grid inspired by Licorice. Wide cards take a whole row. Cards are 140–240dp rows, 2–3 rows per page depending on height. Default order: Clock, Reading stats, Continue reading, Music, Reading calendar, Quote, Device, Weather, Headlines, Markets, Recent books, This year.
+  - Clock: large time, date, today's reading time and streak.
+  - Reading stats: today's minutes, streak and goal, a thin goal bar and seven day bars.
+  - Continue reading: the first book's cover, title, author/app, chapter, progress bar and `%`.
+  - Music: real title/artist, source app, elapsed/total, progress bar and five 34dp controls. Tapping a control calls the active `MediaSession` directly (`MediaNow`); without notification access it falls back to media keys. The card redraws 250ms after a control so the play/pause icon matches.
+  - Calendar: the current month; filled day = 5+ minutes, ring = goal met, today bold.
+  - Quote: a short public-domain quote chosen by day.
+  - Device: battery/charging, Wi-Fi, Bluetooth and light.
+  - Weather: temperature, high/low, condition and a line icon; Open-Meteo by city name (no key). Tapping the card or `Set up` asks for a city. Refresh at most every 30 minutes.
+  - Headlines: the top three Hacker News stories, refreshed every 30 minutes; tap opens Hacker News.
+  - Markets: one symbol from Yahoo Finance (price and day change), refreshed every 15 minutes; tap or long-press asks for the symbol.
+  - Recent books: the first four shelf covers.
+  - This year: finished books, year reading time and a twelve-month bar chart.
+- Long-press a card for `Move left`, `Move right`, `Remove this widget` and card-specific settings (city, 24-hour clock, media controls). Added cards are stored in `shared_prefs/widgets.xml` (`native`), so the order survives updates; new cards are appended once.
+- `Add widget ›` opens the same paged picker for built-in cards (first) and Android widgets. Built-in cards already on the desktop are marked `Added`.
+- **Android widgets** keep a full page each after the built-in pages: name, `Remove this widget`, a thin rule, then the widget resized to the page. Long-press removes it. Missing widgets (app uninstalled) are dropped from the list.
+- Widget ids stay in device-protected `shared_prefs/widgets.xml`. No animation: only the page is rebuilt.
+- **Mini apps** (Home bottom bar `Mini apps`, Widgets footer `Mini apps ›`, or Settings › Widgets › Mini apps): calculator, notes and timer, in `MiniAppsActivity`. Calculator has a 4×5 keypad and a large display. Notes are stored as JSON in `shared_prefs/mini.xml`, listed six-per-page with `New note`, tap to edit, long-press to delete. Timer has 5/10/15/25/30/60 minute presets, a large countdown, start/pause and reset; it redraws once per second only while running.
+- Settings › Widgets adds `Weather city`, `Stock symbol`, `Notification access` (opens the system notification-listener screen for `MediaWatchService`) and `Mini apps`.
 
 ### ⑭ 시작하기
 - 홈이 뜰 때(잠금이 풀린 뒤) 아직 띄운 적이 없고 두 기능 중 하나라도 시스템에서 꺼져 있으면(3쪽이 있으면 책 파일 읽기까지) 한 번 띄운다(예전 버전에서 업데이트한 사람 포함. 모두 켜져 있으면 띄우지 않고 띄운 것으로 친다). 띄우는 순간 적는다(`onboarded`): 어떻게 나가든(뒤로·홈 버튼 포함) 다시 나오지 않는다. 같은 설정은 ⑧ 독서에 있다.

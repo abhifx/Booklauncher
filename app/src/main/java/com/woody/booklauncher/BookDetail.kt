@@ -213,8 +213,9 @@ private fun Context.editRound(r: BookRecord, round: BookRecord.Round, onChange: 
             // 두 줄 사이 틈은 줄 안쪽 여백으로(누르는 자리가 넓게)
             val half = dp(DAY_ROW_GAP_DP) / 2
             startRow.setPadding(0, 0, 0, half)
-            addView(dayRow(R.string.finish_day, sub, to, hint { now, cur, today -> finishDayRangeText(now, cur, today) },
-                { finishDayError(r, round, it) }) { day = it }.apply { setPadding(0, half, 0, 0) }, lp(MATCH, WRAP))
+            // 완독한 날의 범위는 함께 고르는 읽기 시작한 날부터(두 날을 함께 앞으로 옮길 수 있게)
+            addView(dayRow(R.string.finish_day, sub, to, hint { now, cur, today -> finishDayRangeText(now, cur, today, start) },
+                { finishDayError(r, round, it, start) }) { day = it }.apply { setPadding(0, half, 0, 0) }, lp(MATCH, WRAP))
         }
     }
     // 저장에서 받지 못한 날이 있으면 메뉴가 닫힌 뒤 그 안내(머리 = 그 줄 이름)를 먼저 띄우고, 안내를 닫으면 [then](둘이 겹치지 않게 닫힐 때 한 곳에서)
@@ -248,10 +249,13 @@ private fun Context.saveRound(
     var to = round.to
     var stale = false
     val finishId = round.finishId
+    val began = start.takeIf { it != round.from }
     // 완독한 회차는 그 완독 줄(id)에: 완독한 날은 고쳤을 때만, 저장하는 순간의 기록으로 다시 확인해서(메뉴를 연 사이 다음 회차가 시작했을 수 있다)
     if (finishId != null) {
         val moved = day.takeIf { it != round.to }
-        val error = moved?.let { finishDayError(r, round, it) }
+        // 완독한 날은 함께 고른 읽기 시작한 날부터 받는다. 그 시작한 날이 받을 수 없는 날이면 지금 시작한 날부터(완독한 날이 시작한 날 앞으로 가지 않게)
+        val from = began?.takeIf { moved != null && startDayError(r, round, it, moved) == null } ?: round.from
+        val error = moved?.let { finishDayError(r, round, it, from) }
         if (error != null) reject(R.string.finish_day to error)
         else if (moved != null) to = moved
         BookShelf.setFinish(this, r.book.id, finishId, review ?: round.review ?: Review(), moved.takeIf { error == null })
@@ -264,10 +268,10 @@ private fun Context.saveRound(
         Saved.STALE -> stale = true
     }
     // 읽기 시작한 날은 고쳤을 때만, 저장한 완독한 날까지의 범위로 다시 확인해서
-    start.takeIf { it != round.from && !stale }?.let { began ->
-        val error = startDayError(r, round, began, to)
+    began?.takeIf { !stale }?.let { b ->
+        val error = startDayError(r, round, b, to)
         if (error != null) reject(R.string.start_day to error)
-        else { saveBegan(r, round, began); changed = true }
+        else { saveBegan(r, round, b); changed = true }
     }
     return changed
 }
@@ -286,13 +290,13 @@ private fun Context.roundNow(r: BookRecord, round: BookRecord.Round): Pair<BookR
 }
 
 /**
- * 회차 [round] 의 완독한 날을 [day] 로 바꿀 수 있는가: 지금 기록과 오늘로 다시 본다(메뉴를 연 사이 다음 회차가 생겼거나 자정이 지났을 수 있다).
- * 바꿀 수 있으면 null, 아니면 지금 범위를 담은 안내.
+ * 회차 [round] 의 완독한 날을 [day] 로 바꿀 수 있는가(읽기 시작한 날 [from] 부터): 지금 기록과 오늘로 다시 본다(메뉴를 연 사이 다음 회차가
+ * 생겼거나 자정이 지났을 수 있다). 바꿀 수 있으면 null, 아니면 지금 범위를 담은 안내.
  */
-private fun Context.finishDayError(r: BookRecord, round: BookRecord.Round, day: LocalDate?): String? {
+private fun Context.finishDayError(r: BookRecord, round: BookRecord.Round, day: LocalDate?, from: LocalDate?): String? {
     val (now, cur) = roundNow(r, round) ?: return getString(R.string.date_invalid, "")
     val today = LocalDate.now()
-    return if (day != null && now.canFinishOn(cur, day, today)) null else getString(R.string.date_invalid, finishDayRangeText(now, cur, today))
+    return if (day != null && now.canFinishOn(cur, day, today, from)) null else getString(R.string.date_invalid, finishDayRangeText(now, cur, today, from))
 }
 
 /** 회차 [round] 의 읽기 시작한 날을 [day] 로 바꿀 수 있는가(완독한 날 [to] 까지, [finishDayError] 처럼 지금 기록과 오늘로). 되면 null, 아니면 안내. */
@@ -335,8 +339,8 @@ private fun Context.dayRow(
 }
 
 /** 완독한 날을 고칠 수 있는 범위 글자 `2026.07.16 – 2026.10.14 사이`(읽은 기록이 없는 첫 완독은 [BookRecord.EARLIEST_DAY] 부터) */
-internal fun Context.finishDayRangeText(r: BookRecord, round: BookRecord.Round, today: LocalDate): String {
-    val (earliest, latest) = r.finishDayRange(round, today)
+internal fun Context.finishDayRangeText(r: BookRecord, round: BookRecord.Round, today: LocalDate, from: LocalDate? = round.from): String {
+    val (earliest, latest) = r.finishDayRange(round, today, from)
     return getString(R.string.date_range, (earliest ?: BookRecord.EARLIEST_DAY).format(DOTTED), latest.format(DOTTED))
 }
 

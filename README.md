@@ -2,17 +2,19 @@
 
 **An E Ink launcher for Android e-readers.** The book you're reading stays on Home, your shelf is a cover grid, and reading time, stats, widgets and apps are one tap away.
 
-BookLauncher is a fork of [Pebble Desk](https://github.com/hissinger/pebble-desk), rebuilt around a lower, more visual home screen: the current book with a `Continue reading` button and progress, a bookshelf-style `Also reading` grid with each book's app and progress, one row of favorites, and **All apps · Stats · Widgets · Settings** at the bottom (or as a left sidebar in landscape).
+BookLauncher is a fork of [Pebble Desk](https://github.com/hissinger/pebble-desk), rebuilt around a lower, more visual home screen: the current book with a `Continue reading` button and progress, a bookshelf-style `Also reading` grid with each book's app and progress, one row of favorites, and **All apps · Stats · Widgets · Mini apps · Settings** at the bottom (or as a left sidebar in landscape).
 
-<p align="center"><img src="docs/screenshots/v2-home.png" width="340" alt="BookLauncher 2.0 home on HiBreak: the current book with Continue reading and progress, a bookshelf cover grid with app and progress under each book, one row of favorite apps, and the bottom icon bar"></p>
+<p align="center"><img src="docs/screenshots/v2-home.png" width="340" alt="BookLauncher 2.1 home on HiBreak: the current book with Continue reading and progress, a bookshelf cover grid with app and progress under each book, one row of favorite apps, and the bottom bar with All apps, Stats, Widgets, Mini apps and Settings"></p>
 
-## What's in 2.0.0
+## What's in 2.1.0
 
 - **The current book, on Home** — cover, title, author, reading app, a `Continue reading` button and a progress bar. Tap anywhere to open the book.
 - **Also reading as a cover grid** — the other books in a bookshelf-style grid (4 columns on narrow screens, 6 on the Pebble, 5 in landscape), with title, reading app and progress under each cover. Covers keep their size as you add books; the shelf pages instead. `See all` opens the full book list.
 - **One row of favorites** — 5 apps per page, in your own order. List or grid view. Long-press to rename, change the icon or remove.
-- **Bottom bar** — All apps, reading Stats, Widgets and Settings, with a little breathing room above the device edge. In landscape it becomes a left sidebar so the shelf can use the full width.
-- **Widgets** — a large E Ink media-control pad for audiobooks and TTS, plus Android widgets added from a paged picker. One widget per page, long-press to remove.
+- **Bottom bar** — All apps, reading Stats, Widgets, Mini apps and Settings, with a little breathing room above the device edge. In landscape it becomes a left sidebar so the shelf can use the full width.
+- **Licorice-style desktop widgets** — clock and date, reading stats, continue reading, music, reading calendar, quote of the day, device status, weather, headlines, markets, recent books and the reading year. Add, remove and reorder cards from `Add widget`; Android widgets still get their own pages after them.
+- **A music card that works with audiobooks and TTS** — shows the real title, app and position, and controls the active media session directly instead of firing blind media keys. Notification access makes it reliable when several audio apps are alive; without it the card falls back to media keys.
+- **Mini apps** — a calculator, a notes pad and a countdown timer, built in and offline.
 - **Reading stats** — today's ring, streak, four-week calendar or graph, daily goal, and weekly/monthly/yearly totals.
 - **Made for E Ink** — no animation, pages instead of scrolling, monochrome first, optional color on color E Ink.
 
@@ -20,11 +22,11 @@ BookLauncher is a fork of [Pebble Desk](https://github.com/hissinger/pebble-desk
 
 | Home | Reading log | Widgets |
 |---|---|---|
-| <img src="docs/screenshots/v2-home.png" width="220"> | <img src="docs/screenshots/v1-reading.png" width="220"> | <img src="docs/screenshots/v1-widgets.png" width="220"> |
-| **All apps** | **Settings** | |
-| <img src="docs/screenshots/v1-apps.png" width="220"> | <img src="docs/screenshots/v1-settings.png" width="220"> | |
+| <img src="docs/screenshots/v2-home.png" width="220"> | <img src="docs/screenshots/v1-reading.png" width="220"> | <img src="docs/screenshots/v2-widgets.png" width="220"> |
+| **All apps** | **Mini apps** | **Settings** |
+| <img src="docs/screenshots/v1-apps.png" width="220"> | <img src="docs/screenshots/v2-mini-apps.png" width="220"> | <img src="docs/screenshots/v2-settings.png" width="220"> |
 
-<p align="center"><img src="docs/screenshots/v2-home-landscape.png" width="720" alt="BookLauncher 2.0 landscape home: left sidebar, current book and Favorites cards, and a full-width Also reading shelf"></p>
+<p align="center"><img src="docs/screenshots/v2-home-landscape.png" width="720" alt="BookLauncher 2.1 landscape home: left sidebar with Mini apps, current book and Favorites cards, and a full-width Also reading shelf"></p>
 
 All screenshots were taken on a HiBreak.
 
@@ -37,7 +39,8 @@ All screenshots were taken on a HiBreak.
 - **All apps** — paged, with a letter index. Hide the apps you never use.
 - **Icon packs** — Arcticons and other Android icon packs, with per-app overrides.
 - **Display** — text size 70–150%, line spacing 80–150%, optional color theme, landscape and tall screens.
-- **Your data stays on the device** — the reading log is never sent anywhere.
+- **Mini apps** — calculator, notes and a timer, without leaving the launcher.
+- **Your data stays on the device** — the reading log is never sent anywhere. Weather, headlines and markets use the network (Open-Meteo, Hacker News, Yahoo Finance; no account).
 
 ## Supported apps
 
@@ -50,11 +53,11 @@ What each app provides (cover, title, author, progress, due date) is shown in Se
 <tr><td align="center" width="96"><img src="docs/screenshots/app-icons/yes24-ebook.png" width="48"><br><sub>YES24 eBook</sub></td><td align="center" width="96"><img src="docs/screenshots/app-icons/futon.png" width="48"><br><sub>Futon</sub></td><td align="center" width="96"><img src="docs/screenshots/app-icons/kotatsu.png" width="48"><br><sub>Kotatsu</sub></td><td align="center" width="96"><img src="docs/screenshots/app-icons/librera.png" width="48"><br><sub>Librera</sub></td></tr>
 </table>
 
-NeoReader (BOOX) and AcousText are supported too. AcousText books can be controlled from the media pad in Widgets.
+NeoReader (BOOX), iReader (built-in) and AcousText are supported too. AcousText books can be controlled from the music card on the Widgets screen; allow notification access in Settings › Widgets for TTS apps that do not expose a media session.
 
 ## Install
 
-1. Download `BookLauncher-1.5.0-release.apk` from [Releases](https://github.com/abhifx/Booklauncher/releases) and open it in a file manager on the device.
+1. Download `BookLauncher-2.1.0-release.apk` from [Releases](https://github.com/abhifx/Booklauncher/releases) and open it in a file manager on the device.
 2. Choose BookLauncher in Settings › Apps › `Default home app`.
 3. On first run, `Getting started` turns on the two core features: **Auto-add books** (Android Accessibility) and **Reading time** (Usage access). On Android 13+, an app installed from a file may need **Allow restricted settings** in its app info first.
 

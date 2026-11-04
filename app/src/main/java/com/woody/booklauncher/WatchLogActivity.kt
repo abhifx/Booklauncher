@@ -181,6 +181,7 @@ class WatchLogActivity : EinkActivity() {
             WatchLog.Kind.RECENT_WAIT -> getString(R.string.wl_recent_wait, e.arg)
             WatchLog.Kind.FILE -> getString(R.string.wl_file, e.arg, e.detail)
             WatchLog.Kind.ERROR -> getString(R.string.wl_error, e.arg, e.detail)
+            WatchLog.Kind.NOTE -> e.arg
             WatchLog.Kind.CRASH -> getString(R.string.wl_crash, e.arg, e.detail)
         }
         val time = if (DateUtils.isToday(e.at)) clock(e.at) else "${MD.format(e.at)} ${clock(e.at)}"

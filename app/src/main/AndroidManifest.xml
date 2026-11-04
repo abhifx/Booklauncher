@@ -12,7 +12,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- 기기 정보: 와이파이가 켜져 있는지 -->
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <!-- 상태 줄: 블루투스가 켜져 있는지·연결된 기기(12+ 는 '근처 기기' 권한이 필요해 연결은 모른다) -->
+    <!-- 상태 줄: 블루투스가 켜져 있는지·연결된 기기(12+ 는 '근처 기기' 권한 대신 소리 출력·외부 입력 장치로 짐작한다) -->
     <uses-permission
         android:name="android.permission.BLUETOOTH"
         android:maxSdkVersion="30" />
@@ -107,6 +107,13 @@
             android:exported="false" />
 
         <activity
+            android:name=".MiniAppsActivity"
+            android:screenOrientation="locked"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
             android:name=".ReadingActivity"
             android:screenOrientation="locked"
             android:excludeFromRecents="true"
@@ -173,6 +180,19 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/reader_watch" />
         </service>
+        <!-- Widget music player: lets the launcher read the active media session so
+             audiobook/TTS controls go to the right app. The service never reads
+             notification content (MediaWatchService). -->
+        <service
+            android:name=".MediaWatchService"
+            android:exported="false"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
         <!-- 월간 결산 그림을 다른 앱에 보낼 때만 읽기로 내준다(RecapActivity) -->
         <provider
             android:name=".RecapFiles"

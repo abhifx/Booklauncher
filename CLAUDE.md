@@ -12,8 +12,8 @@ README 는 영어(`README.md`)와 한국어(`README.ko.md`) 두 벌이다. 하�
 
 ```bash
 export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
-./gradlew -q assembleRelease          # app/build/outputs/apk/release/BookLauncher-2.0.0-release.apk
-adb install -r app/build/outputs/apk/release/BookLauncher-2.0.0-release.apk </dev/null
+./gradlew -q assembleRelease          # app/build/outputs/apk/release/BookLauncher-2.1.0-release.apk
+adb install -r app/build/outputs/apk/release/BookLauncher-2.1.0-release.apk </dev/null
 ```
 
 - 릴리스는 R8 축소(약 740KB, 1.6.5 는 720KB·1.6.4 는 705KB·1.6.1 은 734KB·1.5.3 은 480KB. HTML 라이브러리 없이 YES24 검색 결과를 직접 읽는다. 릴리스만 Kotlin 널 검사 호출을 빼고(`-Xno-*-assertions`) `-repackageclasses`, 도장 그림은 16단계 투명도 4비트 PNG). dex 는 minSdk 28 이라 압축하지 않고 넣는다(설치 뒤 풀어 두지 않아 저장 공간·실행이 낫다). 덮어 설치하면 앱 데이터가 남는다.
@@ -57,8 +57,11 @@ adb install -r app/build/outputs/apk/release/BookLauncher-2.0.0-release.apk </de
 
 | 파일 | 역할 |
 |---|---|
-| HomeActivity | 홈: 상단 · 책 자리(스켈레톤/지금 읽는 책 + `이어 읽기`·진행률 + 같은 크기 표지의 `함께 읽는 책` 격자, 책이 늘어도 표지 크기는 그대로·쪽만 늘어남) · 자주 쓰는 앱(고정 1줄) · 하단 줄(모든 앱 · 통계 · 위젯 · 설정 아이콘. 가로는 왼쪽 세로 줄) |
-| WidgetsActivity / WidgetPickerActivity | ⑯ 위젯: 첫 쪽은 미디어 조절(오디오북·TTS 에 미디어 키), 그 뒤는 `AppWidgetHost` 로 받은 안드로이드 위젯을 한 쪽에 하나씩(길게 눌러 빼기, `shared_prefs/widgets.xml` 에 id) / 위젯 고르기(깔린 위젯 목록, 전자잉크 쪽 목록) |
+| HomeActivity | 홈: 상단 · 책 자리(스켈레톤/지금 읽는 책 + `이어 읽기`·진행률 + 같은 크기 표지의 `함께 읽는 책` 격자, 책이 늘어도 표지 크기는 그대로·쪽만 늘어남) · 자주 쓰는 앱(고정 1줄) · 하단 줄(모든 앱 · 통계 · 위젯 · 미니 앱 · 설정 아이콘. 가로는 왼쪽 세로 줄) |
+| WidgetsActivity / WidgetPickerActivity | ⑯ 위젯: Licorice-style built-in cards (Clock · Reading stats · Continue reading · Music · Calendar · Quote · Device · Weather · Recent books · This year) in a paged two-column grid, then `AppWidgetHost` Android widgets one per page. Long-press a card for move/remove/settings. Picker lists built-in cards first, then Android widgets. Order in `shared_prefs/widgets.xml` (`native`, `ids`). |
+| NativeWidgets / Weather / Headlines / Stocks / Quotes | Card rendering and data (`WidgetData`), Open-Meteo weather by city (30-minute cache), Hacker News top three, one Yahoo Finance symbol, daily quote. |
+| Media / MediaWatchService | Reads the active `MediaSession` through a notification listener (`MediaWatchService`), falls back to `AudioManager` media keys. Used by the music card and its large control sheet. |
+| MiniAppsActivity / MiniStore | Built-in calculator, notes pad and countdown timer (notes JSON in `shared_prefs/mini.xml`). |
 | ReadingActivity | ⑫ 독서 기록: 연속일·오늘 링, 4주 링 달력·막대그래프(각각 뷰 하나로 그림, 같은 높이), 합계, 이번 주 읽은 책 |
 | YearBooksActivity | ⑬ 올해 읽은 책(목록·격자, 해 고르기): 읽는 중·완독한 책(표지에 띠)·뺀 책, 완독·다시 읽기·기록에서 지우기 |
 | Recap / RecapImage / RecapActivity | ⑮ 월간 결산: 한 달 데이터와 배치(막대 끊기·주마다 줄 채우기·오른쪽 칸 모양 `Recap`), 1080×1350 그림(`RecapImage`, 표지는 `BookShelf.shareCover`), 화면(올해 읽은 책 아래 줄 오른쪽 `10월 결산 ›`, `‹ 9월 · 공유 · 11월 ›`, 그림을 누르면 크게, 공유 = 파일로 저장·다른 앱으로 보내기, 보내는 그림은 `RecapFiles` 가 내준다) |
@@ -100,7 +103,7 @@ adb install -r app/build/outputs/apk/release/BookLauncher-2.0.0-release.apk </de
 - 글자 크기·줄 간격(설정 › 화면 › 글자 · 간격, 슬라이더 10% 씩): 글자 70~150%(기기 글꼴 크기에 곱한다, `Ui.textScale`·`setSp`·`spf`), 줄 간격 80~150%(목록·메뉴·설정 줄 높이, `Ui.rowScale`·`rowDp`). 둘 다 100% 면 1.5.0 과 같은 화면. 화면에 맞춰 자동으로 줄이지 않는다(사용자가 미리 보기를 보며 고른다). 홈은 맨 위 책 표지·자주 쓰는 앱·하단 줄을 100% 기준으로 고정하고, 책장 표지는 맨 위 책 줄과 글자 크기로 정한다(줄 간격은 홈에 안 씀). 칸에 다 들지 않는 줄은 그리지 않는다(`FitColumn`). 기기가 앱의 밀도를 덮어썼으면(BOOX 앱별 DPI) 홈에 `화면이 크게 보입니다` 창(`다시 보지 않기`)을 띄우고 틀은 1.5.3 까지처럼 그린다.
 - 바형 화면(긴 변 ÷ 짧은 변 1.5 이상, `Ui.tallScreen`. Tango·Palma 등 2.0): 홈 맨 위 표지 126dp, 책장은 세 줄까지, 독서 기록은 남는 높이가 있으면 달력과 그래프를 함께, 합계와 이번 주 읽은 책은 위아래로(폭이 좁은 화면도), 홈 하단 오늘 읽은 시간은 `오늘` 없이. 시험은 `Tango_A14` 에뮬레이터(824×1648, 400dpi, API 34).
 - 가로 화면(1.5.4 까지는 세로 고정): 세로의 칸 모양은 그대로 두고 남는 폭에 칸을 나란히(독서 기록 요약 | 달력(넓으면 그래프도), 아래 메뉴 정보 | 항목, 설정 묶음 두 칸, 격자는 표지 크기 그대로 열을 늘림). 홈은 왼쪽 세로 단추 줄 + 오른쪽 위 카드 두 장(지금 읽는 책 | 자주 쓰는 앱) + 그 아래 화면 폭 전체의 `함께 읽는 책` 격자. 바형도 같은 규칙. 판단은 `landscape()`(폭 > 높이), 자세한 건 DESIGN.md `가로 화면`. 높이가 낮은 가로 화면(HiBreak 835×383dp)은 독서 기록 왼쪽 칸의 링·줄 높이를 줄이고(`DENSE_*`), 홈 카드·표지도 줄인다. 에뮬은 `settings put system user_rotation 1`(자동 회전 끄고)로 돌린다.
-- 하단 줄 56dp(모든 화면). 홈은 아이콘 네 칸(모든 앱 · 통계 · 위젯 · 설정), 가로 홈은 왼쪽 세로 줄. 오늘 읽은 시간은 통계 화면에서 본다.
+- 하단 줄 56dp(모든 화면). 홈은 아이콘 다섯 칸(모든 앱 · 통계 · 위젯 · 미니 앱 · 설정), 가로 홈은 왼쪽 세로 줄. 오늘 읽은 시간은 통계 화면에서 본다.
 - 읽는 책 자동 추가·오늘 읽은 시간은 앱에 켜짐 값을 두지 않고 시스템 값(접근성 켜짐 / **사용 기록 액세스**(`PACKAGE_USAGE_STATS`) 허용)이 곧 켜짐이다(어긋나지 않게). 어떤 책인지는 접근성 서비스가 그 앱에서 마지막으로 편 책으로 나누고(그 앱에서 편 책을 한 번도 몰랐으면 앱별. 서비스가 꺼진 동안 읽은 시간은 책 없이 하루 합계·연속일에만 들어간다). 읽는 화면은 클래스 이름 규칙(`READER` 정규식)으로 가린다. 연속일 = 5분 이상 읽은 날. 하루 목표 기본 30분(설정, 없음 / 15분~1시간 / 직접 입력 1~300분). 바꿔도 지난날은 그날의 목표로 센다.
 - 기록은 처음 켤 때 7일 전까지 채우고 그날을 기록 시작일로 둔다(그 전은 '기록 없음').
 - KOReader 는 화면(접근성)으로 아무것도 알 수 없어 '모든 파일 액세스'(설정 › 독서 › 책 파일 읽기)로 KOReader 가 남기는 파일을 읽는다: 어떤 책은 `koreader/history.lua` 맨 앞 줄, 열림·닫힘은 그 줄의 때와 책 파일의 접근 시각(KOReader 가 열 때만 맞춘다, 저장소는 noatime), 제목·진행률은 책 옆 `.sdr`. 권한 없는 길(koreader 폴더만 허락·플러그인·KOSync)은 조사 뒤 쓰지 않기로 했다(docs/READER_APPS.md).

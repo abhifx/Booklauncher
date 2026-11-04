@@ -257,11 +257,12 @@ data class PastBook(val book: ShelfBook, val leftAt: Long, val hidden: Boolean =
 /**
  * 홈·목록·상세에 붙이는 읽는 화 또는 진행률, 반납일 `[Ch. 12, 반납 4일 남음]`·`[47% 읽음]`. 읽는 화(만화 앱 메뉴의 화 이름)를 알면 % 대신 그것만
  * (Futon 은 작품 화면의 % 도 들어오지만 읽는 화가 더 알기 쉽다, 사용자가 정함). 모르는 값은 뺀다(홈은 한 줄씩, 목록은 이어서).
+ * [withPercent] 가 false 면 진행률은 빼고(홈 맨 앞 책은 막대와 함께 따로 그린다, [percentShown]) 읽는 화는 그대로.
  */
-fun Context.bookStatus(book: ShelfBook, today: LocalDate = LocalDate.now()): List<String> {
+fun Context.bookStatus(book: ShelfBook, today: LocalDate = LocalDate.now(), withPercent: Boolean = true): List<String> {
     val parts = mutableListOf<String>()
     if (book.chapter.isNotEmpty()) parts += book.chapter
-    else if (book.progress >= 0) parts += getString(R.string.progress_pct, book.progress)
+    else if (withPercent && book.progress >= 0) parts += getString(R.string.progress_pct, book.progress)
     if (book.due >= 0) {
         val left = book.due - today.toEpochDay()
         parts += when {
@@ -272,6 +273,9 @@ fun Context.bookStatus(book: ShelfBook, today: LocalDate = LocalDate.now()): Lis
     }
     return parts
 }
+
+/** [bookStatus] 가 진행률(%)을 보이는가: 진행률을 알고 읽는 화가 없을 때 */
+val ShelfBook.percentShown: Boolean get() = chapter.isEmpty() && progress >= 0
 
 /**
  * 제목 맞추기용: 부제(`:` 뒤)·공백·기호를 빼고 소문자로. 이북 앱 서재는 부제를 빼고 보여 주기도 한다.

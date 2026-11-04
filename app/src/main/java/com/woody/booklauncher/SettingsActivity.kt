@@ -52,6 +52,7 @@ class SettingsActivity : EinkActivity() {
             PAGE_DISPLAY -> getString(R.string.section_display)
             PAGE_TEXT -> getString(R.string.text_spacing)
             PAGE_KEYS -> getString(R.string.page_keys)
+            PAGE_WIDGETS -> getString(R.string.section_widgets)
             else -> getString(R.string.settings)
         }
         val titleRow = titleRow(title) { finish() }
@@ -95,6 +96,7 @@ class SettingsActivity : EinkActivity() {
             PAGE_DISPLAY -> renderDisplay()
             PAGE_TEXT -> renderText()
             PAGE_KEYS -> renderPageKeys()
+            PAGE_WIDGETS -> renderWidgets()
             else -> {
                 render()
                 Update.onChange = { renderUpdate(); updates.onChange(); showLatest() }
@@ -145,6 +147,8 @@ class SettingsActivity : EinkActivity() {
         }
 
         col = right
+        row(getString(R.string.section_widgets), null, next = true) { open(PAGE_WIDGETS) }
+
         section(getString(R.string.section_apps))
         row(getString(R.string.favorites), prefs.favoriteList.size.toString(), next = true) {
             startActivity(FavoritesActivity.intent(this))
@@ -613,6 +617,37 @@ class SettingsActivity : EinkActivity() {
         return right
     }
 
+    private fun renderWidgets() {
+        list.removeAllViews()
+        col = list
+        row(getString(R.string.weather_city_title), Weather.city(this) ?: getString(R.string.none), next = true) { askCity() }
+        row(getString(R.string.stock_symbol_title), Stocks.symbol(this) ?: getString(R.string.none), next = true) { askSymbol() }
+        row(
+            getString(R.string.notification_access),
+            getString(if (MediaNow.hasAccess(this)) R.string.notification_access_on else R.string.notification_access_off),
+            on = MediaNow.hasAccess(this), next = true,
+        ) { MediaNow.requestAccess(this) }
+        row(getString(R.string.mini_apps), null, next = true) { startActivity(MiniAppsActivity.intent(this)) }
+    }
+
+    private fun askCity() {
+        Sheet(this).header(getString(R.string.weather_city_title), getString(R.string.weather_city_hint))
+            .input(Weather.city(this).orEmpty()) { city ->
+                Weather.setCity(this, city)
+                if (page == PAGE_WIDGETS) renderWidgets() else render()
+            }
+            .show()
+    }
+
+    private fun askSymbol() {
+        Sheet(this).header(getString(R.string.stock_symbol_title), getString(R.string.stock_symbol_hint))
+            .input(Stocks.symbol(this).orEmpty()) { symbol ->
+                Stocks.setSymbol(this, symbol)
+                if (page == PAGE_WIDGETS) renderWidgets() else render()
+            }
+            .show()
+    }
+
     private fun section(title: String) = col.addView(sectionView(title))
 
     private fun sectionView(title: String) = text(title, 16f, color = Ui.LIGHT_GRAY).apply {
@@ -669,6 +704,7 @@ class SettingsActivity : EinkActivity() {
         private const val PAGE_TEXT = "text"
         private const val PAGE_DISPLAY = "display"
         private const val PAGE_KEYS = "page_keys"
+        private const val PAGE_WIDGETS = "widgets"
         /** 설정 줄 이름 글자(sp) */
         private const val ROW_LABEL_SP = 22f
         private const val PAGE_READING = "reading"

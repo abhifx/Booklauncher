@@ -10,11 +10,15 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
+import android.media.AudioDeviceInfo
+import android.media.AudioManager
 import android.net.ConnectivityManager
+import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.wifi.WifiManager
 import android.os.BatteryManager
 import android.os.Build
+import android.view.InputDevice
 import android.view.View
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -27,14 +31,15 @@ data class DeviceStatus(
     /** 와이파이에 연결돼 있다(켜져 있기만 하면 아니다) */
     val wifi: Boolean,
     val bluetooth: Boolean,
-    /** 블루투스 기기(이어폰·리모컨 등)가 연결돼 있다. 안드로이드 12+ 는 '근처 기기' 권한이 없어 늘 false */
+    /** 블루투스 기기(이어폰·리모컨 등)가 연결돼 있다. 안드로이드 12+ 는 소리 출력·외부 입력 장치로 짐작한다 */
     val bluetoothConnected: Boolean,
     val light: Boolean,
     /** 잔상 제거(전체 새로고침) 주기. 0 이면 표시하지 않는다. */
     val refreshEvery: Int,
 ) {
     companion object {
-        fun read(context: Context): DeviceStatus {
+        /** [lostWifi]: 끊겼다고 알려 온 와이파이. 시스템 목록에 아직 남아 있어도 연결로 치지 않는다 */
+        fun read(context: Context, lostWifi: Set<Network> = emptySet()): DeviceStatus {
             val battery = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
             val level = battery?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
             val scale = battery?.getIntExtra(BatteryManager.EXTRA_SCALE, 100) ?: 100
@@ -42,9 +47,9 @@ data class DeviceStatus(
             return DeviceStatus(
                 battery = if (level >= 0 && scale > 0) level * 100 / scale else -1,
                 charging = plugged,
-                wifi = wifiConnected(context),
+                wifi = wifiConnected(context, lostWifi),
                 bluetooth = bluetoothOn(),
-                bluetoothConnected = bluetoothConnected(),
+                bluetoothConnected = bluetoothConnected(context),
                 light = Device.lightOn(context),
                 refreshEvery = refreshEvery(),
             )
@@ -56,27 +61,52 @@ data class DeviceStatus(
             .getOrDefault(false)
 
         @Suppress("DEPRECATION")
-        private fun wifiConnected(context: Context) = runCatching {
+        private fun wifiConnected(context: Context, lost: Set<Network> = emptySet()) = runCatching {
             val cm = context.getSystemService(ConnectivityManager::class.java)
-            cm.allNetworks.any { cm.getNetworkCapabilities(it)?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true }
+            cm.allNetworks.any { it !in lost && cm.getNetworkCapabilities(it)?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true }
         }.getOrDefault(false)
 
         /** 이어폰(A2DP·헤드셋)·키보드·리모컨(HID, 숨은 상수 4) 중 하나라도 연결돼 있으면 */
-        private fun bluetoothConnected() = profileStates().any { it.second == BluetoothProfile.STATE_CONNECTED }
+        private fun bluetoothConnected(context: Context) = profileStates(context).any { it.second == BluetoothProfile.STATE_CONNECTED }
 
         /**
-         * [BT_PROFILES] 마다 (이름, 연결 상태 0 끊김·1 연결 중·2 연결됨·3 끊는 중). 꺼져 있으면 빈 목록, 물을 수 없으면 -1:
-         * 안드로이드 12+ 는 '근처 기기'(BLUETOOTH_CONNECT) 권한이 있어야 하는데 이 앱은 선언하지 않아 묻지 않는다(홈은 1분마다 읽는다).
+         * [BT_PROFILES] 마다 (이름, 연결 상태 0 끊김·1 연결 중·2 연결됨·3 끊는 중). 꺼져 있으면 빈 목록, 물을 수 없으면 -1.
+         * 안드로이드 12+ 는 프로필 상태를 물으려면 '근처 기기'(BLUETOOTH_CONNECT) 권한이 있어야 하는데 이 앱은 선언하지 않아 묻지 않는다.
+         * 그래서 권한 없이 보이는 것으로 0·2 만 정한다: A2DP·HFP 는 블루투스 소리 출력 장치가 있는지, HID 는 외부 키 입력 장치
+         * (USB·블루투스로 붙은 키보드·리모컨. USB 와 가르지 못한다. 기기 안 터치·펜 패널이 외부로 잡혀도 세지 않게 키를 내는 것만)가
+         * 있는지. 1.7.5 까지는 12+ 에서 늘 몰라 연결 아이콘이 나오지 않았다(안드로이드 14 팬톤, 2026-11-03 댓글).
          */
         @SuppressLint("MissingPermission")
         @Suppress("DEPRECATION")
-        private fun profileStates(): List<Pair<String, Int>> {
+        private fun profileStates(context: Context): List<Pair<String, Int>> {
             val bt = runCatching { BluetoothAdapter.getDefaultAdapter()?.takeIf { it.isEnabled } }.getOrNull() ?: return emptyList()
-            val allowed = Build.VERSION.SDK_INT < Build.VERSION_CODES.S
-            return BT_PROFILES.map { (name, profile) ->
-                name to if (allowed) runCatching { bt.getProfileConnectionState(profile) }.getOrDefault(-1) else -1
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return BT_PROFILES.map { (name, profile) ->
+                name to runCatching { bt.getProfileConnectionState(profile) }.getOrDefault(-1)
             }
+            val outputs = runCatching {
+                context.getSystemService(AudioManager::class.java).getDevices(AudioManager.GET_DEVICES_OUTPUTS).map { it.type }
+            }.getOrNull()
+            val external = runCatching {
+                InputDevice.getDeviceIds().any { id ->
+                    InputDevice.getDevice(id)?.let { it.isExternal && it.supportsSource(InputDevice.SOURCE_KEYBOARD) } == true
+                }
+            }.getOrNull()
+            fun state(connected: Boolean?) = when (connected) {
+                null -> -1
+                true -> BluetoothProfile.STATE_CONNECTED
+                false -> BluetoothProfile.STATE_DISCONNECTED
+            }
+            return listOf(
+                "A2DP" to state(outputs?.any { it in BT_MEDIA_OUTPUTS }),
+                "HFP" to state(outputs?.contains(AudioDeviceInfo.TYPE_BLUETOOTH_SCO)),
+                "HID" to state(external),
+            )
         }
+
+        /** 이어폰·스피커로 소리를 내는 블루투스 출력(예전 A2DP 와 LE 오디오) */
+        private val BT_MEDIA_OUTPUTS = setOf(
+            AudioDeviceInfo.TYPE_BLUETOOTH_A2DP, AudioDeviceInfo.TYPE_BLE_HEADSET, AudioDeviceInfo.TYPE_BLE_SPEAKER,
+        )
 
         private val BT_PROFILES = listOf("A2DP" to BluetoothProfile.A2DP, "HFP" to BluetoothProfile.HEADSET, "HID" to 4)
 
@@ -90,7 +120,7 @@ data class DeviceStatus(
             }.getOrDefault(false),
             wifiLinked = wifiConnected(context),
             btOn = bluetoothOn(),
-            profiles = profileStates(),
+            profiles = profileStates(context),
         )
 
         /** 크레마 상단바와 같은 값(persist.vendor.fullmode_cnt). */

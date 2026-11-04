@@ -7,22 +7,22 @@ import android.appwidget.AppWidgetProviderInfo
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.RectF
-import android.graphics.drawable.Drawable
-import android.media.AudioManager
+import android.net.Uri
 import android.os.Bundle
 import android.view.Gravity
-import android.view.KeyEvent
 import android.view.View
 import android.widget.FrameLayout
+import android.widget.LinearLayout
 import android.widget.TextView
-import kotlin.math.min
+import kotlin.math.max
 
 /**
- * 위젯 ⑯: 늘 첫 쪽에 있는 미디어 조절(오디오북·TTS)과, 사용자가 고른 안드로이드 위젯을 한 쪽에 하나씩 보여 준다.
- * 전자잉크라 위젯도 쪽으로 넘기고, 위젯을 길게 누르면 뺄 수 있다. 위젯은 [AppWidgetHost] 로 받는다.
+ * ⑯ Widgets: the Licorice-style desktop on the first pages, then Android widgets.
+ *
+ * The built-in cards (clock, reading stats, current book, music, calendar, quote,
+ * device status, weather, recent books and the reading year) are paged as a neat
+ * two-column grid. Any Android widget the user adds still gets a full page after
+ * them. No animation; only the changed page is rebuilt.
  */
 class WidgetsActivity : EinkActivity() {
     private lateinit var host: AppWidgetHost
@@ -31,19 +31,25 @@ class WidgetsActivity : EinkActivity() {
     private lateinit var pageText: TextView
     private lateinit var titleCount: TextView
     private lateinit var addText: TextView
+    private lateinit var toolsText: TextView
 
-    /** 받아 둔 위젯 id(쪽 순서). 첫 쪽(0)은 미디어 조절이라 위젯은 1쪽부터. */
+    /** Android widget ids in page order, after the built-in pages. */
     private var ids: List<Int> = emptyList()
     private var index = 0
     private var pendingId = -1
+    private var data: WidgetData? = null
+    private var layoutReady = false
+    private var nativePages: List<List<NativeWidget>> = emptyList()
 
-    private val pageCount get() = 1 + ids.size
-    private val pager = object : Paged {
-        override val page get() = index
-        override val pageCount get() = 1 + ids.size
-        override fun next() { index = (index + 1).coerceAtMost(pageCount - 1); render() }
-        override fun prev() { index = (index - 1).coerceAtLeast(0); render() }
-    }
+    private val native get() = NativeWidgets.load(this)
+    private val pageCount get() = max(1, nativePages.size + ids.size)
+
+    private val actions = WidgetActions(
+        open = ::openWidget,
+        menu = ::widgetMenu,
+        changed = ::reload,
+        openBook = ::openBook,
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,6 +57,10 @@ class WidgetsActivity : EinkActivity() {
         manager = AppWidgetManager.getInstance(this)
         ids = loadIds()
         buildViews()
+        body.post {
+            layoutReady = true
+            reload()
+        }
     }
 
     override fun onStart() {
@@ -63,8 +73,55 @@ class WidgetsActivity : EinkActivity() {
         super.onStop()
     }
 
+    private val handler = android.os.Handler(android.os.Looper.getMainLooper())
+    /** Keeps the music card honest while the screen is open; redraws only on a real change. */
+    private val musicPoller = object : Runnable {
+        override fun run() {
+            val d = data
+            if (d != null) {
+                val np = runCatching { MediaNow.info(this@WidgetsActivity) }.getOrNull()
+                val access = runCatching { MediaNow.hasAccess(this@WidgetsActivity) }.getOrDefault(false)
+                if (!samePlaying(d.nowPlaying, np) || d.mediaAccess != access) {
+                    d.nowPlaying = np
+                    d.mediaAccess = access
+                    render()
+                }
+            }
+            handler.postDelayed(this, 10_000)
+        }
+    }
+
     override fun onResume() {
         super.onResume()
+        if (layoutReady) reload()
+        handler.removeCallbacks(musicPoller)
+        handler.postDelayed(musicPoller, 10_000)
+    }
+
+    override fun onPause() {
+        handler.removeCallbacks(musicPoller)
+        super.onPause()
+    }
+
+    private fun samePlaying(a: NowPlaying?, b: NowPlaying?): Boolean {
+        if (a == null || b == null) return a == b
+        return a.packageName == b.packageName && a.title == b.title && a.artist == b.artist &&
+            a.playing == b.playing && a.durationMs == b.durationMs
+    }
+
+    private fun reload() {
+        data = WidgetData(this)
+        // Weather is the only card that needs the network. Refresh it quietly and
+        // redraw only when a new snapshot arrives.
+        if (Weather.city(this) != null && !Weather.isFresh(this)) {
+            Weather.refresh(this) { runOnUiThread { if (!isFinishing) { data = WidgetData(this); render() } } }
+        }
+        if (!Headlines.isFresh(this)) {
+            Headlines.refresh(this) { runOnUiThread { if (!isFinishing) { data = WidgetData(this); render() } } }
+        }
+        if (Stocks.symbol(this) != null && !Stocks.isFresh(this)) {
+            Stocks.refresh(this) { runOnUiThread { if (!isFinishing) { data = WidgetData(this); render() } } }
+        }
         render()
     }
 
@@ -80,42 +137,69 @@ class WidgetsActivity : EinkActivity() {
         root.addView(hline(1, inset = false))
 
         val footer = FrameLayout(this)
-        addText = text(getString(R.string.widget_add), 21f, Ui.bold).apply {
+        addText = text(getString(R.string.widget_add), 19f, Ui.bold).apply {
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(Ui.MARGIN), 0, dp(24), 0)
+            setPadding(dp(20), 0, dp(10), 0)
             setOnClickListener { pickWidget() }
         }
         footer.addView(addText, FrameLayout.LayoutParams(WRAP, MATCH, Gravity.START))
-        pageText = text("", 21f).apply {
+        toolsText = text(getString(R.string.mini_apps) + "  ›", 17f, Ui.medium, Ui.GRAY).apply {
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(24), 0, dp(Ui.MARGIN), 0)
-            pagesClick(pager)
+            setOnClickListener { startActivity(MiniAppsActivity.intent(this@WidgetsActivity)) }
+        }
+        footer.addView(toolsText, FrameLayout.LayoutParams(WRAP, MATCH, Gravity.CENTER))
+        pageText = text("", 19f).apply {
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(10), 0, dp(20), 0)
+            pagesClick(object : Paged {
+                override val page get() = index
+                override val pageCount get() = this@WidgetsActivity.pageCount
+                override fun next() { turn(1) }
+                override fun prev() { turn(-1) }
+            })
         }
         footer.addView(pageText, FrameLayout.LayoutParams(WRAP, MATCH, Gravity.END))
         root.addView(footer, lp(MATCH, dp(Ui.FOOTER_DP)))
         setContentView(root)
     }
 
+    private fun turn(delta: Int) {
+        index = (index + delta).coerceIn(0, pageCount - 1)
+        render()
+    }
+
     override fun onSwipe(toLeft: Boolean): Boolean {
         if (pageCount <= 1) return false
-        index = (index + if (toLeft) 1 else -1).coerceIn(0, pageCount - 1)
-        render()
+        turn(if (toLeft) 1 else -1)
+        return true
+    }
+
+    override fun onPageKey(next: Boolean): Boolean {
+        if (pageCount <= 1) return false
+        turn(if (next) 1 else -1)
         return true
     }
 
     private fun render() {
-        index = index.coerceIn(0, maxOf(0, pageCount - 1))
-        titleCount.text = if (ids.isEmpty()) "" else ids.size.toString()
+        val widgets = native
+        nativePages = paginate(widgets)
+        index = index.coerceIn(0, pageCount - 1)
+        titleCount.text = (widgets.size + ids.size).toString().takeIf { widgets.isNotEmpty() || ids.isNotEmpty() }.orEmpty()
         pageText.text = "${index + 1} / $pageCount"
         body.removeAllViews()
-        if (index == 0) {
-            body.addView(mediaPage())
+
+        if (index < nativePages.size) {
+            body.addView(nativePage(nativePages[index]))
             return
         }
-        val id = ids[index - 1]
+        val widgetIndex = index - nativePages.size
+        val id = ids.getOrNull(widgetIndex)
+        if (id == null) {
+            body.addView(emptyPage())
+            return
+        }
         val info = manager.getAppWidgetInfo(id)
         if (info == null) {
-            // 그사이 앱을 지운 위젯은 목록에서 지운다.
             ids = ids - id
             saveIds()
             index = index.coerceAtMost(pageCount - 1)
@@ -125,48 +209,216 @@ class WidgetsActivity : EinkActivity() {
         body.addView(widgetPage(id, info))
     }
 
-    /** 미디어 조절: 오디오북·TTS 앱이 받는 미디어 키를 보낸다(재생·일시정지, 앞뒤, 되감기·빨리 감기). */
-    private fun mediaPage(): View = vbox().apply {
-        setPadding(dp(Ui.MARGIN), dp(22), dp(Ui.MARGIN), dp(12))
-        addView(text(getString(R.string.widget_media_title), 28f, Ui.bold))
+    /** Pack cards into rows (wide cards take a whole row) and rows into pages. */
+    private fun paginate(widgets: List<NativeWidget>): List<List<NativeWidget>> {
+        val rowsPerPage = rowsPerPage()
+        val rows = mutableListOf<List<NativeWidget>>()
+        var i = 0
+        while (i < widgets.size) {
+            val w = widgets[i]
+            if (w.wide) {
+                rows += listOf(w)
+                i++
+            } else {
+                val next = widgets.getOrNull(i + 1)
+                if (next != null && !next.wide) {
+                    rows += listOf(w, next)
+                    i += 2
+                } else {
+                    rows += listOf(w)
+                    i++
+                }
+            }
+        }
+        if (rows.isEmpty()) return emptyList()
+        return rows.chunked(rowsPerPage).map { it.flatten() }
+    }
+
+    private fun rowsPerPage(): Int {
+        val h = body.height.takeIf { it > 0 } ?: (resources.displayMetrics.heightPixels - dp(150))
+        return (h / dp(150)).coerceIn(2, 3)
+    }
+
+    private fun nativePage(widgets: List<NativeWidget>): View {
+        val column = vbox()
+        val gap = dp(8)
+        val rows = mutableListOf<List<NativeWidget>>()
+        var i = 0
+        while (i < widgets.size) {
+            val w = widgets[i]
+            val next = widgets.getOrNull(i + 1)
+            if (w.wide || next == null || next.wide) {
+                rows += listOf(w)
+                i++
+            } else {
+                rows += listOf(w, next)
+                i += 2
+            }
+        }
+        val height = body.height.takeIf { it > 0 } ?: (resources.displayMetrics.heightPixels - dp(150))
+        val rowH = ((height - gap * (rows.size - 1)) / rows.size.coerceAtLeast(1))
+            .coerceIn(dp(140), dp(240))
+        // A short last page (one wide card, for example) sits in the middle instead
+        // of hugging the top edge.
+        val total = rowH * rows.size + gap * (rows.size - 1)
+        column.setPadding(0, ((height - total) / 2).coerceAtLeast(0), 0, 0)
+        val d = data ?: WidgetData(this).also { data = it }
+        rows.forEachIndexed { r, row ->
+            val line = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+            row.forEachIndexed { c, widget ->
+                val card = NativeWidgets.card(this, widget, d, actions)
+                val params = if (row.size == 1) {
+                    LinearLayout.LayoutParams(MATCH, MATCH)
+                } else {
+                    LinearLayout.LayoutParams(0, MATCH, 1f)
+                }
+                if (c > 0) params.marginStart = gap
+                line.addView(card, params)
+            }
+            column.addView(line, LinearLayout.LayoutParams(MATCH, rowH).apply {
+                if (r > 0) topMargin = gap
+            })
+        }
+        return column
+    }
+
+    private fun emptyPage(): View = vbox().apply {
+        setPadding(dp(Ui.MARGIN), dp(24), dp(Ui.MARGIN), dp(12))
+        addView(text(getString(R.string.widget_none), 22f, Ui.bold))
         addView(
-            text(getString(R.string.widget_media_hint), 15f, color = Ui.GRAY, lines = 2),
+            text(getString(R.string.widget_none_desc), 15f, color = Ui.GRAY, lines = 4),
             lp(MATCH, WRAP).apply { topMargin = dp(8) },
-        )
-        addView(hbox().apply {
-            setPadding(0, dp(28), 0, 0)
-            fun key(code: Int, icon: Int, label: Int) = MediaButton(this@WidgetsActivity, icon, getString(label)) {
-                mediaKey(code)
-            }
-            // 소리가 나고 있으면 일시정지 그림, 아니면 재생 그림(상태를 읽는 권한 없이 알 수 있는 만큼만).
-            val playing = getSystemService(AudioManager::class.java)?.isMusicActive == true
-            val buttons = listOf(
-                key(KeyEvent.KEYCODE_MEDIA_PREVIOUS, R.drawable.ic_media_previous, R.string.media_previous),
-                key(KeyEvent.KEYCODE_MEDIA_REWIND, R.drawable.ic_media_rewind, R.string.media_rewind),
-                key(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, if (playing) R.drawable.ic_media_pause else R.drawable.ic_media_play, R.string.media_play_pause),
-                key(KeyEvent.KEYCODE_MEDIA_FAST_FORWARD, R.drawable.ic_media_forward, R.string.media_forward),
-                key(KeyEvent.KEYCODE_MEDIA_NEXT, R.drawable.ic_media_next, R.string.media_next),
-            )
-            buttons.forEachIndexed { i, button ->
-                addView(button, lp(0, dp(88), 1f).apply { if (i > 0) marginStart = dp(10) })
-            }
-        }, lp(MATCH, WRAP))
-        addView(
-            text(getString(R.string.widget_media_tip), 14f, color = Ui.LIGHT_GRAY, lines = 2),
-            lp(MATCH, WRAP).apply { topMargin = dp(18) },
         )
     }
 
-    @Suppress("DEPRECATION")
-    private fun mediaKey(code: Int) {
-        val audio = getSystemService(AudioManager::class.java) ?: return
-        runCatching {
-            audio.dispatchMediaKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, code))
-            audio.dispatchMediaKeyEvent(KeyEvent(KeyEvent.ACTION_UP, code))
+    // ---- card actions -------------------------------------------------------
+
+    private fun openWidget(widget: NativeWidget) {
+        when (widget) {
+            NativeWidget.CLOCK -> startActivity(Intent(this, SettingsActivity::class.java))
+            NativeWidget.STATS, NativeWidget.CALENDAR, NativeWidget.QUOTE ->
+                startActivity(ReadingActivity.intent(this))
+            NativeWidget.READING -> openFirstBook()
+            NativeWidget.MUSIC -> showMediaPanel()
+            NativeWidget.STATUS -> startActivity(DeviceInfoActivity.intent(this))
+            NativeWidget.WEATHER -> askCity()
+            NativeWidget.HEADLINES -> runCatching {
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://news.ycombinator.com/")))
+            }
+            NativeWidget.STOCKS -> askSymbol()
+            NativeWidget.RECENT -> startActivity(BooksActivity.intent(this))
+            NativeWidget.YEAR -> startActivity(YearBooksActivity.intent(this))
         }
     }
 
-    /** 안드로이드 위젯 한 쪽: 위젯 이름과 `빼기`, 그 아래 위젯 화면. 길게 누르면 뺀다. */
+    private fun openFirstBook() {
+        val book = runCatching { BookShelf.list(this).firstOrNull() }.getOrNull()
+            ?: return startActivity(BooksActivity.intent(this))
+        openBook(book)
+    }
+
+    private fun openBook(book: ShelfBook) {
+        BookShelf.moveToFront(this, book.id)
+        val app = book.app?.let { AppStore.find(this, it) }
+        if (app != null && AppStore.openBook(this, book, app)) return
+        startActivity(BooksActivity.intent(this))
+    }
+
+    private fun askCity() {
+        val current = Weather.city(this).orEmpty()
+        Sheet(this).header(getString(R.string.weather_city_title), getString(R.string.weather_city_hint))
+            .input(current) { city ->
+                Weather.setCity(this, city)
+                reload()
+            }
+            .show()
+    }
+
+    private fun askSymbol() {
+        Sheet(this).header(getString(R.string.stock_symbol_title), getString(R.string.stock_symbol_hint))
+            .input(Stocks.symbol(this).orEmpty()) { symbol ->
+                Stocks.setSymbol(this, symbol)
+                reload()
+            }
+            .show()
+    }
+
+    private fun widgetMenu(widget: NativeWidget, anchor: View) {
+        val title = getString(widget.title)
+        val sheet = Sheet(this).header(title, getString(R.string.widget_builtin))
+        when (widget) {
+            NativeWidget.WEATHER -> sheet.item(getString(R.string.widget_change_city), bold = true) { askCity() }
+            NativeWidget.CLOCK -> sheet.item(getString(R.string.widget_clock_mode), bold = true) {
+                prefs.clock24h = !prefs.clock24h
+                reload()
+            }
+            NativeWidget.MUSIC -> sheet.item(getString(R.string.widget_media_controls), bold = true) { showMediaPanel() }
+            NativeWidget.STOCKS -> sheet.item(getString(R.string.stock_symbol_title), bold = true) { askSymbol() }
+            NativeWidget.HEADLINES -> sheet.item(getString(R.string.widget_refresh), bold = true) {
+                Headlines.refresh(this) { runOnUiThread { data = WidgetData(this); render() } }
+            }
+            else -> Unit
+        }
+        sheet.item(getString(R.string.widget_move_left)) { move(widget, -1) }
+        sheet.item(getString(R.string.widget_move_right)) { move(widget, 1) }
+        sheet.item(getString(R.string.widget_remove), bold = true) {
+            NativeWidgets.remove(this, widget)
+            reload()
+        }.show()
+    }
+
+    private fun move(widget: NativeWidget, delta: Int) {
+        NativeWidgets.move(this, widget, delta)
+        reload()
+    }
+
+    private fun showMediaPanel() {
+        val now = runCatching { MediaNow.info(this) }.getOrNull()
+        val panel = vbox().apply {
+            setPadding(dp(20), dp(4), dp(20), dp(12))
+            addView(text(now?.subtitle() ?: getString(R.string.widget_nothing_playing), 20f, Ui.bold, lines = 2))
+            addView(
+                text(
+                    now?.let { "${it.appLabel} · ${it.minuteText()}".trim(' ', '·') } ?: getString(R.string.widget_media_access_needed),
+                    13f, color = Ui.GRAY,
+                ),
+                lp(MATCH, WRAP).apply { topMargin = dp(4) },
+            )
+            if (now != null && now.progress >= 0) {
+                addView(BarView(this@WidgetsActivity, now.progress), lp(MATCH, dp(5)).apply { topMargin = dp(8) })
+            }
+            addView(hbox().apply {
+                setPadding(0, dp(14), 0, 0)
+                fun key(icon: Int, label: Int, action: () -> Unit) =
+                    CardIconButton(this@WidgetsActivity, icon, getString(label), action)
+                val buttons = listOf(
+                    key(R.drawable.ic_media_previous, R.string.media_previous) { MediaNow.previous(this@WidgetsActivity) },
+                    key(R.drawable.ic_media_rewind, R.string.media_rewind) { MediaNow.seek(this@WidgetsActivity, -10_000) },
+                    key(if (now?.playing == true) R.drawable.ic_media_pause else R.drawable.ic_media_play, R.string.media_play_pause) { MediaNow.toggle(this@WidgetsActivity) },
+                    key(R.drawable.ic_media_forward, R.string.media_forward) { MediaNow.seek(this@WidgetsActivity, 10_000) },
+                    key(R.drawable.ic_media_next, R.string.media_next) { MediaNow.next(this@WidgetsActivity) },
+                )
+                buttons.forEachIndexed { i, b ->
+                    addView(b, lp(0, dp(64), 1f).apply { if (i > 0) marginStart = dp(10) })
+                }
+            }, lp(MATCH, WRAP))
+            addView(
+                text(
+                    getString(R.string.widget_media_hint),
+                    13f, color = Ui.LIGHT_GRAY, lines = 2,
+                ),
+                lp(MATCH, WRAP).apply { topMargin = dp(10) },
+            )
+        }
+        val sheet = Sheet(this).header(getString(R.string.native_music), getString(R.string.widget_controls)).note(panel)
+        if (!MediaNow.hasAccess(this)) {
+            sheet.item(getString(R.string.notification_access), bold = true) { MediaNow.requestAccess(this) }
+        }
+        sheet.onDismiss { reload() }.show()
+    }
+
+    // ---- Android widgets ----------------------------------------------------
+
     private fun widgetPage(id: Int, info: AppWidgetProviderInfo): View = vbox().apply {
         setPadding(dp(Ui.MARGIN), dp(16), dp(Ui.MARGIN), dp(12))
         val label = runCatching { info.loadLabel(packageManager).toString() }.getOrDefault(info.provider.shortClassName)
@@ -190,7 +442,6 @@ class WidgetsActivity : EinkActivity() {
         } else {
             view.setAppWidget(id, info)
             frame.addView(view, FrameLayout.LayoutParams(MATCH, MATCH))
-            // 위젯이 이 칸에 맞게 그려지도록 크기를 알려 준다.
             view.post { resize(view, frame) }
         }
         addView(frame, lp(MATCH, 0, 1f))
@@ -231,7 +482,10 @@ class WidgetsActivity : EinkActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         when (requestCode) {
             REQ_PICK -> if (resultCode == RESULT_OK && data != null) {
-                WidgetPickerActivity.providerOf(data)?.let(::addWidget)
+                WidgetPickerActivity.nativeOf(data)?.let {
+                    NativeWidgets.add(this, it)
+                    reload()
+                } ?: WidgetPickerActivity.providerOf(data)?.let(::addWidget)
             }
             REQ_BIND -> {
                 val id = data?.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, pendingId) ?: pendingId
@@ -244,7 +498,7 @@ class WidgetsActivity : EinkActivity() {
         }
     }
 
-    /** 위젯을 이 앱의 호스트에 붙인다. 허용이 필요하면 시스템에 묻는다. */
+    /** Attach an Android widget to this app's host, asking the system for permission if needed. */
     private fun addWidget(provider: ComponentName) {
         val id = runCatching { host.allocateAppWidgetId() }.getOrNull() ?: return failed()
         val allowed = runCatching { manager.bindAppWidgetIdIfAllowed(id, provider) }.getOrDefault(false)
@@ -268,7 +522,7 @@ class WidgetsActivity : EinkActivity() {
         }
         if (id !in ids) ids = ids + id
         saveIds()
-        index = ids.indexOf(id) + 1
+        index = nativePages.size + ids.indexOf(id)
         render()
     }
 
@@ -290,43 +544,8 @@ class WidgetsActivity : EinkActivity() {
 
     private fun widgetPrefs() = Storage.of(this).getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
-    /** 전자잉크 버튼: 검은 테두리 안에 아이콘 하나. 애니메이션 없이 바로 누른다. */
-    private class MediaButton(
-        context: Context,
-        iconRes: Int,
-        description: String,
-        onClick: () -> Unit,
-    ) : View(context) {
-        private val icon: Drawable? = context.getDrawable(iconRes)
-        private val border = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            style = Paint.Style.STROKE
-            color = Ui.BLACK
-            strokeWidth = context.dpf(1.5f)
-        }
-        private val rect = RectF()
-
-        init {
-            contentDescription = description
-            isClickable = true
-            setOnClickListener { onClick() }
-        }
-
-        override fun onDraw(canvas: Canvas) {
-            val inset = border.strokeWidth / 2
-            val radius = context.dpf(10f)
-            rect.set(inset, inset, width - inset, height - inset)
-            canvas.drawRoundRect(rect, radius, radius, border)
-            val d = icon ?: return
-            val size = min(width, height) * 0.42f
-            val left = ((width - size) / 2f).toInt()
-            val top = ((height - size) / 2f).toInt()
-            d.setBounds(left, top, left + size.toInt(), top + size.toInt())
-            d.draw(canvas)
-        }
-    }
-
     companion object {
-        /** 이 앱의 위젯 호스트 번호(다른 앱과 겹치지 않게 앱마다 하나) */
+        /** This app's widget host id (one per app, so it does not collide with another launcher). */
         private const val HOST_ID = 0x0B00C
         private const val PREFS = "widgets"
         private const val KEY_IDS = "ids"

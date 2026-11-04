@@ -14,8 +14,8 @@ class BookRecordRoundsTest {
 
     private fun d(s: String) = LocalDate.parse("2026-$s")
     private fun minutes(m: Int) = m * 60_000L
-    private fun fin(id: Long, day: String, started: String? = null, review: Review? = null, began: String? = null) =
-        BookShelf.Finish(id, d(day), null, started?.let(::d), review, began?.let(::d))
+    private fun fin(id: Long, day: String, started: String? = null, review: Review? = null, began: String? = null, at: String? = null) =
+        BookShelf.Finish(id, d(day), at?.let { d(it).atTime(12, 0).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli() }, started?.let(::d), review, began?.let(::d))
 
     private fun rec(
         state: State = State.PAST, finishes: List<BookShelf.Finish> = emptyList(), days: Map<String, Int> = emptyMap(),
@@ -269,5 +269,37 @@ class BookRecordRoundsTest {
         // 마지막으로 읽은 날(10-01) 뒤로 고친 시작일(10-05)보다 앞으로도 못 간다
         val later = rec(finishes = listOf(fin(1, "10-10", began = "10-05")), days = mapOf("10-01" to 10))
         assertEquals(d("10-05") to d("10-15"), later.finishDayRange(later.rounds[0], d("10-15")))
+    }
+
+    @Test fun `완독을 누른 날까지 읽은 시간은 완독한 날을 앞으로 고쳐도 그 회차`() {
+        // 11-02 에 읽고 완독을 눌렀고, 읽기 시작한 날은 10-14, 완독한 날은 10-15 로 고쳤다
+        val r = rec(finishes = listOf(fin(1, "10-15", began = "10-14", at = "11-02")), days = mapOf("11-02" to 30))
+        val round = r.rounds.single()
+        assertEquals(d("10-14"), round.from)
+        assertEquals(d("10-15"), round.to)
+        assertEquals(minutes(30), round.ms)
+        assertEquals(d("11-02"), round.pressed)
+        // 누른 날 뒤에 읽은 것은 다음 회차
+        val after = rec(finishes = listOf(fin(1, "10-15", at = "11-02")), days = mapOf("11-02" to 30, "11-03" to 10)).rounds
+        assertEquals(listOf(minutes(30), minutes(10)), after.map { it.ms })
+    }
+
+    @Test fun `완독한 날 범위 - 누른 때를 알면 마지막으로 읽은 날보다 앞으로도, 읽기 시작한 날까지`() {
+        val r = rec(finishes = listOf(fin(1, "11-02", began = "10-14", at = "11-02")), days = mapOf("11-02" to 30))
+        assertEquals(d("10-14") to d("11-02"), r.finishDayRange(r.rounds.single(), d("11-02")))
+        assertTrue(r.canFinishOn(r.rounds.single(), d("10-15"), d("11-02")))
+        // 읽기 시작한 날을 고치지 않았으면 처음 읽은 날까지(그보다 앞은 기간이 거꾸로)
+        val plain = rec(finishes = listOf(fin(1, "11-02", at = "11-02")), days = mapOf("10-20" to 10, "11-02" to 30))
+        assertEquals(d("10-20") to d("11-02"), plain.finishDayRange(plain.rounds.single(), d("11-02")))
+        // 회차 메뉴에서 읽기 시작한 날(10-14)을 함께 고르는 중이면 그날부터
+        assertEquals(d("10-14") to d("11-02"), plain.finishDayRange(plain.rounds.single(), d("11-02"), from = d("10-14")))
+        assertTrue(plain.canFinishOn(plain.rounds.single(), d("10-15"), d("11-02"), from = d("10-14")))
+    }
+
+    @Test fun `완독한 날 범위 - 누른 날 뒤로 고쳐 들어온 읽은 날보다는 앞으로 못 간다`() {
+        // 11-02 에 눌렀다가 완독한 날을 11-05 로 고쳐 11-04 에 읽은 시간이 이 회차에 들어왔다
+        val r = rec(finishes = listOf(fin(1, "11-05", at = "11-02")), days = mapOf("11-01" to 10, "11-04" to 10))
+        assertEquals(minutes(20), r.rounds.single().ms)
+        assertEquals(d("11-04") to d("11-10"), r.finishDayRange(r.rounds.single(), d("11-10")))
     }
 }

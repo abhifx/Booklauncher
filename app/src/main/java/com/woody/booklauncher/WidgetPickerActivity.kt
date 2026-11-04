@@ -52,8 +52,9 @@ class WidgetPickerActivity : EinkActivity() {
             .map { ProviderItem(it, appLabel(it.provider.packageName), widgetLabel(it)) }
             .distinctBy { it.info.provider }
             .sortedWith(compareBy<ProviderItem> { it.appLabel.lowercase() }.thenBy { it.widgetLabel.lowercase() })
-        empty.visibility = if (providers.isEmpty()) View.VISIBLE else View.GONE
-        rows.setRows(providers.map { item -> { pickerRow(item) } })
+        val builtIn = NativeWidget.entries.map { widget -> { nativeRow(widget) } }
+        empty.visibility = if (providers.isEmpty() && builtIn.isEmpty()) View.VISIBLE else View.GONE
+        rows.setRows(builtIn + providers.map { item -> { pickerRow(item) } })
     }
 
     override fun onSwipe(toLeft: Boolean): Boolean {
@@ -69,6 +70,27 @@ class WidgetPickerActivity : EinkActivity() {
 
     private fun widgetLabel(info: AppWidgetProviderInfo): String =
         runCatching { info.loadLabel(packageManager).toString() }.getOrDefault(info.provider.shortClassName)
+
+    /** Built-in card: name and a short "Built-in" label. */
+    private fun nativeRow(widget: NativeWidget): View = hbox().apply {
+        setPadding(dp(Ui.MARGIN), 0, dp(Ui.MARGIN), 0)
+        addView(vbox().apply {
+            gravity = Gravity.CENTER_VERTICAL
+            addView(text(getString(widget.title), Ui.ROW_SP))
+            addView(
+                text(
+                    getString(R.string.widget_picker_builtin) +
+                        if (widget in NativeWidgets.load(this@WidgetPickerActivity)) " · " + getString(R.string.widget_added) else "",
+                    14f, color = Ui.GRAY,
+                ),
+                lp(MATCH, WRAP).apply { topMargin = dp(2) },
+            )
+        }, lp(0, WRAP, 1f))
+        setOnClickListener {
+            setResult(RESULT_OK, Intent().putExtra(EXTRA_NATIVE, widget.key))
+            finish()
+        }
+    }
 
     /** 앱 아이콘 · 위젯 이름 · 앱 이름. 누르면 고른 위젯의 ComponentName 을 돌려주고 닫는다. */
     private fun pickerRow(item: ProviderItem): View = hbox().apply {
@@ -96,8 +118,12 @@ class WidgetPickerActivity : EinkActivity() {
 
     companion object {
         const val EXTRA_PROVIDER = "provider"
+        const val EXTRA_NATIVE = "native"
 
         fun providerOf(intent: Intent): ComponentName? =
             intent.getStringExtra(EXTRA_PROVIDER)?.let(ComponentName::unflattenFromString)
+
+        fun nativeOf(intent: Intent): NativeWidget? =
+            NativeWidget.of(intent.getStringExtra(EXTRA_NATIVE))
     }
 }

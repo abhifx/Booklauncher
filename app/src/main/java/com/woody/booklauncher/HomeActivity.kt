@@ -16,6 +16,10 @@ import android.graphics.Color
 import android.graphics.DashPathEffect
 import android.graphics.Paint
 import android.graphics.drawable.GradientDrawable
+import android.hardware.input.InputManager
+import android.media.AudioDeviceCallback
+import android.media.AudioDeviceInfo
+import android.media.AudioManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -121,10 +125,34 @@ class HomeActivity : EinkActivity() {
     private val lightObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
         override fun onChange(selfChange: Boolean) = updateStatus()
     }
+    /**
+     * 끊긴 와이파이. 시스템은 끊김(onLost)을 알린 뒤에 네트워크 목록에서 빼서, 알림을 받자마자 읽으면 끊긴 와이파이가
+     * 아직 남아 있을 수 있다(안드로이드 14 기기에서 끊어도 아이콘이 남았다가 다른 화면에 다녀오면 지워졌다). 다시 연결될 때까지 뺀다.
+     */
+    private val lostWifi = mutableSetOf<Network>()
     /** 와이파이 연결·끊김(연결 방송은 안드로이드 11 에뮬에서 오지 않았다) */
     private val wifiCallback = object : ConnectivityManager.NetworkCallback() {
-        override fun onAvailable(network: Network) = updateStatus()
-        override fun onLost(network: Network) = updateStatus()
+        override fun onAvailable(network: Network) {
+            lostWifi.remove(network)
+            updateStatus()
+        }
+        override fun onLost(network: Network) {
+            lostWifi.add(network)
+            updateStatus()
+        }
+    }
+    /**
+     * 블루투스 이어폰·리모컨이 붙고 떨어질 때. 안드로이드 12+ 는 연결 방송(`ACTION_CONNECTION_STATE_CHANGED`)이 '근처 기기' 권한
+     * 없이는 오지 않아, 상태 줄이 연결을 짐작하는 소리 출력·외부 입력 장치의 바뀜으로 다시 읽는다([DeviceStatus]).
+     */
+    private val audioCallback = object : AudioDeviceCallback() {
+        override fun onAudioDevicesAdded(added: Array<out AudioDeviceInfo>) = updateStatus()
+        override fun onAudioDevicesRemoved(removed: Array<out AudioDeviceInfo>) = updateStatus()
+    }
+    private val inputListener = object : InputManager.InputDeviceListener {
+        override fun onInputDeviceAdded(deviceId: Int) = updateStatus()
+        override fun onInputDeviceRemoved(deviceId: Int) = updateStatus()
+        override fun onInputDeviceChanged(deviceId: Int) = Unit
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -310,12 +338,15 @@ class HomeActivity : EinkActivity() {
             addAction(BluetoothAdapter.ACTION_STATE_CHANGED)
             addAction(BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED)
         })
+        val main = Handler(Looper.getMainLooper())
         runCatching {
             getSystemService(ConnectivityManager::class.java).registerNetworkCallback(
                 NetworkRequest.Builder().addTransportType(NetworkCapabilities.TRANSPORT_WIFI).build(),
-                wifiCallback, Handler(Looper.getMainLooper()),
+                wifiCallback, main,
             )
         }
+        runCatching { getSystemService(AudioManager::class.java).registerAudioDeviceCallback(audioCallback, main) }
+        runCatching { getSystemService(InputManager::class.java).registerInputDeviceListener(inputListener, main) }
         Device.lightKeys.forEach { contentResolver.registerContentObserver(Settings.System.getUriFor(it), false, lightObserver) }
         updateStatus()
     }
@@ -323,6 +354,9 @@ class HomeActivity : EinkActivity() {
     override fun onStop() {
         runCatching { unregisterReceiver(statusReceiver) }
         runCatching { getSystemService(ConnectivityManager::class.java).unregisterNetworkCallback(wifiCallback) }
+        lostWifi.clear()
+        runCatching { getSystemService(AudioManager::class.java).unregisterAudioDeviceCallback(audioCallback) }
+        runCatching { getSystemService(InputManager::class.java).unregisterInputDeviceListener(inputListener) }
         contentResolver.unregisterContentObserver(lightObserver)
         super.onStop()
     }
@@ -395,7 +429,7 @@ class HomeActivity : EinkActivity() {
     /** 화면이 꺼져 있을 때는 그리지 않는다(슬립화면 위에 덧그리지 않도록). 켜지면 SCREEN_ON 으로 다시 부른다. */
     private fun updateStatus() {
         if (!::topBar.isInitialized || !getSystemService(PowerManager::class.java).isInteractive) return
-        topBar.update(DeviceStatus.read(this))
+        topBar.update(DeviceStatus.read(this, lostWifi))
     }
 
     private fun buildViews() {
@@ -457,12 +491,13 @@ class HomeActivity : EinkActivity() {
         window.setBackgroundDrawable(null)
     }
 
-    /** 아래 단추 줄(모든 앱 · 통계 · 위젯 · 설정). 세로 화면은 화면 맨 아래, 가로 화면은 왼쪽 세로 줄([sidebar])로 둔다. */
+    /** 아래 단추 줄(모든 앱 · 통계 · 위젯 · 미니 앱 · 설정). 세로 화면은 화면 맨 아래, 가로 화면은 왼쪽 세로 줄([sidebar])로 둔다. */
     private fun footer() = hbox().apply {
         listOf(
             Triple(R.drawable.ic_apps, getString(R.string.all_apps)) { startActivity(AppListActivity.intent(this@HomeActivity, AppListActivity.Mode.ALL)) },
             Triple(R.drawable.ic_stats, getString(R.string.stats)) { startActivity(ReadingActivity.intent(this@HomeActivity)) },
             Triple(R.drawable.ic_widgets, getString(R.string.widgets)) { startActivity(Intent(this@HomeActivity, WidgetsActivity::class.java)) },
+            Triple(R.drawable.ic_mini_apps, getString(R.string.mini_apps)) { startActivity(MiniAppsActivity.intent(this@HomeActivity)) },
             Triple(R.drawable.ic_settings, getString(R.string.settings)) { startActivity(Intent(this@HomeActivity, SettingsActivity::class.java)) },
         ).forEach { (icon, label, action) ->
             addView(vbox().apply {
@@ -485,6 +520,7 @@ class HomeActivity : EinkActivity() {
             Triple(R.drawable.ic_apps, getString(R.string.all_apps)) { startActivity(AppListActivity.intent(this@HomeActivity, AppListActivity.Mode.ALL)) },
             Triple(R.drawable.ic_stats, getString(R.string.stats)) { startActivity(ReadingActivity.intent(this@HomeActivity)) },
             Triple(R.drawable.ic_widgets, getString(R.string.widgets)) { startActivity(Intent(this@HomeActivity, WidgetsActivity::class.java)) },
+            Triple(R.drawable.ic_mini_apps, getString(R.string.mini_apps)) { startActivity(MiniAppsActivity.intent(this@HomeActivity)) },
             Triple(R.drawable.ic_settings, getString(R.string.settings)) { startActivity(Intent(this@HomeActivity, SettingsActivity::class.java)) },
         ).forEach { (icon, label, action) ->
             addView(hbox().apply {

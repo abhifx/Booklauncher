@@ -11,6 +11,7 @@ import com.woody.booklauncher.readers.CherieViewer
 import com.woody.booklauncher.readers.EasyView
 import com.woody.booklauncher.readers.EasyViewFree
 import com.woody.booklauncher.readers.Futon
+import com.woody.booklauncher.readers.IReader
 import com.woody.booklauncher.readers.Kahon
 import com.woody.booklauncher.readers.KOReader
 import com.woody.booklauncher.readers.KOReaderFdroid
@@ -56,14 +57,15 @@ internal object ReaderGuide {
      * 앱 하나의 안내. [bookFiles] 는 책 파일 읽기 줄의 보조 글(꼭 필요·표지 등, null 이면 그 줄을 두지 않는다), [todo] 는 앱에서 할 것(비면 `따로 바꿀 것은 없습니다`),
      * [note] 는 알아 둘 것(없으면 그 묶음을 두지 않는다).
      * 표지는 안드로이드 9·10 이면 [coverBefore11]: 서재 화면에서 자르는 표지는 화면 캡처가 안드로이드 11 부터라 들어오지 않는다
-     * (기본. 책 파일 읽기 줄이 있는 앱은 표지를 책 파일·앱 데이터에서 꺼내 그대로이고, 그 길만 남는 앱만 따로 준다).
+     * (기본. 책 파일 읽기 줄이 있는 앱과 [appCover](앱이 표지를 내주는 앱, iReader)는 표지를 화면에서 자르지 않아 그대로이고, 그 길만 남는 앱만 따로 준다).
      */
     class Info(
         val todo: List<Int>,
         cover: Field, val title: Field, val author: Field, val progress: Field, val due: Field,
         val bookFiles: Int? = null,
         val note: Int? = null,
-        coverBefore11: Field = if (cover.added && bookFiles == null) BEFORE_11 else cover,
+        val appCover: Boolean = false,
+        coverBefore11: Field = if (cover.added && bookFiles == null && !appCover) BEFORE_11 else cover,
     ) {
         val cover = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) coverBefore11 else cover
 
@@ -97,6 +99,11 @@ internal object ReaderGuide {
 
     /** 자동 추가 안내의 앱들. [ReaderApps.ALL] 을 빠짐없이 덮어야 한다(단위 테스트, 앱을 더하면 여기도) */
     val APPS = listOf(
+        App(listOf(R.string.guide_ireader), listOf(IReader), Info(
+            emptyList(),
+            cover = YES, title = YES, author = YES, progress = YES, due = NO,
+            appCover = true,
+        )),
         App(listOf(R.string.guide_kel), listOf(KyoboLibrary), Info(
             listOf(R.string.guide_t_kyobo_bottom, R.string.guide_t_kel_list),
             cover = Field(R.string.guide_added_list_view), title = yes(R.string.guide_n_kel_title),

@@ -31,7 +31,7 @@ Pebble Desk 가 이북 앱에서 무엇을 알아내고 무엇을 할 수 있는
 | Mihon `app.mihon`·Kahon `com.amanoteam.kahon`(만화, 오픈소스. Kahon 은 Mihon 포크) | `eu.kanade.tachiyomi.ui.reader.ReaderActivity` | ? | 그냥 열면 마지막 화면 | X | 사용자가 고른 저장 폴더(로컬 만화 `<폴더>/local/<작품>/<화>.cbz`) |
 | Futon `io.github.landwarderer.futon`·Kotatsu `org.koitharu.kotatsu`(만화·소설, 오픈소스. Futon 은 Kotatsu 포크, Kotatsu 는 2025-11 저장소 보관·GitHub 릴리스·F-Droid 에서 내려감) | `<이름공간>.reader.ui.ReaderActivity`(Futon 은 소설·PDF `novel.ui.reader.NovelReaderActivity`·`…pdf.PdfReaderActivity` 도) | ? | 그냥 열면 마지막 화면 | X | 앱 전용 폴더(`Android/data/…/files/manga`, 불러오기로 복사) |
 | Librera `com.foobnix.pdf.reader`(무료, 광고)·Librera Pro `com.foobnix.pro.pdf.reader`(Play 유료, GitHub·F-Droid 판도 이 패키지. 오픈소스 내 파일 리더, 우주의 원본) | `com.foobnix.pdf.search.activity.HorizontalViewActivity`(책 넘김)·`org.ebookdroid.ui.viewer.VerticalViewActivity`(스크롤) | O (`file://` 를 `com.foobnix.OpenerActivity` 로, 읽던 쪽으로) | O (그냥 열면 라이브러리) | ? | 사용자가 둔 곳(공유 저장소). Librera 기록은 `/sdcard/Librera`(모든 파일 액세스가 없으면 `Download/Librera`) |
-| 아이리더 기본 리더 `com.zhangyue.iReader.Eink`(掌阅 iReader SmartOS 기기의 시스템 앱. Tango·Ocean 5C 에서 확인) | `ActivityRead`(클래스 앞부분은 모름) | ? | ? | ? | ? |
+| 아이리더 기본 리더 `com.zhangyue.iReader.Eink`(掌阅 iReader SmartOS 기기의 시스템 앱. Tango·Ocean 5C 에서 확인) | `com.zhangyue.iReader.Eink.Activity.ActivityRead`·`ActivityReadP1` | O (`ActivityAliasOpenBook` 에 파일 경로 `file`) | O (`ActivityAliasBookShelf`. 실행 화면은 기기에 따라 서점 별칭) | X | 앱 전용 DB |
 | YES24 `com.yes24.ebook.einkstore`(my YES, 시스템 앱. USB 디버깅 중에는 쓸 수 없음) | O | X (스토어 상세만) | O | X | `Android/data` |
 
 - 사용 기록에는 **앱·화면 이름과 시각만** 남는다. 어떤 책인지는 알 수 없다.
@@ -95,8 +95,8 @@ Pebble Desk 가 이북 앱에서 무엇을 알아내고 무엇을 할 수 있는
 
 #### 아이리더 기본 리더 `com.zhangyue.iReader.Eink`
 
-- **지원**: 하지 않는다(2026-10-31). 자동 추가도 오늘 읽은 시간도 없다(정해 둔 이북 앱 목록에 없어 읽은 시간을 세지 않는다).
-- **읽은 시간만이라면**: 읽는 화면 `ActivityRead`(마지막 이름으로) 가 앞에 있던 동안을 책 없이 앱으로 셀 수 있다(오늘 읽은 시간·연속일·달력에만 들어가고 읽은 책 목록에는 없다). 만들어 보았으나 넣지 않았다.
+- **지원**(2026-11-03): 기기 내장판 4.1.0용 `readers/IReader.kt`를 추가했다. 읽는 화면 `ActivityRead`·별도 프로세스의 `ActivityReadP1`에서 읽은 시간을 세고, 공개 최근 책 Provider로 자동 추가한다(펌웨어가 지금 책 식별자를 내주면 그것으로 맞추고, 없으면 맨 위 줄). 목차를 열 필요는 없다. Ocean 5 Pro(펌웨어 4.1.0.215.0)에서 자동 추가·진행률·홈에서 열기를 확인했다.
+- **공개 데이터**: `content://com.szzy.ireader.eink.ireaderdata`의 `IReaderDataSyncProvider`가 최근 책(제목·저자·열람 시각)과 표지 URI를 준다. 진행률은 최근 책 줄의 `readpercent`(0~1)를 쓰고, 읽는 화면을 떠날 때 저장하므로 홈에 오면 한 번 더 읽는다. 자세한 근거·제약은 `readers/IReader.kt`와 1.7.4 릴리스 노트에 있다.
 - **근거**: 사용자 두 사람의 기기 정보 사진(2026-10-31, Tango `PM06A-CKD` 시스템 4.1.0.215.0 · Ocean 5C `SM07A-CKDC` 4.1.0.214.0, Pebble Desk 1.7.1)의 `최근에 뜬 다른 화면` 에 `com.zhangyue.iReader.Eink / ActivityRead` 가 있었다(기기 정보는 클래스의 마지막 이름만 보여 마지막 이름으로 가린다). iReader 홈은 `com.szzy.ireader.ink.launcher / LauncherActivity`.
 - **APK**(2026-10-31): 같은 패키지의 화웨이 MatePad Paper 용 `掌阅墨水屏版`(InkReaderEink) 1.8.3(versionCode 100901123, targetSdk 30, 3673.com 파일 `zsInkReaderEink_v1.8.3_3673.com.apk`, 사용자가 받음)을 보았다. 읽는 화면은 `com.zhangyue.iReader.Eink.Activity.ActivityRead`(기기 사진과 같은 이름), 서재는 `Eink.home.ActivityHome`. SmartOS 4.1 의 기본 리더와 같은 판인지는 **(미확인)**. 네이티브 라이브러리가 32비트 ARM(`armeabi-v7a`)뿐이라 Mac 의 64비트 전용 에뮬레이터에는 깔리지 않아(`INSTALL_FAILED_NO_MATCHING_ABIS`) jadx 로 레이아웃·코드만 보았다.
   - 서재: `Id_bookshelf_grid` 등이 `BookShelfView`(`View` 하나에 모든 책을 `drawText`·그림으로 직접 그림)라 접근성에 책 칸·제목이 없다. 목록 보기의 `bookshelf_bookitem_type_list`(`book_name`·`book_read_percent`)도 같은 뷰가 그린다.

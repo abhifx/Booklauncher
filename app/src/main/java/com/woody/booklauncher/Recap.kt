@@ -18,14 +18,14 @@ object Recap {
     const val LANES = 4
 
     /**
-     * 그달 읽은 책 한 권: 날마다 읽은 시간(1일부터), 그달 마지막으로 완독한 날(없으면 null), 그달에 걸친 회차의 별점(반 개 단위)·감상,
-     * 표지에서 뽑은 막대 색은 그릴 때 정한다.
+     * 그달 읽은 책 한 권: 날마다 읽은 시간(1일부터, 회차의 고친 기간 밖에 읽은 날은 뺀다 [BookRecord.periodDayMs]), 그달 마지막으로 완독한 날(없으면 null),
+     * 그달에 사용자가 고친 읽기 시작한 날(없으면 null), 그달에 걸친 회차의 별점(반 개 단위)·감상, 표지에서 뽑은 막대 색은 그릴 때 정한다.
      */
-    class Book(val book: ShelfBook, val dayMs: LongArray, val finishDay: Int?, val halves: Int, val review: String) {
+    class Book(val book: ShelfBook, val dayMs: LongArray, val finishDay: Int?, val halves: Int, val review: String, val startDay: Int? = null) {
         val ms = dayMs.sum()
 
-        /** 읽은 날(1부터). 완독한 날은 읽은 시간이 없어도 넣는다(막대 끝에 완독 표시가 놓이게). */
-        val days: List<Int> = (dayMs.indices.filter { dayMs[it] > 0 }.map { it + 1 } + listOfNotNull(finishDay)).distinct().sorted()
+        /** 읽은 날(1부터). 완독한 날·고친 읽기 시작한 날은 읽은 시간이 없어도 넣는다(막대가 그날부터, 끝에 완독 표시가 놓이게). */
+        val days: List<Int> = (dayMs.indices.filter { dayMs[it] > 0 }.map { it + 1 } + listOfNotNull(finishDay, startDay)).distinct().sorted()
         val firstDay get() = days.firstOrNull() ?: 1
         val lastDay get() = days.lastOrNull() ?: 1
 
@@ -63,13 +63,16 @@ object Recap {
         val n = month.lengthOfMonth()
         val dayMs = LongArray(n) { days.total(month.atDay(it + 1)) }
         val books = records.mapNotNull { r ->
-            val per = LongArray(n) { r.dayMs[month.atDay(it + 1)] ?: 0L }
+            // 책별 시간은 회차의 고친 기간 안만(그 밖에 읽은 날은 위 날마다 합계에만 남는다)
+            val per = LongArray(n) { r.periodDayMs[month.atDay(it + 1)] ?: 0L }
             val finish = r.finishes.filter { YearMonth.from(it) == month }.maxOrNull()
             if (per.sum() < ReadingLog.MIN_DAY_MS && finish == null) return@mapNotNull null
             // 별점·감상: 그달 완독한 회차, 없으면 그달에 걸친 진행 중인 회차
             val round = r.rounds.lastOrNull { it.finished && it.to != null && YearMonth.from(it.to) == month }
                 ?: r.rounds.lastOrNull { !it.finished && (it.from == null || YearMonth.from(it.from) <= month) }
-            Book(r.book, per, finish?.dayOfMonth, round?.review?.halves ?: 0, round?.review?.text.orEmpty())
+            // 사용자가 고친 읽기 시작한 날이 그달이면 막대를 그날부터(그달 완독한 회차가 있으면 그 회차의, 아니면 그달에 시작한 회차의)
+            val start = r.rounds.lastOrNull { it.startSet && it.from != null && YearMonth.from(it.from) == month }?.from
+            Book(r.book, per, finish?.dayOfMonth, round?.review?.halves ?: 0, round?.review?.text.orEmpty(), start?.dayOfMonth)
         }.sortedWith(compareBy<Book> { it.firstDay }.thenByDescending { it.ms })
         val year = days.keys.filter { it.year == month.year }.associateWith { days.total(it) }
         return Month(month, dayMs, books, year, goalMin.takeIf { it > 0 } ?: DEFAULT_GOAL_MIN, firstDayOfWeek)

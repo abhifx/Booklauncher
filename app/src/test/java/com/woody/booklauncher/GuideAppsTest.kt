@@ -33,10 +33,10 @@ class GuideAppsTest {
         assertEquals(emptyList<String>(), wrong.flatMap { app -> app.specs.map { it.pkg } })
     }
 
-    /** 안드로이드 9·10 은 화면 캡처가 없어 서재에서 자르는 표지가 들어오지 않는다. 표지가 들어오는 것은 책 파일·앱 데이터를 읽는 앱뿐 */
+    /** 안드로이드 9·10 은 화면 캡처가 없어 서재에서 자르는 표지가 들어오지 않는다. 표지가 들어오는 것은 책 파일·앱 데이터를 읽거나 앱이 표지를 내주는 앱뿐 */
     @Config(sdk = [29])
-    @Test fun `안드로이드 10 에서는 책 파일을 읽는 앱만 표지가 들어온다`() {
-        val wrong = ReaderGuide.APPS.filter { app -> app.info.cover.added != (app.info.bookFiles != null) }
+    @Test fun `안드로이드 10 에서는 파일이나 공개 데이터로만 표지가 들어온다`() {
+        val wrong = ReaderGuide.APPS.filter { app -> app.info.cover.added != (app.info.bookFiles != null || app.info.appCover) }
         assertEquals(emptyList<String>(), wrong.flatMap { app -> app.specs.map { it.pkg } })
     }
 
