@@ -1,5 +1,7 @@
 # BookLauncher
 
+[![License: PolyForm Noncommercial 1.0.0](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-black.svg)](LICENSE)
+
 **An E Ink launcher for Android e-readers.** The book you're reading stays on Home, your shelf is a cover grid, and reading time, stats, widgets and apps are one tap away.
 
 BookLauncher is a fork of [Pebble Desk](https://github.com/hissinger/pebble-desk), rebuilt around a lower, more visual home screen: the current book with a `Continue reading` button and progress, a bookshelf-style `Also reading` grid with each book's app and progress, one row of favorites, and **All apps · Stats · Widgets · Mini apps · Settings** at the bottom (or as a left sidebar in landscape).
@@ -95,7 +97,7 @@ Design and behavior are specified in [DESIGN.md](DESIGN.md); device notes are in
 
 BookLauncher is a fork of Pebble Desk and keeps its license and `Required Notice`. Changes in this fork: the BookLauncher name and package, the current book with `Continue reading` and progress, the `Also reading` shelf with per-book app and progress, the one-row Favorites section, the bottom icon bar / landscape sidebar, the compact top bar, and the Widgets screen.
 
-[PolyForm Noncommercial 1.0.0](LICENSE). Individuals (hobby, study, research) and noncommercial organizations (schools, public institutions, charities, etc.) may use, modify and share it freely. When sharing, pass on this license and the `Required Notice` line.
+[PolyForm Noncommercial 1.0.0](LICENSE). Individuals (hobby, study, research) and noncommercial organizations (schools, public institutions, charities, etc.) may use, modify and share it freely. When sharing, pass on this license and the `Required Notice` line. The original project and its notice are also kept in [NOTICE](NOTICE). GitHub's automatic license detector labels PolyForm as `Other`; the license above is the one that applies.
 
 Commercial use (selling it, including it in a paid product or service, using it for a company's for-profit work, etc.) is not allowed. If you need it, ask through [GitHub issues](https://github.com/abhifx/Booklauncher/issues).
 

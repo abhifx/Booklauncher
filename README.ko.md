@@ -1,5 +1,7 @@
 # BookLauncher
 
+[![License: PolyForm Noncommercial 1.0.0](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-black.svg)](LICENSE)
+
 **이북리더기를 위한 전자잉크 런처.** 지금 읽는 책이 홈에 있고, 서가는 표지 격자로 보이며, 읽은 시간·통계·위젯·앱이 한 번의 누르기로 이어진다.
 
 [Pebble Desk](https://github.com/hissinger/pebble-desk)를 포크해 홈을 더 낮고 책 중심으로 바꿨습니다. 지금 읽는 책에는 `이어 읽기` 단추와 진행률, `함께 읽는 책`은 책마다 앱·진행률이 붙은 책장 격자, 자주 쓰는 앱은 한 줄, 아래에는 **모든 앱 · 통계 · 위젯 · 미니 앱 · 설정** 아이콘 줄(가로에서는 왼쪽 세로 줄)이 있습니다.
@@ -95,7 +97,7 @@ adb install -r app/build/outputs/apk/release/BookLauncher-1.5.0-release.apk
 
 BookLauncher는 Pebble Desk의 포크이며 원래 라이선스와 `Required Notice`를 그대로 따릅니다. 이 포크에서 바뀐 것: BookLauncher 이름·패키지, `이어 읽기`·진행률이 있는 지금 읽는 책, 책마다 앱·진행률이 붙은 `함께 읽는 책` 격자, 자주 쓰는 앱 한 줄, 하단 아이콘 줄(가로는 왼쪽 세로 줄), 한 줄 상단, 위젯 화면.
 
-[PolyForm Noncommercial 1.0.0](LICENSE). 개인 용도(취미·공부·연구)와 비영리 단체(학교·공공기관·자선 단체 등)는 자유롭게 쓰고, 고치고, 나눌 수 있습니다. 나눌 때는 이 라이선스와 `Required Notice` 줄을 함께 전합니다.
+[PolyForm Noncommercial 1.0.0](LICENSE). 개인 용도(취미·공부·연구)와 비영리 단체(학교·공공기관·자선 단체 등)는 자유롭게 쓰고, 고치고, 나눌 수 있습니다. 나눌 때는 이 라이선스와 `Required Notice` 줄을 함께 전합니다. 원본 프로젝트와 그 고지는 [NOTICE](NOTICE)에도 있습니다. GitHub의 자동 라이선스 감지는 PolyForm을 `Other`로 보지만, 적용되는 라이선스는 위와 같습니다.
 
 상업적 이용(판매, 유료 제품·서비스에 넣기, 회사의 영리 업무에 쓰기 등)은 허용하지 않습니다. 필요하면 [GitHub 이슈](https://github.com/abhifx/Booklauncher/issues)로 문의합니다.
 
