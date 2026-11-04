@@ -181,6 +181,8 @@
     <string name="finish_nth">#%1$d</string>
     <string name="edit_book">Edit book info ›</string>
     <string name="forget_confirm">Remove from your books read?</string>
+    <string name="forget_round_confirm">Remove read %1$s?</string>
+    <string name="forget_round">Remove this read</string>
     <string name="since_date">Since %1$s</string>
     <string name="filter_all">All</string>
     <string name="year_finished_empty">No books finished this year.</string>

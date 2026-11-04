@@ -204,6 +204,19 @@ class BookRecord(
      */
     fun roundIn(now: BookRecord, round: Round): Round? = rounds.indexOf(round).takeIf { it >= 0 }?.let { now.rounds.getOrNull(it) }
 
+    /**
+     * 회차 [round] 를 지울 때([BookShelf.forgetRound]) 그 책의 기록에서 뺄 날: 앞 회차까지 읽은 시간의 끝(완독한 날과 완독을 누른 날 중 늦은 날,
+     * 첫 회차면 처음부터) 다음 날부터 이 회차까지 읽은 시간의 끝(완독한 회차는 같은 식, 진행 중 회차는 [today] 와 마지막으로 읽은 날 중 늦은 날)까지.
+     * 남은 회차의 시간은 그대로다(완독한 회차를 지워도 그 시간이 다음 회차로 넘어가지 않는다). 읽은 시간은 날 단위라 진행 중 회차를 지운 날
+     * 그 책을 다시 읽어도 그날 시간은 이 책의 기록에 들지 않는다(받아들인 한계).
+     */
+    fun dropOf(round: Round, today: LocalDate): BookShelf.Drop {
+        val prev = rounds.getOrNull(rounds.indexOf(round) - 1)
+        val after = prev?.let { p -> listOfNotNull(p.to, p.pressed).maxOrNull() }
+        val until = if (round.finished) listOfNotNull(round.to, round.pressed).max() else listOfNotNull(today, round.lastRead).max()
+        return BookShelf.Drop(after, until)
+    }
+
     internal fun reloadIn(context: Context, records: List<BookRecord>): BookRecord {
         val id = if (state == State.TITLE_ONLY) {
             (BookShelf.findByTitle(context, book.title) ?: BookShelf.findLivePast(context, book.title)?.book)?.id ?: book.id
@@ -270,13 +283,18 @@ class BookRecord(
             val openReviews = BookShelf.reviews(context)
             val starts = BookShelf.roundStarts(context)
             val began = BookShelf.roundBegans(context)
+            val drops = BookShelf.roundDrops(context)
             return acc.values.map {
                 BookRecord(
-                    it.book, it.state, it.hidden, finishes[it.book.id].orEmpty(), it.dayMs, openReviews[it.book.id], starts[it.book.id],
+                    it.book, it.state, it.hidden, finishes[it.book.id].orEmpty(), kept(it.dayMs, drops[it.book.id]), openReviews[it.book.id], starts[it.book.id],
                     it.book.id in starts, began[it.book.id],
                 )
             }
         }
+
+        /** 책의 날마다 읽은 시간에서 지운 회차([BookShelf.forgetRound])에 읽은 날을 뺀 것 */
+        private fun kept(dayMs: Map<LocalDate, Long>, drops: List<BookShelf.Drop>?): Map<LocalDate, Long> =
+            if (drops.isNullOrEmpty()) dayMs else dayMs.filterKeys { d -> drops.none { it.covers(d) } }
 
         /** 읽고 있는 책 한 권의 기록(읽은 시간도 완독도 없으면 빈 기록) */
         fun of(context: Context, book: ShelfBook): BookRecord =

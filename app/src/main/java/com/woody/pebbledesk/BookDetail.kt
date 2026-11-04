@@ -4,7 +4,10 @@ import android.app.Activity
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.graphics.Path
+import android.graphics.Rect
 import android.view.Gravity
+import android.view.TouchDelegate
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
@@ -509,7 +512,8 @@ internal fun Context.period(s: BookRecord.Round, withYear: Boolean): String {
  * 굵은 `완독 5회` + 회색 `· 모두 21시간 7분 · 2023년부터`(회차 시간의 합, 시작한 해는 여러 해에 걸쳐 읽었을 때만),
  * 그 아래 최근 회차부터 세로 타임라인([Timeline]): 줄마다 해를 붙인 기간 / 회색 `5회 · 3시간 12분`(진행 중이면 `2회 · 진행 중 · …`)과
  * 그 회차의 작은 별 / 그 회차의 감상 한 줄(넘치면 `…`), 남긴 것이 없으면 옅은 회색 `별점·감상 남기기 ›`. 완독한 회차는 채운 점, 진행 중은 테두리만.
- * 줄을 누르면 그 회차 메뉴([editRound]: 읽기 시작한 날·완독한 날·별점·감상)를 띄우고 닫으면 다시 전체 기록으로.
+ * 줄을 누르면 그 회차 메뉴([editRound]: 읽기 시작한 날·완독한 날·별점·감상)를 띄우고 닫으면 다시 전체 기록으로. 첫 줄 오른쪽 끝의 휴지통([TrashIcon])은
+ * 그 회차만 지울지 묻는다([forgetRound], 닫으면 전체 기록, 회차가 하나가 됐으면 상세로).
  * 화면에 다 들어가지 않으면 쪽으로 나눠 요약 줄 오른쪽에 `‹ 1 / 2 ›`(눌러서 넘김). 닫으면(닫기·뒤로 가기·바깥) 상세로 돌아간다([back]).
  */
 private fun Context.showHistory(r: BookRecord, sub: String?, onChange: () -> Unit, back: () -> Unit) {
@@ -522,13 +526,27 @@ private fun Context.showHistory(r: BookRecord, sub: String?, onChange: () -> Uni
         addView(text(rest, 18f, color = Ui.GRAY), lp(0, WRAP, 1f))
         addView(pageText, lp(WRAP, WRAP).apply { marginStart = dp(12) })
     }
-    // 줄을 눌러 고치러 가면 닫혀도 상세로 돌아가지 않는다(고친 뒤 전체 기록을 다시 띄운다).
+    // 줄(회차 메뉴)·휴지통(회차 지우기)을 눌러 다른 메뉴로 가면 닫혀도 상세로 돌아가지 않는다([leaveFor]).
     var editing = false
     lateinit var dialog: android.app.Dialog
+    // 전체 기록을 닫고 [go] 의 메뉴로(닫히면 지금 기록으로 전체 기록을 다시, 회차가 하나가 됐으면 상세로). 머리의 부제(진행률·앱)도 그사이 바뀌었을 수 있다.
+    fun leaveFor(go: (then: () -> Unit) -> Unit) {
+        if (!dialog.isShowing) return
+        editing = true
+        dialog.dismiss()
+        go { r.reload(this).let { now -> if (now.rounds.size >= 2) showHistory(now, detailSub(now), onChange, back) else back() } }
+    }
     val rows = rounds.map { round ->
         vbox().apply {
             tag = round.finished
-            addView(text(period(round, withYear = true), 18f))
+            // 첫 줄: 기간과 오른쪽 끝 휴지통(누르면 이 회차만 지울지 묻는다, [forgetRound]). 휴지통 칸은 둘째 줄까지 눌린다(줄 전체는 회차 메뉴).
+            val trash = TrashIcon(context)
+            addView(hbox().apply {
+                addView(text(period(round, withYear = true), 18f), lp(0, WRAP, 1f))
+                addView(trash, lp(dp(TrashIcon.WIDTH_DP), MATCH))
+            })
+            trash.setOnClickListener { leaveFor { then -> forgetRound(r, round, onChange, then) } }
+            trash.extendTouch(this)
             addView(hbox().apply {
                 addView(text(roundDetail(round), 16f, color = Ui.GRAY))
                 round.review?.halves?.takeIf { it > 0 }?.let { halves ->
@@ -540,13 +558,7 @@ private fun Context.showHistory(r: BookRecord, sub: String?, onChange: () -> Uni
                 review == null || review.isEmpty -> addView(text(getString(R.string.review_add), 16f, color = Ui.LIGHT_GRAY), lp(MATCH, WRAP).apply { topMargin = dp(6) })
                 review.text.isNotBlank() -> addView(text(review.text, 16f), lp(MATCH, WRAP).apply { topMargin = dp(6) })
             }
-            setOnClickListener {
-                if (!dialog.isShowing) return@setOnClickListener
-                editing = true
-                dialog.dismiss()
-                // 다시 띄우는 전체 기록은 지금 기록으로(머리의 부제 — 진행률·앱 — 도 그사이 바뀌었을 수 있다)
-                editRound(r, round, onChange) { r.reload(this@showHistory).let { now -> showHistory(now, detailSub(now), onChange, back) } }
-            }
+            setOnClickListener { leaveFor { then -> editRound(r, round, onChange, then) } }
         }
     }
     // 쪽 나누기: 화면 높이에서 타임라인 없이 띄운 메뉴(머리·요약 줄·닫기)의 높이를 뺀 높이에 들어가는 만큼씩(줄 높이는 감상이 있으면 한 줄 더).
@@ -591,6 +603,63 @@ private fun Context.showHistory(r: BookRecord, sub: String?, onChange: () -> Uni
 }
 
 private const val TIMELINE_TOP_DP = 16
+
+/**
+ * 전체 기록의 휴지통: 회차 [round] 하나만 지울지 묻는다(`2회 기록을 지울까요?` / `책 · 기간`, 설명 글 없이 `이 회차 지우기` / `취소`). 지우면 그 회차의 완독·별점·감상과
+ * 그 회차에 읽은 시간이 이 책에서 빠진다([BookShelf.forgetRound]. 하루 읽은 시간·연속일은 그대로). 읽고 있는 책의 진행 중 회차를 지우면 읽고 있는
+ * 책에서도 빠진다. 누르는 순간의 기록으로 다시 보고, 그사이 그 회차가 없어졌거나 회차가 하나가 됐으면 지우지 않는다. 닫히면 [then].
+ */
+private fun Context.forgetRound(r: BookRecord, round: BookRecord.Round, onChange: () -> Unit, then: () -> Unit) {
+    val nth = getString(R.string.finish_nth, round.nth ?: 0)
+    Sheet(this).header(getString(R.string.forget_round_confirm, nth), "${r.book.title}  ·  ${period(round, withYear = true)}")
+        .item(getString(R.string.forget_round), bold = true) {
+            val (now, cur) = roundNow(r, round) ?: return@item
+            if (now.rounds.size < 2) return@item
+            if (BookShelf.forgetRound(this, now.book.id, cur.finishId, now.dropOf(cur, LocalDate.now()))) onChange()
+        }
+        .item(getString(R.string.cancel)) {}.noClose().onDismiss { if (alive()) then() }.show()
+}
+
+/** 전체 기록 회차 줄의 휴지통(회색 선 그림, 글자를 키우면 함께 커진다 [Ui.textGrow]). 칸 폭 [WIDTH_DP], 그림은 오른쪽 끝에 맞춘다. */
+private class TrashIcon(context: Context) : View(context) {
+    companion object {
+        const val WIDTH_DP = 48
+        private const val SIZE_DP = 22f
+    }
+
+    private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Ui.GRAY; style = Paint.Style.STROKE; strokeWidth = context.dpf(1.8f * Ui.textGrow); strokeJoin = Paint.Join.ROUND; strokeCap = Paint.Cap.ROUND
+    }
+    private val path = Path()
+
+    init { contentDescription = context.getString(R.string.forget_round) }
+
+    /** 누르는 자리를 [row] 의 둘째 줄까지 넓힌다(첫 줄 높이만으로는 손가락에 좁다) */
+    fun extendTouch(row: ViewGroup) {
+        row.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+            val parent = parent as? View ?: return@addOnLayoutChangeListener
+            val below = maxOf(parent.top + bottom, row.getChildAt(1)?.bottom ?: 0)
+            val hit = Rect(parent.left + left - context.dp(8), parent.top + top - context.dp(8), row.width, below)
+            row.touchDelegate = TouchDelegate(hit, this)
+        }
+    }
+
+    override fun onDraw(canvas: Canvas) {
+        val s = context.dpf(SIZE_DP * Ui.textGrow)
+        val cx = width - s / 2
+        val cy = height / 2f
+        path.reset()
+        // 뚜껑·손잡이
+        path.moveTo(cx - s * 0.45f, cy - s * 0.32f); path.lineTo(cx + s * 0.45f, cy - s * 0.32f)
+        path.moveTo(cx - s * 0.14f, cy - s * 0.32f); path.lineTo(cx - s * 0.14f, cy - s * 0.46f)
+        path.lineTo(cx + s * 0.14f, cy - s * 0.46f); path.lineTo(cx + s * 0.14f, cy - s * 0.32f)
+        // 통과 안의 두 줄
+        path.moveTo(cx - s * 0.34f, cy - s * 0.32f); path.lineTo(cx - s * 0.28f, cy + s * 0.46f)
+        path.lineTo(cx + s * 0.28f, cy + s * 0.46f); path.lineTo(cx + s * 0.34f, cy - s * 0.32f)
+        for (x in floatArrayOf(-0.1f, 0.1f)) { path.moveTo(cx + s * x, cy - s * 0.14f); path.lineTo(cx + s * x, cy + s * 0.3f) }
+        canvas.drawPath(path, paint)
+    }
+}
 
 /**
  * 전체 기록의 세로 타임라인: 줄마다 왼쪽에 점(첫 줄의 가운데 높이, 완독한 회차(줄의 tag 가 true)는 채운 점, 아니면 테두리만), 점 사이를 회색 세로선으로 잇는다.

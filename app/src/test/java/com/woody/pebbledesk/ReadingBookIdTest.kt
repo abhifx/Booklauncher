@@ -129,14 +129,19 @@ class ReadingBookIdTest {
         db.execSQL("INSERT INTO review VALUES ('auto-데미안', 8, '좋았다', 0)")
         db.execSQL("INSERT INTO round_start VALUES ('auto-데미안', NULL)")
         db.execSQL("INSERT INTO book_open VALUES (0, 'pkg', '데미안', 'auto-데미안')")
+        db.execSQL("INSERT INTO round_began VALUES ('auto-데미안', 90)")
+        db.execSQL("INSERT INTO round_drop (book_id, after_day, until_day) VALUES ('auto-데미안', NULL, 50)")
         read(1, "데미안", 10, "auto-데미안")
+        // 옛 id 로 읽어 둔 지운 회차는 id 를 바꾼 뒤 다시 읽는다
+        assertEquals(setOf("auto-데미안"), BookShelf.roundDrops(app).keys)
         val id = BookShelf.list(app).single().id
         assertTrue(id.startsWith("b-"))
-        for (table in listOf("finish", "review", "round_start", "reading_day", "book_open")) {
+        for (table in listOf("finish", "review", "round_start", "round_began", "round_drop", "reading_day", "book_open")) {
             assertEquals(table, listOf(id), db.rows("SELECT book_id FROM $table") { it.getString(0) })
         }
         assertEquals(1, BookShelf.finishList(app)[id]?.size)
         assertEquals("데미안", BookShelf.list(app).single().seenTitle)
+        assertEquals(listOf(java.time.LocalDate.ofEpochDay(50)), BookShelf.roundDrops(app)[id]?.map { it.until })
     }
 
     @Test fun `자동 추가가 꺼지면 앱마다 제목 없는 편 책을 적고, 다시 펴면 그 책`() {
