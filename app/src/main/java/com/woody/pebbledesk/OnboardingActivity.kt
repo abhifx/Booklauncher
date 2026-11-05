@@ -204,14 +204,19 @@ class OnboardingActivity : EinkActivity() {
 
     /**
      * 자동 추가 켜는 방법. 안드로이드 13+ 은 파일로 깐 앱을 '제한된 설정'으로 막을 수 있어(막혔는지는 알 수 없다) 푸는 단계까지.
-     * `⋮` 의 `제한된 설정 허용` 은 접근성에서 막힌 창을 한 번 본 뒤에야 생긴다. [booxFreeze] 면 맨 앞에 BOOX 얼리기에서 빼기.
+     * `⋮` 의 `제한된 설정 허용` 은 접근성에서 막힌 창을 한 번 본 뒤에야 생긴다. [booxFreeze] 면 맨 앞에 BOOX 얼리기에서 빼기,
+     * BOOX 면(얼리기와 상관없이) 그다음에 백그라운드 `무제한`(그대로 두면 5분 뒤 강제 종료돼 접근성이 꺼진다, [Device.openBooxOptimization]).
      */
     private fun booksSteps(): List<Pair<String, Step?>> {
         val freeze = if (booxFreeze) listOf(
             getString(R.string.onboarding_books_boox) to Step(R.string.onboarding_open_freeze) { Device.openBooxFreezeSettings(this) },
         ) else emptyList()
+        val background = if (Device.hasBooxLauncher(this)) listOf(
+            getString(R.string.onboarding_books_boox_background) to
+                Step(R.string.onboarding_open_eink) { Device.openBooxOptimization(this, componentName) },
+        ) else emptyList()
         val accessibility = Step(R.string.onboarding_open_accessibility) { ReaderWatchService.openSettings(this) }
-        return freeze + if (ReaderWatchService.mayBeRestricted) listOf(
+        return freeze + background + if (ReaderWatchService.mayBeRestricted) listOf(
             getString(R.string.onboarding_books_r1) to accessibility,
             getString(R.string.onboarding_books_r2) to null,
             getString(R.string.onboarding_books_r3) to Step(R.string.onboarding_open_app_info) { ReaderWatchService.openAppInfo(this) },
@@ -299,7 +304,8 @@ class OnboardingActivity : EinkActivity() {
         private const val SAMPLE_COVER_DP = 52
         private const val KEY_PAGE = "page"
         private const val KEY_BOOX_FREEZE = "boox_freeze"
-        private val CIRCLED = listOf("①", "②", "③", "④", "⑤")
+        /** 단계 번호: 가장 많을 때 BOOX 얼리기·백그라운드 + 제한된 설정 넷 */
+        private val CIRCLED = listOf("①", "②", "③", "④", "⑤", "⑥")
         /** [fitPage]: 넘칠 때 글자를 한 번에 줄이는 비율과 가장 작게 줄이는 비율 */
         private const val FIT_STEP = 0.05f
         private const val MAX_FIT_STEPS = 6

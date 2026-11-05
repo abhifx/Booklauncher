@@ -78,7 +78,7 @@ adb install -r app/build/outputs/apk/release/PebbleDesk-1.7.7-release.apk </dev/
 | EinkActivity / Sheet / Ui / TopBarView / HomePrefs | 공통 화면(밀기·언어·밀도 맞춤)·아래 메뉴(돌아왔을 때 그사이 DB 가 바뀌었으면 떠 있던 메뉴를 닫는 `Sheet.dismissStale`)·규격(`PictureView`, 완독 도장을 찍는 줄 `StampedRow`, 기준 폭 572dp 포함)·상단·설정 저장 |
 | PageKeys | 페이지 버튼(설정 › 화면 › 페이지 버튼): 정한 앞 쪽·다음 쪽 키 판단(`direction`, 소리가 나는 동안의 음량 키는 빼고)·키 이름, 화면·메뉴마다 키 받기 `PageKeyHandler`(넘길 목록이 있을 때만 먹는다. 화면은 `EinkActivity.onPageKey`, 메뉴는 `Sheet.pages`) |
 | Palette | 색(설정 › 화면 › 색): 흑백·컬러('색면의 서가'). 표지·아이콘 컬러 여부, 화면 묶음(`Area`)마다 색면·큰 제목 색, 완독(띠·도장)·큰 별 색. `Palette.current` 는 EinkActivity 가 정한다 |
-| Device / Crema | 기기 종류(크레마·메이북·기타)와 기기마다 다른 동작(빠른 설정·조명·시스템 속성·BOOX 얼린 앱 열기·이 앱이 BOOX 얼리기 대상인지 `booxAutoFreeze`) / 크레마 전용 화면 보정(대비·가려지는 아래·로고) |
+| Device / Crema | 기기 종류(크레마·메이북·기타)와 기기마다 다른 동작(빠른 설정·조명·시스템 속성·BOOX 얼린 앱 열기·이 앱이 BOOX 얼리기 대상인지 `booxAutoFreeze`·BOOX E-Ink 센터 열기 `openBooxOptimization`) / 크레마 전용 화면 보정(대비·가려지는 아래·로고) |
 | Update / UpdateSheets | 설정 › 업데이트·홈의 새 판 알림: GitHub 최신 릴리스 확인, APK 받기·확인(크기·SHA-256·서명 이력), 설치 세션·설치 창, 설치 뒤 홈 다시 띄우기 / 두 화면이 같이 쓰는 창(바뀐 점·`설치`·허용 안내·받는 중·실패, 홈의 `새 버전이 나왔습니다`) |
 | Storage / Db | 기기 보호 저장소와 예전 저장소에서 옮기기 / 앱 데이터 DB(SQLite)와 예전 JSON 옮기기 |
 

@@ -513,6 +513,10 @@
     <string name="year_books_count">%1$d</string>
     <string name="boox_frozen_help">BOOX froze this app, so it couldn\'t open. Remove it from BOOX app freeze settings.</string>
     <string name="boox_freeze_settings">Open freeze settings</string>
+    <string name="onboarding_books_boox_background">Set Stay active in the background to Unlimited. (EinkWise (app optimization), or long-press the icon in the BOOX app list › Optimize › Others tab)</string>
+    <string name="onboarding_open_eink">EinkWise  ›</string>
+    <string name="boox_background_hint">Set Stay active in the background to Unlimited. (EinkWise (app optimization), or long-press the icon in the BOOX app list › Optimize › Others tab) Otherwise auto-add turns off.</string>
+    <string name="boox_eink_center">Open EinkWise</string>
     <!-- ⑮ Monthly recap -->
     <string name="recap_title">%1$s recap</string>
     <string name="recap_month_fmt">MMMM</string>
