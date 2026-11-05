@@ -244,10 +244,14 @@ class HomeActivity : EinkActivity() {
         // 켜져 있는데 아직 안 붙었다: 앱이 막 떠 붙는 중일 수 있어 조금 기다렸다 본다([warnStalled])
         if (on) { handler.postDelayed(stalledLater, STALLED_WAIT_MS); return }
         val restricted = ReaderWatchService.mayBeRestricted
+        // BOOX 는 다른 앱으로 넘어가고 5분이 지나면 이 앱을 강제 종료해 접근성이 꺼진다: 다시 켜기 전에 백그라운드 `무제한` 을(줄여도 남긴다)
+        val boox = Device.hasBooxLauncher(this)
         fun sheet(hints: Boolean): Sheet {
-            val desc = listOfNotNull(R.string.auto_off_desc, R.string.allow_hint.takeIf { hints }, R.string.restricted_hint.takeIf { hints && restricted })
-                .joinToString("\n\n") { getString(it) }
-            val sheet = autoNotice(R.string.auto_off_title, desc)
+            val desc = listOfNotNull(
+                R.string.auto_off_desc, R.string.boox_background_hint.takeIf { boox },
+                R.string.allow_hint.takeIf { hints }, R.string.restricted_hint.takeIf { hints && restricted },
+            ).joinToString("\n\n") { getString(it) }
+            val sheet = autoNotice(R.string.auto_off_title, desc, einkCenter = boox)
             if (restricted) sheet.item(getString(R.string.open_app_info)) { ReaderWatchService.openAppInfo(this) }
             return sheet
         }
@@ -257,10 +261,14 @@ class HomeActivity : EinkActivity() {
         autoOffStalled = false
     }
 
-    /** 자동 추가 안내 창(화면 가운데, 기록이 바뀌어도 닫지 않는다)과 `접근성 설정 열기`. [freeze] 면 그 위에 `얼리기 설정 열기` */
-    private fun autoNotice(title: Int, desc: String, freeze: Boolean = false): Sheet =
+    /**
+     * 자동 추가 안내 창(화면 가운데, 기록이 바뀌어도 닫지 않는다)과 `접근성 설정 열기`. [freeze] 면 그 위에 `얼리기 설정 열기`,
+     * [einkCenter] 면 그 위에 `E-Ink 센터 열기`(BOOX 백그라운드 `무제한`)
+     */
+    private fun autoNotice(title: Int, desc: String, freeze: Boolean = false, einkCenter: Boolean = false): Sheet =
         Sheet(this).header(getString(title), desc).centered().keepOnChange().apply {
             if (freeze) item(getString(R.string.boox_freeze_settings), bold = true) { Device.openBooxFreezeSettings(this@HomeActivity) }
+            if (einkCenter) item(getString(R.string.boox_eink_center), bold = true) { Device.openBooxOptimization(this@HomeActivity, componentName) }
         }.item(getString(R.string.open_accessibility), bold = true) { ReaderWatchService.openSettings(this) }
 
     /**
