@@ -69,7 +69,7 @@ object WatchLog {
     private const val PREFS = "watch_log"
 
     private var app: Context? = null
-    private val entries = ArrayDeque<Entry>()
+    private val entries = java.util.ArrayDeque<Entry>()
     private val counts = mutableMapOf<String, Int>()
     private val lastAt = mutableMapOf<String, Long>()
     private var since = 0L
@@ -155,7 +155,8 @@ object WatchLog {
     /** 최근 것부터 */
     fun entries(context: Context): List<Entry> {
         load(context)
-        return entries.reversed()
+        // java.util.ArrayDeque.reversed() 는 안드로이드 15 부터라 쓰지 않는다
+        return entries.descendingIterator().asSequence().toList()
     }
 
     fun summary(context: Context): Summary {
