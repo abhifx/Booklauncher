@@ -10,6 +10,7 @@
     python3 tools/emu/seed.py unknown out.db # 이번 주 책 모름만(B4)
     python3 tools/emu/seed.py empty out.db   # 이번 주 기록 없음(B11)
     python3 tools/emu/seed.py books12 out.db # 읽고 있는 책 12권(G3)
+    python3 tools/emu/seed.py heavy out.db   # 성능 재기: 2년 기록·완독 150권·읽는 책 10권
     python3 tools/emu/seed.py check docs/emulator-test-cases.md  # 문서의 S 케이스가 모두 시드에 있는지
 
 날짜는 실행하는 날(오늘) 기준이다. 넣는 법은 tools/emu/swapdb.sh.
@@ -17,6 +18,7 @@
 """
 import datetime as dt
 import os
+import random
 import sqlite3
 import sys
 import uuid
@@ -287,6 +289,35 @@ def books12(db):
         s.read(ago(k % 5), f"책 {k + 1}", 10 + k, f"b-{k:02d}")
 
 
+def heavy(db):
+    """성능 재기: 2년 기록(앱 넷), 읽고 있는 책 10권, 완독 150권(그 가운데 22권은 두 번), 사흘마다 책 모르는 시간"""
+    v3_schema(db)
+    s = V3(db)
+    s.meta(ago(730))
+    rnd = random.Random(7)
+    pkgs = ["kr.co.kyobobook.KEL", "kr.co.millie.eink", "com.initialcoms.ridi", PKG]
+    # 완독한 책: 4일마다 한 권씩 끝내며 그 앞 12일 동안 읽었다(마지막 책은 4주 전)
+    for k in range(150):
+        end = ago(730 - 4 * k - 12)
+        i, t = f"p-{k:03d}", f"끝낸 책 {k + 1}"
+        s.past(i, t, end, author=f"지은이 {k % 40}")
+        s.finish(i, end, stars=rnd.randint(4, 10), text="좋았다" if k % 3 == 0 else None, started=end - dt.timedelta(days=12))
+        if k % 7 == 0:
+            s.finish(i, end + dt.timedelta(days=40), started=end + dt.timedelta(days=30))
+        pkg = pkgs[k % 4]
+        for d in range(12):
+            day = end - dt.timedelta(days=d)
+            db.execute("INSERT OR REPLACE INTO reading_day VALUES (?,?,?,?,?)", (ep(day), pkg, t, i, rnd.randint(5, 60) * MIN))
+    for k in range(10):
+        i, t = f"b-{k:02d}", f"읽는 책 {k + 1}"
+        s.shelf(i, t, author=f"지은이 {k}", progress=rnd.randint(1, 95))
+        for d in range(1, 40, 1 + k % 3):
+            db.execute("INSERT OR REPLACE INTO reading_day VALUES (?,?,?,?,?)", (ep(ago(d)), pkgs[k % 4], t, i, rnd.randint(5, 40) * MIN))
+        s.opened(ms(ago(k + 1)), t, i, pkgs[k % 4])
+    for d in range(1, 730, 3):
+        db.execute("INSERT OR REPLACE INTO reading_day VALUES (?,?,?,?,?)", (ep(ago(d)), PKG, "", "", rnd.randint(1, 20) * MIN))
+
+
 def v2(db):
     x = db.execute
     x("CREATE TABLE reading_day (day INTEGER NOT NULL, key TEXT NOT NULL, ms INTEGER NOT NULL, PRIMARY KEY (day, key))")
@@ -321,7 +352,7 @@ def v2(db):
     db.execute("PRAGMA user_version=2")
 
 
-SEEDS = {"main": main, "v2": v2, "b2": b2, "week": week, "streak": streak, "gone": gone, "unknown": unknown, "empty": empty, "books12": books12}
+SEEDS = {"main": main, "v2": v2, "b2": b2, "week": week, "streak": streak, "gone": gone, "unknown": unknown, "empty": empty, "books12": books12, "heavy": heavy}
 
 
 # 시드가 만든 DB 에서 그 케이스의 핵심 상태(SQL 결과)

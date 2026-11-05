@@ -234,7 +234,7 @@ object Db {
 
     /** 커서의 줄마다 [row] 로 읽고 닫는다. */
     inline fun <T> SQLiteDatabase.rows(sql: String, args: Array<String>? = null, row: (Cursor) -> T): List<T> =
-        rawQuery(sql, args).use { c -> buildList { while (c.moveToNext()) add(row(c)) } }
+        rawQuery(sql, args).use { c -> ArrayList<T>().apply { while (c.moveToNext()) add(row(c)) } }
 
     fun values(vararg pairs: Pair<String, Any?>) = ContentValues().apply {
         for ((k, v) in pairs) when (v) {

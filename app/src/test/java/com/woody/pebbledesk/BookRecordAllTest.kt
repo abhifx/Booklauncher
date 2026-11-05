@@ -145,4 +145,33 @@ class BookRecordAllTest {
         val ghost = BookRecord(ShelfBook("b-ghost", "없는 책", "", null, 0), State.PAST, false, emptyList(), emptyMap())
         assertTrue(ghost.reloadIn(app, emptyList()) === ghost)
     }
+
+    @Test fun `기록이 그대로면 지난번 목록을, 완독·감상을 저장하면 새 목록을`() {
+        shelf(0, "b-1", "데미안")
+        db.execSQL("INSERT INTO reading_day VALUES (${LocalDate.now().minusDays(2).toEpochDay()}, '$pkg', '데미안', 'b-1', 600000)")
+        BookShelf.clearCaches()
+        ReadingLog.clearCache()
+        val first = BookRecord.all(app)
+        assertTrue(BookRecord.all(app) === first)
+        BookShelf.setReview(app, "b-1", Review(6, "좋다"))
+        val reviewed = BookRecord.all(app)
+        assertTrue(reviewed !== first)
+        assertEquals(Review(6, "좋다"), reviewed.of("b-1").lastRound.review)
+        assertTrue(BookShelf.finish(app, "b-1", Review(8)))
+        val finished = BookRecord.all(app).of("b-1")
+        assertEquals(State.PAST, finished.state)
+        assertTrue(finished.lastRound.finished)
+    }
+
+    @Test fun `캐시를 비우면(되돌린 트랜잭션) 지난번 목록을 버린다`() {
+        shelf(0, "b-1", "데미안")
+        BookShelf.clearCaches()
+        val first = BookRecord.all(app)
+        // 트랜잭션 밖에서 고치면 DB 순번이 그대로다: 되돌린 트랜잭션처럼 캐시를 비워야 새로 읽는다
+        shelf(1, "b-2", "싯다르타")
+        db.execSQL("INSERT INTO finish (uid, book_id, day, at) VALUES ('u-2', 'b-2', ${LocalDate.now().minusDays(1).toEpochDay()}, 0)")
+        assertTrue(BookRecord.all(app) === first)
+        BookShelf.clearCaches()
+        assertEquals(listOf("b-2"), BookRecord.all(app).map { it.book.id })
+    }
 }

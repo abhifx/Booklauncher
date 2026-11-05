@@ -198,7 +198,7 @@ class DeviceInfoActivity : EinkActivity() {
         listOf(Settings.System.CONTENT_URI, Settings.Secure.CONTENT_URI, Settings.Global.CONTENT_URI).flatMap { uri ->
             runCatching {
                 contentResolver.query(uri, arrayOf("name", "value"), null, null, null)?.use { c ->
-                    buildList { while (c.moveToNext()) if (c.getString(1)?.contains(pkg) == true) c.getString(0)?.let { add(it) } }
+                    ArrayList<String>().apply { while (c.moveToNext()) if (c.getString(1)?.contains(pkg) == true) c.getString(0)?.let { add(it) } }
                 }
             }.getOrNull().orEmpty()
         }.filter { !AOSP_PACKAGE_SETTING.matches(it) }.distinct().map { short(it) }
@@ -212,7 +212,7 @@ class DeviceInfoActivity : EinkActivity() {
         val events = getSystemService(UsageStatsManager::class.java)?.queryEvents(now - RECENT_MS, now) ?: return "-"
         val e = UsageEvents.Event()
         val time = SimpleDateFormat("HH:mm:ss", Locale.US)
-        val recent = ArrayDeque<String>()
+        val recent = java.util.ArrayDeque<String>()
         while (events.hasNextEvent()) {
             events.getNextEvent(e)
             @Suppress("DEPRECATION")
@@ -220,7 +220,8 @@ class DeviceInfoActivity : EinkActivity() {
             recent.addLast("${time.format(e.timeStamp)}  ${e.packageName} / ${e.className.orEmpty().substringAfterLast('.')}")
             if (recent.size > RECENT_COUNT) recent.removeFirst()
         }
-        return recent.reversed().joinToString("\n").ifEmpty { "-" }
+        // java.util.ArrayDeque.reversed() 는 안드로이드 15 부터라 쓰지 않는다
+        return recent.descendingIterator().asSequence().joinToString("\n").ifEmpty { "-" }
     }
 
     /** 버튼을 누르면 키 번호·이름·스캔 코드를 보여 준다(쪽 넘기기는 하지 않는다). 뒤로 키는 기록만 하고 닫는다. */
@@ -246,7 +247,7 @@ class DeviceInfoActivity : EinkActivity() {
     private fun vendorSettings(): String {
         val all = runCatching {
             contentResolver.query(Settings.System.CONTENT_URI, arrayOf("name", "value"), null, null, null)?.use { c ->
-                buildMap { while (c.moveToNext()) c.getString(0)?.let { put(it, c.getString(1).orEmpty()) } }
+                HashMap<String, String>().apply { while (c.moveToNext()) c.getString(0)?.let { put(it, c.getString(1).orEmpty()) } }
             }
         }.getOrNull().orEmpty()
         val keys = SETTINGS + all.keys.filter { (vendorKey(it) || SETTING_KEY.containsMatchIn(it)) && !AOSP_SETTING.matches(it) }.sorted()

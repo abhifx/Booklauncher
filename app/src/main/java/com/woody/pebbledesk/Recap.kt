@@ -57,8 +57,8 @@ object Recap {
      * [filter] 로 거른다(고른 카테고리의 책과 그 시간만, `전체`면 통계에서 뺀 카테고리의 책만 빼고). 책 기록은 거르지 않은 기록으로 모은 뒤 책으로 거른다.
      */
     fun load(context: Context, month: YearMonth, prefs: HomePrefs, filter: StatsFilter, filterName: String?): Month {
-        val days = days(context)
-        return build(month, days, BookRecord.all(context, days), prefs.readingGoalMin, prefs.firstDayOfWeek, filter, filterName)
+        // 책 기록은 올해 읽은 책·책 상세와 같은 목록(바뀌지 않았으면 다시 만들지 않는다, [BookRecord.all])
+        return build(month, days(context), BookRecord.all(context), prefs.readingGoalMin, prefs.firstDayOfWeek, filter, filterName)
     }
 
     /** [load] 의 거르기(테스트는 읽은 시간과 기록을 직접 넣는다): 기록에서 지운 책과 [filter] 에 들지 않는 책을 빼고, 날마다 시간도 [filter] 로 거른다 */

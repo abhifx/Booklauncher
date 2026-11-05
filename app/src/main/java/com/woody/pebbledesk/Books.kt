@@ -580,6 +580,7 @@ object BookShelf {
     internal fun clearCaches() {
         cached = null; cachedHistory = null; cachedFinishes = null; cachedRoundStarts = null; cachedReviews = null; cachedRoundBegans = null
         cachedRoundDrops = null
+        BookRecord.clearCache()
     }
 
     /** 읽고 있는 책을 목록에서 내보낸다(나간 책으로 남긴다). 표지는 남긴다. 나간 책에 넣기와 빼기를 한 번에(끊기면 같은 책이 양쪽에 남는다). */
