@@ -285,7 +285,7 @@ class TopBarView(context: Context, private val fixedFrame: Boolean = true) : Vie
         val s = status?.takeIf { showStatus } ?: return
         val base = clockBase + drawLineGap + statusCap
         val mid = base - statusCap / 2f
-        val items = buildList<(Float) -> Float> {
+        val items = ArrayList<(Float) -> Float>().apply {
             add { x -> drawText(canvas, dateFormat.format(now), x, base) }
             if (s.battery >= 0) add { x ->
                 val textLeft = drawText(canvas, "${s.battery}%", x, base)

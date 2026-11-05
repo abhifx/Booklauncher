@@ -299,7 +299,7 @@ object RecapImage {
             val min = ms / 60_000
             val h = min / 60
             val mm = min % 60
-            val parts = buildList {
+            val parts = ArrayList<Pair<String, Boolean>>().apply {
                 if (h > 0) { add("$h" to true); add(ctx.getString(R.string.recap_unit_h) to false) }
                 if (mm > 0 || h == 0L) { add("$mm" to true); add(ctx.getString(R.string.recap_unit_m) to false) }
             }
