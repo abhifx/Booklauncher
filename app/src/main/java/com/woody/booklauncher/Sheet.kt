@@ -48,7 +48,16 @@ class Sheet(private val context: Context) {
         }
     }
 
-    private class Item(val label: String, val bold: Boolean, val action: () -> Unit)
+    private class Item(val label: String, val bold: Boolean, val right: String?, val action: () -> Unit)
+
+    /** 체크 줄([check]): 누르면 [onClick] 하고 메뉴는 그대로(모든 체크 칸을 [on] 으로 다시 본다) */
+    private class Check(val label: String, val sub: String?, val tag: String?, val right: String?, val on: () -> Boolean, val onClick: () -> Unit)
+    private val checks = mutableListOf<Check>()
+
+    /** 맨 아래 줄 왼쪽 글자와 누르면 할 일(닫고 한다). 없으면 오른쪽 `닫기`만. */
+    private var footLeft: Pair<String, () -> Unit>? = null
+    /** 맨 아래 줄 오른쪽을 `닫기` 대신 이 글자로, 누르면 닫고 할 일 */
+    private var done: Pair<String, () -> Unit>? = null
 
     private var app: AppEntry? = null
     /** 앱 아이콘 대신 보여 줄 그림(책 표지). 폭 [SHEET_COVER_DP], 2:3 으로 그린다. */
@@ -66,7 +75,7 @@ class Sheet(private val context: Context) {
     /** 입력 줄 아래 회색 안내(없으면 두지 않는다) */
     private var inputHint: String? = null
     /** 저장 전에 확인한다: 틀렸으면 알릴 글(안내 자리에 굵게, 저장하지 않고 메뉴를 둔다), 맞으면 null */
-    private var check: ((String) -> String?)? = null
+    private var validate: ((String) -> String?)? = null
     /** 아래 `닫기` 줄을 두는가. 확인 창은 `취소`를 항목으로 두고 닫기를 뺀다. */
     private var closeRow = true
 
@@ -118,20 +127,38 @@ class Sheet(private val context: Context) {
         this.title = title; this.subtitle = subtitle; this.app = app; this.image = image; subtitleLines = lines
     }
 
-    fun item(label: String, bold: Boolean = false, action: () -> Unit) = apply { items += Item(label, bold, action) }
+    /** 항목 한 줄. [right] 가 있으면 오른쪽에 회색으로(지금 값 `소설 ›`). */
+    fun item(label: String, bold: Boolean = false, right: String? = null, action: () -> Unit) = apply { items += Item(label, bold, right, action) }
 
-    /** 한 줄 입력(박스 없이 아래 굵은 선). 빈 글자는 저장하지 않는다. [numeric] 이면 숫자 키보드. */
-    fun input(initial: String, numeric: Boolean = false, onDone: (String) -> Unit) = apply {
+    /**
+     * 체크 줄(왼쪽 체크 칸 · 이름([sub] 는 그 아래 작게, [tag] 는 뒤에 작게) · 오른쪽 회색 [right]). 누르면 [onClick] 하고 닫지 않는다.
+     * 한 줄을 누르면 다른 줄의 칸도 바뀔 수 있어(`전체`) 모든 칸을 다시 본다. 맨 아래 [done] 으로 정한다.
+     */
+    fun check(label: String, sub: String? = null, tag: String? = null, right: String? = null, on: () -> Boolean, onClick: () -> Unit) =
+        apply { checks += Check(label, sub, tag, right, on, onClick) }
+
+    /** 맨 아래 줄 왼쪽 글자(`카테고리 관리 ›`): 누르면 닫고 [action] */
+    fun footer(label: String, action: () -> Unit) = apply { footLeft = label to action }
+
+    /** 맨 아래 줄 오른쪽을 `닫기` 대신 [label](굵게): 누르면 닫고 [action] */
+    fun done(label: String, action: () -> Unit) = apply { done = label to action }
+
+    /**
+     * 한 줄 입력(박스 없이 아래 굵은 선). 빈 글자는 저장하지 않는다. [numeric] 이면 숫자 키보드.
+     * [check] 가 있으면 저장 전에 본다(틀렸으면 입력 줄 아래에 그 글을 굵게 알리고 저장하지 않는다. 처음에는 빈 줄).
+     */
+    fun input(initial: String, numeric: Boolean = false, check: ((String) -> String?)? = null, onDone: (String) -> Unit) = apply {
         input = initial to onDone; this.numeric = numeric
+        if (check != null) { validate = check; inputHint = inputHint ?: "" }
     }
 
     /** 날짜 한 줄 입력(날짜 자판): 아래에 [hint], 저장 전에 [check](틀렸으면 그 글을 굵게 알리고 저장하지 않는다). */
     fun dateInput(initial: String, hint: String, check: (String) -> String?, onDone: (String) -> Unit) = apply {
-        input = initial to onDone; date = true; inputHint = hint; this.check = check
+        input = initial to onDone; date = true; inputHint = hint; validate = check
     }
 
     /** 가로 화면에서 두 칸으로 나누는가: 아래에 붙는 메뉴이고 항목이 있으며 별점·감상·입력 칸이 없을 때(키보드와 함께 쓰는 메뉴는 한 칸) */
-    private val split get() = !centered && review == null && input == null && items.isNotEmpty() && context.landscape()
+    private val split get() = !centered && review == null && input == null && (items.isNotEmpty() || checks.isNotEmpty()) && context.landscape()
 
     /** 두 칸 메뉴의 오른쪽(항목) 칸 폭 */
     private fun menuWidth() = maxOf(context.dp(SPLIT_MENU_DP), (context.resources.displayMetrics.widthPixels * SPLIT_MENU_RATIO).toInt())
@@ -181,12 +208,31 @@ class Sheet(private val context: Context) {
         return h
     }
 
+    /** 줄(항목·체크 줄)이 많아 메뉴가 화면을 넘으면 한 쪽에 이만큼씩([fitRows]). null 이면 다 보인다. */
+    private var perPage: Int? = null
+
+    /**
+     * 메뉴가 화면(이 화면의 내용 칸) 높이를 넘으면 넘는 만큼 줄을 덜어 쪽으로 나눈다(카테고리가 많은 보기·고르기 메뉴). 넘지 않으면 그대로.
+     * 별점·입력이 있는 메뉴는 나누지 않는다. 칸([note])이 있는 메뉴(책 상세)는 부르는 쪽이 칸을 먼저 줄여 맞추고, 그래도 넘치면 줄을 나눈다.
+     */
+    private fun fitRows() {
+        val count = items.size + checks.size
+        if (perPage != null || count < 2 || centered || review != null || input != null) return
+        val avail = (context as? android.app.Activity)?.findViewById<View>(android.R.id.content)?.height?.takeIf { it > 0 }
+            ?: context.resources.displayMetrics.heightPixels
+        val over = height() - avail
+        if (over <= 0) return
+        val rowH = context.rowDp(Ui.ROW_DP) + context.dp(1)
+        perPage = (count - (over + rowH - 1) / rowH).coerceAtLeast(1)
+    }
+
     /** 닫히면(닫기·뒤로 가기·바깥 누르기, 항목을 눌러 닫힐 때도) 부를 일 */
     private var onDismiss: (() -> Unit)? = null
 
     fun onDismiss(action: () -> Unit) = apply { onDismiss = action }
 
     fun show(): Dialog {
+        fitRows()
         val dialog = Dialog(context, R.style.Sheet)
         val root = layout(dialog)
         val shown = Shown(dialog, context, Db.changes())
@@ -333,7 +379,7 @@ class Sheet(private val context: Context) {
             val hint = inputHint?.let { c.text(it, 15f, color = Ui.LIGHT_GRAY, lines = 2) }
             val save = {
                 val v = field.text.toString().trim()
-                val error = check?.invoke(v)
+                val error = validate?.invoke(v)
                 if (error != null) hint?.apply { text = error; typeface = Ui.bold; setTextColor(Ui.BLACK) }
                 else if (v.isNotEmpty()) {
                     // 키보드를 내리고 닫는다(아래 메뉴 위에 떠서 열었을 때 키보드가 남아 그 메뉴의 아래 줄을 가리지 않게).
@@ -353,23 +399,75 @@ class Sheet(private val context: Context) {
             field.requestFocus()
         }
 
-        items.forEachIndexed { i, item ->
-            // 두 칸이면 첫 항목 위 선은 두지 않는다(메뉴 위 굵은 선 바로 아래라)
-            if (!split || i > 0) menu.addView(c.hline(1, Ui.DIVIDER))
-            menu.addView(c.hbox().apply {
+        // 항목·체크 줄(줄마다 위에 옅은 선). 두 칸이면 첫 줄 위 선은 두지 않는다(메뉴 위 굵은 선 바로 아래라)
+        val rows = mutableListOf<View>()
+        fun row(i: Int, content: View) = c.vbox().apply {
+            if (!split || i > 0) addView(c.hline(1, Ui.DIVIDER))
+            addView(content, lp(MATCH, c.rowDp(Ui.ROW_DP)))
+        }.also { rows += it }
+        items.forEach { item ->
+            row(rows.size, c.hbox().apply {
                 setPadding(c.dp(Ui.MARGIN), 0, c.dp(Ui.MARGIN), 0)
-                addView(c.text(item.label, 24f, if (item.bold) Ui.bold else Ui.regular), lp(MATCH, WRAP))
+                addView(c.text(item.label, 24f, if (item.bold) Ui.bold else Ui.regular), if (item.right == null) lp(MATCH, WRAP) else lp(WRAP, WRAP))
+                item.right?.let { addView(c.text(it, 21f, color = Ui.GRAY).apply { gravity = Gravity.END }, lp(0, WRAP, 1f).apply { marginStart = c.dp(16) }) }
                 setOnClickListener { dismissThen(item.action) }
-            }, lp(MATCH, c.rowDp(Ui.ROW_DP)))
+            })
+        }
+        val marks = mutableListOf<Pair<CheckMark, Check>>()
+        checks.forEach { check ->
+            val mark = CheckMark(c).apply { on = check.on() }
+            marks += mark to check
+            row(rows.size, c.hbox().apply {
+                setPadding(c.dp(Ui.MARGIN), 0, c.dp(Ui.MARGIN), 0)
+                addView(mark, lp(c.dp(CHECK_DP), c.dp(CHECK_DP)).apply { marginEnd = c.dp(16) })
+                addView(c.vbox().apply {
+                    gravity = Gravity.CENTER_VERTICAL
+                    addView(c.hbox().apply {
+                        gravity = Gravity.BOTTOM
+                        addView(c.text(check.label, 24f))
+                        check.tag?.let { addView(c.text(it, 15f, color = Ui.GRAY), lp(WRAP, WRAP).apply { marginStart = c.dp(10); bottomMargin = c.dp(3) }) }
+                    })
+                    check.sub?.let { addView(c.text(it, 15f, color = Ui.GRAY)) }
+                }, lp(0, WRAP, 1f))
+                check.right?.let { addView(c.text(it, 21f, color = Ui.GRAY), lp(WRAP, WRAP).apply { marginStart = c.dp(16) }) }
+                setOnClickListener {
+                    check.onClick()
+                    // 바뀐 칸만 다시 그린다
+                    marks.forEach { (m, ch) -> ch.on().let { v -> if (m.on != v) m.on = v } }
+                }
+            })
+        }
+        val per = perPage
+        if (per == null || rows.size <= per) rows.forEach { menu.addView(it, lp(MATCH, WRAP)) }
+        else {
+            // 화면을 넘는 메뉴: 한 쪽에 [per] 줄씩, 머리 오른쪽에 쪽 표시(누르거나 페이지 버튼으로 넘긴다). 덜 찬 쪽도 높이는 같다.
+            val box = c.vbox().apply { minimumHeight = per * (c.rowDp(Ui.ROW_DP) + c.dp(1)) }
+            menu.addView(box, lp(MATCH, WRAP))
+            val label = c.text("", 18f, Ui.bold, Ui.GRAY).apply { setPadding(c.dp(16), c.dp(8), 0, c.dp(8)) }
+            head.addView(label, lp(WRAP, WRAP).apply { gravity = Gravity.TOP })
+            val pager = RowPager(box, rows, per) { label.text = pageLabel(it) }
+            label.pagesClick(pager)
+            if (pages == null) pages = pager
         }
         if (review == null) menu.addView(c.hline(1, Ui.DIVIDER))
         // 두 칸이면 `닫기`는 오른쪽 칸 맨 아래(왼쪽 칸이 더 높아도)
         // (빈 뷰는 높이를 모를 때 화면 높이를 다 차지한다. Space 는 0 이다가 [EqualHeightRow] 가 높이를 정하면 남는 만큼 늘어난다)
         if (split) menu.addView(Space(c), lp(MATCH, 0, 1f))
-        if (closeRow) menu.addView(c.text(c.getString(R.string.close), 21f, Ui.bold).apply {
-            gravity = Gravity.END or Gravity.CENTER_VERTICAL
-            setPadding(c.dp(Ui.MARGIN), 0, c.dp(Ui.MARGIN), 0)
-            setOnClickListener { dialog.dismiss() }
+        if (closeRow) menu.addView(c.hbox().apply {
+            // 왼쪽 글자(있으면) · 오른쪽 `닫기`(또는 [done] 의 글자)
+            footLeft?.let { (label, action) ->
+                addView(c.text(label, 21f).apply {
+                    gravity = Gravity.CENTER_VERTICAL
+                    setPadding(c.dp(Ui.MARGIN), 0, c.dp(24), 0)
+                    setOnClickListener { dismissThen(action) }
+                }, lp(WRAP, MATCH))
+            }
+            addView(View(c), lp(0, 0, 1f))
+            addView(c.text(done?.first ?: c.getString(R.string.close), 21f, Ui.bold).apply {
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(c.dp(24), 0, c.dp(Ui.MARGIN), 0)
+                setOnClickListener { done?.second?.let { dismissThen(it) } ?: dialog.dismiss() }
+            }, lp(WRAP, MATCH))
         }, lp(MATCH, c.dp(CLOSE_ROW_DP)))
 
         // 입력이 없는 메뉴는 초점을 받지 않는다(받을 수 있으면 기기 버튼을 눌렀을 때 누를 수 있는 글자에 회색 초점 표시가 남는다).
@@ -401,6 +499,61 @@ private class EqualHeightRow(context: Context) : LinearLayout(context) {
         }
     }
 }
+
+/** 화면을 넘는 메뉴의 줄을 쪽으로([Sheet.perPage]): [box] 에 지금 쪽의 줄들, 바뀌면 [onPage] */
+private class RowPager(private val box: LinearLayout, private val rows: List<View>, private val per: Int, private val onPage: (Paged) -> Unit) : Paged {
+    override var page = 0
+        private set
+    override val pageCount = (rows.size + per - 1) / per
+
+    init { render() }
+
+    override fun next() = show(page + 1)
+    override fun prev() = show(page - 1)
+
+    private fun show(p: Int) {
+        val target = p.coerceIn(0, pageCount - 1)
+        if (target == page) return
+        page = target
+        render()
+    }
+
+    private fun render() {
+        box.removeAllViews()
+        rows.drop(page * per).take(per).forEach { box.addView(it, lp(MATCH, WRAP)) }
+        onPage(this)
+    }
+}
+
+/** 체크 칸([Sheet.check]): 꺼지면 검은 테두리, 켜지면 검게 칠하고 흰 ✓ */
+private class CheckMark(context: Context) : View(context) {
+    var on = false
+        set(v) { field = v; invalidate() }
+    private val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
+
+    override fun onDraw(canvas: android.graphics.Canvas) {
+        val s = minOf(width, height).toFloat()
+        val stroke = s * 0.09f
+        paint.color = Ui.BLACK
+        if (on) {
+            paint.style = android.graphics.Paint.Style.FILL
+            canvas.drawRect(0f, 0f, s, s, paint)
+            paint.color = android.graphics.Color.WHITE
+            paint.style = android.graphics.Paint.Style.STROKE
+            paint.strokeWidth = s * 0.13f
+            paint.strokeCap = android.graphics.Paint.Cap.SQUARE
+            val path = android.graphics.Path().apply { moveTo(s * 0.22f, s * 0.52f); lineTo(s * 0.42f, s * 0.72f); lineTo(s * 0.8f, s * 0.28f) }
+            canvas.drawPath(path, paint)
+        } else {
+            paint.style = android.graphics.Paint.Style.STROKE
+            paint.strokeWidth = stroke
+            canvas.drawRect(stroke / 2, stroke / 2, s - stroke / 2, s - stroke / 2, paint)
+        }
+    }
+}
+
+/** 체크 칸 크기 */
+private const val CHECK_DP = 24
 
 /** 머리의 표지 폭(책 상세. 띠 글자가 읽히게 크게) */
 const val SHEET_COVER_DP = 76

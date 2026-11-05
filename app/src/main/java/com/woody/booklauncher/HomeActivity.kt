@@ -1104,7 +1104,7 @@ class HomeActivity : EinkActivity() {
     }
 
     /** 책을 길게 누르면 올해 읽은 책과 같은 책 상세([showBookDetail]) */
-    private fun showBookMenu(book: ShelfBook) = showBookDetail(BookRecord.of(this, book)) { refresh() }
+    private fun showBookMenu(book: ShelfBook) = showBookDetail(BookRecord.of(this, book), onHome = true) { refresh() }
 
     /** 가로 카드 테두리(둥근 모서리): 배경을 칠하지 않고 선만 직접 그려 크레마의 명암 필터를 피한다. */
     private class CardBox(context: Context) : FrameLayout(context) {

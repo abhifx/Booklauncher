@@ -18,7 +18,7 @@ import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import java.time.LocalDate
 
-/** 북커스 2.0.0: 깔린 판으로 1.x 와 가르기, 웹 화면 서재 칸(격자·리스트)·책 상세, 읽는 화면(Compose). 화면은 갤럭시 A23 에서 본 모양 그대로 */
+/** 부커스 2.0.0: 깔린 판으로 1.x 와 가르기, 웹 화면 서재 칸(격자·리스트)·책 상세, 읽는 화면(Compose). 화면은 갤럭시 A23 에서 본 모양 그대로 */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
 class Bookers2Test {
@@ -204,5 +204,12 @@ class Bookers2Test {
             node("android.view.View", 796, 92, 931, 227, null, null, node("android.view.View", 810, 100, 917, 218, null, "검색"), node("android.widget.TextView", 838, 174, 890, 218, "검색")),
         ))
         Bookers2.readViewer(AppWindows(menu, listOf(menu))).let { assertEquals("직장 노예", it.title); assertEquals(2, it.progress) }
+    }
+
+    @Test fun `읽는 사람 수에 쉼표가 있어도 저자에 붙지 않는다`() {
+        val header = node("android.widget.TextView", 458, 91, 621, 164, "내 서재")
+        val title = "위버멘쉬 (30만부 기념 개정판)"
+        val cell = Bookers2.shelfCells(window(listOf(header, gridCell("$title $title 프리드리히 니체 (지은이),어나니머스 (옮긴이) 12,335")))).single()
+        assertEquals(title to "프리드리히 니체 (지은이),어나니머스 (옮긴이)", cell.title to cell.author)
     }
 }

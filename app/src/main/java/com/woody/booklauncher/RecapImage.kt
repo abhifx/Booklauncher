@@ -279,7 +279,8 @@ object RecapImage {
         /** 위 카드: 해 · 이름, `10월 독서 달력`, 권수 줄, 오른쪽 읽은 시간 */
         fun card() {
             gradientBox(RectF(M, TOP, W - M, TOP + cardH), 18f, k.band[0], k.band[1])
-            text("${month.year} · BOOKLAUNCHER", M + 34, 70f, 19f, Ui.bold, k.gray)
+            // 보기에서 카테고리를 골랐으면 그 이름을 붙인다(`2026 · BOOKLAUNCHER · 소설`, 공유한 그림만 보고도 알게)
+            text(listOfNotNull("${month.year} · BOOKLAUNCHER", m.filter).joinToString(" · "), M + 34, 70f, 19f, Ui.bold, k.gray)
             text(ctx.getString(R.string.recap_image_title, month.format(fmt(R.string.recap_month_fmt))), M + 34, 100f, 52f, Ui.heavy, k.ink)
             val base = 40 + cardH - 36
             val n = m.books.size
@@ -493,9 +494,11 @@ object RecapImage {
             val monthEnd = month.atEndOfMonth()
             val shown = m.yearDayMs.filterKeys { it <= monthEnd }
             val ydays = shown.values.count { it >= ReadingLog.MIN_DAY_MS }
-            val yHours = shown.values.sum() / 3_600_000
+            val yMs = shown.values.sum()
+            // 한 시간이 안 되면 분으로(카테고리로 거르면 적은 시간이 흔하다. `0시간` 이 되지 않게)
+            val yTime = if (yMs < 3_600_000) ctx.duration(yMs) else ctx.getString(R.string.recap_year_hours, yMs / 3_600_000)
             text(ctx.getString(R.string.recap_year_title, month.year), M, ys, 24f, Ui.bold, k.ink)
-            text(count(ydays, R.string.recap_days_one, R.string.recap_days_count) + " · " + ctx.getString(R.string.recap_year_hours, yHours),
+            text(count(ydays, R.string.recap_days_one, R.string.recap_days_count) + " · " + yTime,
                 W - M, ys + 2, 21f, Ui.bold, k.gray, Paint.Align.RIGHT)
             val top = ys + 66
             var day = LocalDate.of(month.year, 1, 1)

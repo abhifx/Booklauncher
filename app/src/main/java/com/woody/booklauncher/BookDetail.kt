@@ -4,7 +4,10 @@ import android.app.Activity
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.graphics.Path
+import android.graphics.Rect
 import android.view.Gravity
+import android.view.TouchDelegate
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
@@ -15,23 +18,24 @@ import java.time.format.DateTimeFormatter
 /**
  * 책 상세: 홈에서 책을 길게 누를 때와 올해 읽은 책에서 책을 누를 때 같은 화면. 머리·기록 칸·별점·감상 칸([bookSheet]) 아래
  * 메뉴는 책 상태에 따라
- * - 읽고 있는 책(다시 읽는 책 포함): `완독` / `책 정보 고치기 ›` / `책 빼기`
- * - 나간 책·목록에 없던 책: `완독`(마지막 회차가 진행 중이면) / `다시 읽기` / `책 정보 고치기 ›` / `기록에서 지우기`
- * `완독`·`책 빼기`는 확인 대신 별점·감상 메뉴([reviewSheet], 지금 회차의 것을 채워 띄우고 비워 두고 눌러도 된다), `기록에서 지우기`는 한 번 더 묻는다.
+ * - 읽고 있는 책(다시 읽는 책 포함): `카테고리  소설 ›` / `완독` / `책 정보 고치기 ›` / 홈에서 열면([onHome]) `홈에서 빼기`, 올해 읽은 책에서 열면
+ *   `기록에서 지우기`(홈에 있는 책은 지우지 않고 `홈에서 먼저 빼 주세요` 안내, [askRemoveFirst])
+ * - 나간 책·목록에 없던 책: `카테고리  소설 ›` / `완독`(마지막 회차가 진행 중이면) / `다시 읽기` / `책 정보 고치기 ›` / `기록에서 지우기`
+ * `완독`·`홈에서 빼기`는 확인 대신 별점·감상 메뉴([reviewSheet], 지금 회차의 것을 채워 띄우고 비워 두고 눌러도 된다), `기록에서 지우기`는 한 번 더 묻는다.
  * `완독`은 늘 오늘로 남긴다(완독한 날은 전체 기록의 회차 메뉴에서 고친다, [editRound]). 무엇이든 바뀌면 [onChange].
  */
-fun Context.showBookDetail(r: BookRecord, onChange: () -> Unit) {
+fun Context.showBookDetail(r: BookRecord, onHome: Boolean, onChange: () -> Unit) {
     val sub = detailSub(r)
-    val reopen = { showBookDetail(r.reload(this), onChange) }
+    val reopen = { showBookDetail(r.reload(this), onHome, onChange) }
     // 별점·감상 칸은 메뉴가 화면을 넘지 않는 만큼: 감상 5줄부터 줄여 보고(글자·줄 간격을 키우면 줄어든다), 별 줄도 안 들어가면 칸을 두지 않는다.
     val text = r.lastRound.review?.text?.isNotBlank() == true
-    val fit = (if (text) (5 downTo 0) else listOf(5)).asSequence().map { detailSheet(r, sub, it, onChange, reopen) }
+    val fit = (if (text) (5 downTo 0) else listOf(5)).asSequence().map { detailSheet(r, sub, it, onHome, onChange, reopen) }
         .firstOrNull { it.height() <= screenHeight() }
-    (fit ?: detailSheet(r, sub, -1, onChange, reopen)).show()
+    (fit ?: detailSheet(r, sub, -1, onHome, onChange, reopen)).show()
 }
 
 /** 상세 메뉴 하나(감상 [lines] 줄, -1 이면 별점·감상 칸 없이). 동작은 누르는 순간 책 id 로 저장소가 지금 상태를 보고 한다([BookShelf]). */
-private fun Context.detailSheet(r: BookRecord, sub: String?, lines: Int, onChange: () -> Unit, reopen: () -> Unit): Sheet {
+private fun Context.detailSheet(r: BookRecord, sub: String?, lines: Int, onHome: Boolean, onChange: () -> Unit, reopen: () -> Unit): Sheet {
     val book = r.book
     val sheet = bookSheet(r, sub, lines, onChange, reopen)
     // 메뉴는 누르는 순간의 상태로: 상세를 열어 둔 사이 책이 바뀌었으면(이북 앱에서 다시 펴 되살아남·다른 화면에서 완독 등) 그 동작 대신
@@ -41,7 +45,7 @@ private fun Context.detailSheet(r: BookRecord, sub: String?, lines: Int, onChang
         val now = r.reload(this)
         val changed = now.state != r.state || now.hidden != r.hidden || now.rounds.size != r.rounds.size ||
             now.lastRound.finished != r.lastRound.finished || now.lastRound.review != r.lastRound.review
-        if (changed) { onChange(); if (alive()) showBookDetail(now, onChange) }
+        if (changed) { onChange(); if (alive()) showBookDetail(now, onHome, onChange) }
         else act()
     }
     // 완독하면 지금(완독하지 않은) 회차의 별점·감상이 그 회차의 것이 된다.
@@ -57,10 +61,14 @@ private fun Context.detailSheet(r: BookRecord, sub: String?, lines: Int, onChang
             }
         }
     }
+    // 카테고리(붙이지 않았으면 `없음`): 누르면 고르기([pickCategory])
+    val category = Categories.of(this, r.book.id)?.name ?: getString(R.string.category_none)
+    sheet.item(getString(R.string.category), right = "$category  ›", action = current { pickCategory(r, onChange, reopen) })
     if (r.state == State.READING) {
         sheet.item(getString(R.string.finish_book), action = current { finish() })
         sheet.item(getString(R.string.edit_book), action = current { showEditMenu(r, onChange) })
-        sheet.item(getString(R.string.remove_book), action = current { removeBook(r, sub, onChange) })
+        if (onHome) sheet.item(getString(R.string.remove_book), action = current { removeBook(r, sub, onChange) })
+        else sheet.item(getString(R.string.forget_book), action = current { askRemoveFirst(book) })
         return sheet
     }
     // 나간 책도 마지막 회차가 진행 중이면(완독한 적 없거나 다시 읽다 뺀 책) 완독할 수 있다.
@@ -82,6 +90,28 @@ private fun Context.detailSheet(r: BookRecord, sub: String?, lines: Int, onChang
 }
 
 /**
+ * 카테고리 고르기: `없음` / 카테고리들(지금 것 ✓) / `+ 새 카테고리`, 맨 아래 왼쪽 `카테고리 관리 ›`. 고르면 붙이고 상세를 다시 띄운다.
+ * 목록에 없던 책은 고르는 순간 나간 책으로 적어 둔다([bookId]).
+ */
+private fun Context.pickCategory(r: BookRecord, onChange: () -> Unit, reopen: () -> Unit) {
+    val now = Categories.of(this, r.book.id)?.id
+    fun assign(id: Long?) {
+        withBook(r) { Categories.assign(this, it, id) }
+        onChange()
+        if (alive()) reopen()
+    }
+    val sheet = Sheet(this).header(getString(R.string.category), r.book.title)
+    sheet.item(getString(R.string.category_none) + if (now == null) "  ✓" else "", bold = now == null) { assign(null) }
+    Categories.list(this).forEach { c ->
+        sheet.item(c.name + if (c.id == now) "  ✓" else "", bold = c.id == now,
+            right = if (c.excluded) getString(R.string.category_excluded_tag) else null) { assign(c.id) }
+    }
+    sheet.item(getString(R.string.category_new)) { askNew { assign(it.id) } }
+        .footer(getString(R.string.category_manage)) { startActivity(CategoriesActivity.intent(this)) }
+        .show()
+}
+
+/**
  * 상세가 다루는 책 id(누르는 순간). 목록에 없던 책은 id 가 없어 그때 제목으로 정한다([BookShelf.claim]: 그사이 생긴 같은 제목의 책,
  * 없으면 나간 책으로 적어 둔다). 다른 책은 상세를 연 때의 id 그대로(책은 지우지 않으니 늘 있다).
  */
@@ -95,9 +125,9 @@ private fun <T> Context.withBook(r: BookRecord, act: (String) -> T): T = BookShe
 private fun Context.detailSub(r: BookRecord): String? = bookSubtitle(r.book, r.state == State.READING)
 
 /**
- * `책 빼기`(홈 책 상세·읽고 있는 책 목록의 `빼기`): 올해 읽은 책에 남는 책([BookRecord.inYearBooks])이거나 지금 회차에 이미 별점·감상이 있으면
- * (상세의 별점 칸과 같은 조건) 확인 대신 별점·감상 메뉴(지금 회차의 것, 맨 아래 `취소` / `책 빼기`), 아니면(거의 읽지 않은 책. 남긴 별점을 볼 곳이 없다)
- * 확인만 `읽고 있는 책에서 뺄까요?`.
+ * `홈에서 빼기`(홈 책 상세·읽고 있는 책 목록의 `빼기`): 올해 읽은 책에 남는 책([BookRecord.inYearBooks])이거나 지금 회차에 이미 별점·감상이 있으면
+ * (상세의 별점 칸과 같은 조건) 확인 대신 별점·감상 메뉴(지금 회차의 것, 맨 아래 `취소` / `홈에서 빼기`. 완독하지 않아도 그 회차에 남긴다),
+ * 아니면(거의 읽지 않은 책. 남긴 별점을 볼 곳이 없다) 확인만 `홈에서 뺄까요?`. 기록·올해 읽은 책에는 남는다.
  */
 fun Context.removeBook(shown: BookRecord, sub: CharSequence?, onChange: () -> Unit) {
     // 누르는 순간의 기록으로(상세를 열어 둔 사이 더 읽어 5분을 넘겼을 수 있다)
@@ -109,6 +139,11 @@ fun Context.removeBook(shown: BookRecord, sub: CharSequence?, onChange: () -> Un
     }
     // 읽고 있는 책의 마지막 회차는 늘 완독하지 않은 회차다.
     reviewSheet(book, sub, getString(R.string.remove_book), r.lastRound.review) { review -> BookShelf.remove(this, book.id, review); onChange() }
+}
+
+/** 올해 읽은 책에서 홈에 있는 책의 `기록에서 지우기`: 지우지 않고 홈에서 먼저 빼 달라고 한다(홈에 있는 책은 기록이 있어야 한다) */
+private fun Context.askRemoveFirst(book: ShelfBook) {
+    Sheet(this).header(getString(R.string.forget_on_home), "${book.title}\n${getString(R.string.forget_on_home_note)}").show()
 }
 
 /**
@@ -165,7 +200,7 @@ private fun Context.bookSheet(r: BookRecord, sub: String?, lines: Int, onChange:
         sheet.note(text("${getString(R.string.review_title)}  ›", 18f, color = Ui.GRAY), if (open) history else { { reviewLocked(r, sub, onChange, reopen) } })
     }
     if (lines >= 0) sheet.note(reviewBlock(last.review, lines, enabled = open)) {
-        if (open) editLastReview(r, sub, onChange) else reviewLocked(r, sub, onChange, reopen)
+        if (open) editLastReview(r, sub, onChange, reopen) else reviewLocked(r, sub, onChange, reopen)
     }
     return sheet
 }
@@ -174,14 +209,14 @@ private fun Context.bookSheet(r: BookRecord, sub: String?, lines: Int, onChange:
 private fun Context.reviewLocked(shown: BookRecord, sub: String?, onChange: () -> Unit, reopen: () -> Unit) {
     // 상세를 열어 둔 사이 5분을 넘겼으면(누르는 순간의 기록으로) 그대로 별점·감상 메뉴
     val r = shown.reload(this)
-    if (r.canReview) { editLastReview(r, sub, onChange); return }
+    if (r.canReview) { editLastReview(r, sub, onChange, reopen); return }
     Sheet(this).header(getString(R.string.review_title), getString(R.string.review_locked)).onDismiss { if (alive()) reopen() }.show()
 }
 
 /** 마지막 회차의 별점·감상 메뉴(상세의 별점 칸). 저장은 [saveRoundReview], 그 뒤는 [afterSave] */
-private fun Context.editLastReview(r: BookRecord, sub: String?, onChange: () -> Unit) {
+private fun Context.editLastReview(r: BookRecord, sub: String?, onChange: () -> Unit, reopen: () -> Unit) {
     val last = r.lastRound
-    reviewSheet(r.book, sub, getString(R.string.save), last.review) { review -> afterSave(saveRoundReview(r, last, review), r, onChange) }
+    reviewSheet(r.book, sub, getString(R.string.save), last.review) { review -> afterSave(saveRoundReview(r, last, review), onChange, reopen) }
 }
 
 /** 화면이 끝나는 중이 아니어서 메뉴를 다시 띄울 수 있다(메뉴가 닫힌 뒤 다음 메뉴를 띄울 때) */
@@ -401,10 +436,10 @@ private fun Context.staleTitleOnly(r: BookRecord): Boolean =
     r.state == State.TITLE_ONLY && (BookShelf.findByTitle(this, r.book.title) != null || BookShelf.findLivePast(this, r.book.title) != null)
 
 /** 상세의 별점·감상 칸에서 저장한 뒤: 저장했으면 [onChange], 열어 둔 사이 책이 바뀌었으면 지금 상태로 상세를 다시 */
-private fun Context.afterSave(saved: Saved, r: BookRecord, onChange: () -> Unit) {
+private fun Context.afterSave(saved: Saved, onChange: () -> Unit, reopen: () -> Unit) {
     when (saved) {
         Saved.YES -> onChange()
-        Saved.STALE -> { onChange(); if (alive()) showBookDetail(r.reload(this), onChange) }
+        Saved.STALE -> { onChange(); if (alive()) reopen() }
         Saved.NO -> Unit
     }
 }
@@ -509,7 +544,8 @@ internal fun Context.period(s: BookRecord.Round, withYear: Boolean): String {
  * 굵은 `완독 5회` + 회색 `· 모두 21시간 7분 · 2023년부터`(회차 시간의 합, 시작한 해는 여러 해에 걸쳐 읽었을 때만),
  * 그 아래 최근 회차부터 세로 타임라인([Timeline]): 줄마다 해를 붙인 기간 / 회색 `5회 · 3시간 12분`(진행 중이면 `2회 · 진행 중 · …`)과
  * 그 회차의 작은 별 / 그 회차의 감상 한 줄(넘치면 `…`), 남긴 것이 없으면 옅은 회색 `별점·감상 남기기 ›`. 완독한 회차는 채운 점, 진행 중은 테두리만.
- * 줄을 누르면 그 회차 메뉴([editRound]: 읽기 시작한 날·완독한 날·별점·감상)를 띄우고 닫으면 다시 전체 기록으로.
+ * 줄을 누르면 그 회차 메뉴([editRound]: 읽기 시작한 날·완독한 날·별점·감상)를 띄우고 닫으면 다시 전체 기록으로. 첫 줄 오른쪽 끝의 휴지통([TrashIcon])은
+ * 그 회차만 지울지 묻는다([forgetRound], 닫으면 전체 기록, 회차가 하나가 됐으면 상세로).
  * 화면에 다 들어가지 않으면 쪽으로 나눠 요약 줄 오른쪽에 `‹ 1 / 2 ›`(눌러서 넘김). 닫으면(닫기·뒤로 가기·바깥) 상세로 돌아간다([back]).
  */
 private fun Context.showHistory(r: BookRecord, sub: String?, onChange: () -> Unit, back: () -> Unit) {
@@ -522,13 +558,27 @@ private fun Context.showHistory(r: BookRecord, sub: String?, onChange: () -> Uni
         addView(text(rest, 18f, color = Ui.GRAY), lp(0, WRAP, 1f))
         addView(pageText, lp(WRAP, WRAP).apply { marginStart = dp(12) })
     }
-    // 줄을 눌러 고치러 가면 닫혀도 상세로 돌아가지 않는다(고친 뒤 전체 기록을 다시 띄운다).
+    // 줄(회차 메뉴)·휴지통(회차 지우기)을 눌러 다른 메뉴로 가면 닫혀도 상세로 돌아가지 않는다([leaveFor]).
     var editing = false
     lateinit var dialog: android.app.Dialog
+    // 전체 기록을 닫고 [go] 의 메뉴로(닫히면 지금 기록으로 전체 기록을 다시, 회차가 하나가 됐으면 상세로). 머리의 부제(진행률·앱)도 그사이 바뀌었을 수 있다.
+    fun leaveFor(go: (then: () -> Unit) -> Unit) {
+        if (!dialog.isShowing) return
+        editing = true
+        dialog.dismiss()
+        go { r.reload(this).let { now -> if (now.rounds.size >= 2) showHistory(now, detailSub(now), onChange, back) else back() } }
+    }
     val rows = rounds.map { round ->
         vbox().apply {
             tag = round.finished
-            addView(text(period(round, withYear = true), 18f))
+            // 첫 줄: 기간과 오른쪽 끝 휴지통(누르면 이 회차만 지울지 묻는다, [forgetRound]). 휴지통 칸은 둘째 줄까지 눌린다(줄 전체는 회차 메뉴).
+            val trash = TrashIcon(context)
+            addView(hbox().apply {
+                addView(text(period(round, withYear = true), 18f), lp(0, WRAP, 1f))
+                addView(trash, lp(dp(TrashIcon.WIDTH_DP), MATCH))
+            })
+            trash.setOnClickListener { leaveFor { then -> forgetRound(r, round, onChange, then) } }
+            trash.extendTouch(this)
             addView(hbox().apply {
                 addView(text(roundDetail(round), 16f, color = Ui.GRAY))
                 round.review?.halves?.takeIf { it > 0 }?.let { halves ->
@@ -540,13 +590,7 @@ private fun Context.showHistory(r: BookRecord, sub: String?, onChange: () -> Uni
                 review == null || review.isEmpty -> addView(text(getString(R.string.review_add), 16f, color = Ui.LIGHT_GRAY), lp(MATCH, WRAP).apply { topMargin = dp(6) })
                 review.text.isNotBlank() -> addView(text(review.text, 16f), lp(MATCH, WRAP).apply { topMargin = dp(6) })
             }
-            setOnClickListener {
-                if (!dialog.isShowing) return@setOnClickListener
-                editing = true
-                dialog.dismiss()
-                // 다시 띄우는 전체 기록은 지금 기록으로(머리의 부제 — 진행률·앱 — 도 그사이 바뀌었을 수 있다)
-                editRound(r, round, onChange) { r.reload(this@showHistory).let { now -> showHistory(now, detailSub(now), onChange, back) } }
-            }
+            setOnClickListener { leaveFor { then -> editRound(r, round, onChange, then) } }
         }
     }
     // 쪽 나누기: 화면 높이에서 타임라인 없이 띄운 메뉴(머리·요약 줄·닫기)의 높이를 뺀 높이에 들어가는 만큼씩(줄 높이는 감상이 있으면 한 줄 더).
@@ -591,6 +635,63 @@ private fun Context.showHistory(r: BookRecord, sub: String?, onChange: () -> Uni
 }
 
 private const val TIMELINE_TOP_DP = 16
+
+/**
+ * 전체 기록의 휴지통: 회차 [round] 하나만 지울지 묻는다(`2회 기록을 지울까요?` / `책 · 기간`, 설명 글 없이 `이 회차 지우기` / `취소`). 지우면 그 회차의 완독·별점·감상과
+ * 그 회차에 읽은 시간이 이 책에서 빠진다([BookShelf.forgetRound]. 하루 읽은 시간·연속일은 그대로). 읽고 있는 책의 진행 중 회차를 지우면 읽고 있는
+ * 책에서도 빠진다. 누르는 순간의 기록으로 다시 보고, 그사이 그 회차가 없어졌거나 회차가 하나가 됐으면 지우지 않는다. 닫히면 [then].
+ */
+private fun Context.forgetRound(r: BookRecord, round: BookRecord.Round, onChange: () -> Unit, then: () -> Unit) {
+    val nth = getString(R.string.finish_nth, round.nth ?: 0)
+    Sheet(this).header(getString(R.string.forget_round_confirm, nth), "${r.book.title}  ·  ${period(round, withYear = true)}")
+        .item(getString(R.string.forget_round), bold = true) {
+            val (now, cur) = roundNow(r, round) ?: return@item
+            if (now.rounds.size < 2) return@item
+            if (BookShelf.forgetRound(this, now.book.id, cur.finishId, now.dropOf(cur, LocalDate.now()))) onChange()
+        }
+        .item(getString(R.string.cancel)) {}.noClose().onDismiss { if (alive()) then() }.show()
+}
+
+/** 전체 기록 회차 줄의 휴지통(회색 선 그림, 글자를 키우면 함께 커진다 [Ui.textGrow]). 칸 폭 [WIDTH_DP], 그림은 오른쪽 끝에 맞춘다. */
+private class TrashIcon(context: Context) : View(context) {
+    companion object {
+        const val WIDTH_DP = 48
+        private const val SIZE_DP = 22f
+    }
+
+    private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Ui.GRAY; style = Paint.Style.STROKE; strokeWidth = context.dpf(1.8f * Ui.textGrow); strokeJoin = Paint.Join.ROUND; strokeCap = Paint.Cap.ROUND
+    }
+    private val path = Path()
+
+    init { contentDescription = context.getString(R.string.forget_round) }
+
+    /** 누르는 자리를 [row] 의 둘째 줄까지 넓힌다(첫 줄 높이만으로는 손가락에 좁다) */
+    fun extendTouch(row: ViewGroup) {
+        row.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+            val parent = parent as? View ?: return@addOnLayoutChangeListener
+            val below = maxOf(parent.top + bottom, row.getChildAt(1)?.bottom ?: 0)
+            val hit = Rect(parent.left + left - context.dp(8), parent.top + top - context.dp(8), row.width, below)
+            row.touchDelegate = TouchDelegate(hit, this)
+        }
+    }
+
+    override fun onDraw(canvas: Canvas) {
+        val s = context.dpf(SIZE_DP * Ui.textGrow)
+        val cx = width - s / 2
+        val cy = height / 2f
+        path.reset()
+        // 뚜껑·손잡이
+        path.moveTo(cx - s * 0.45f, cy - s * 0.32f); path.lineTo(cx + s * 0.45f, cy - s * 0.32f)
+        path.moveTo(cx - s * 0.14f, cy - s * 0.32f); path.lineTo(cx - s * 0.14f, cy - s * 0.46f)
+        path.lineTo(cx + s * 0.14f, cy - s * 0.46f); path.lineTo(cx + s * 0.14f, cy - s * 0.32f)
+        // 통과 안의 두 줄
+        path.moveTo(cx - s * 0.34f, cy - s * 0.32f); path.lineTo(cx - s * 0.28f, cy + s * 0.46f)
+        path.lineTo(cx + s * 0.28f, cy + s * 0.46f); path.lineTo(cx + s * 0.34f, cy - s * 0.32f)
+        for (x in floatArrayOf(-0.1f, 0.1f)) { path.moveTo(cx + s * x, cy - s * 0.14f); path.lineTo(cx + s * x, cy + s * 0.3f) }
+        canvas.drawPath(path, paint)
+    }
+}
 
 /**
  * 전체 기록의 세로 타임라인: 줄마다 왼쪽에 점(첫 줄의 가운데 높이, 완독한 회차(줄의 tag 가 true)는 채운 점, 아니면 테두리만), 점 사이를 회색 세로선으로 잇는다.

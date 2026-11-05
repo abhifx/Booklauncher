@@ -46,7 +46,10 @@ interface WatchHost {
     fun <T> inBackground(work: () -> T, done: (Result<T>) -> Unit) = Bg.run(work, done)
 }
 
-/** 홈에서 서비스로 가는 신호(프로세스 수명). 홈에서 바로 연 책의 파일: 읽는 화면에 그 파일 이름이 보이면 그 책을 편 것이다 */
+/**
+ * 홈에서 서비스로 가는 신호(프로세스 수명). 홈에서 바로 연 책: 파일로 연 책은 읽는 화면에 그 파일 이름이 보이면 그 책을 편 것이고([fileOpened]),
+ * 링크로 연 책은 곧 열린 읽는 화면이 그 책이다([bookOpened]). 읽는 어댑터가 [take] 로 꺼낸다
+ */
 object HomeSignals {
     private val opened = ConcurrentHashMap<String, Pair<Cell, Long>>()
 
@@ -55,7 +58,12 @@ object HomeSignals {
         opened[pkg] = Cell(book.title, book.author, -1, -1, null, Rect(), file = path) to System.currentTimeMillis()
     }
 
-    /** [pkg] 로 홈에서 연 파일과 그 때(꺼내면 지운다) */
+    /** 홈에서 [book] 을 [pkg] 로 바로 열었다(링크로 여는 앱. 읽는 화면이 제목 없이 열리는 앱이 그 책으로 알게. 제목은 앱이 보여 준 것) */
+    fun bookOpened(pkg: String, book: ShelfBook) {
+        opened[pkg] = Cell(book.seenTitle.ifEmpty { book.title }, book.author, -1, -1, null, Rect()) to System.currentTimeMillis()
+    }
+
+    /** [pkg] 로 홈에서 연 파일·책과 그 때(꺼내면 지운다) */
     fun take(pkg: String): Pair<Cell, Long>? = opened.remove(pkg)
 }
 

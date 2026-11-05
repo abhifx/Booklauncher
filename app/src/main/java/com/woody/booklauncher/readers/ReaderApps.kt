@@ -5,11 +5,11 @@ import android.content.Context
 /**
  * 읽는 책 자동 추가가 받는 이북 앱들(앱마다 파일 하나). 앱을 더하면 여기와
  * `res/xml/reader_watch.xml` 의 packageNames(시스템이 이 앱들의 화면만 보낸다), 설정 › 독서 › 자동 추가 안내의 앱(`ReaderGuide.APPS`,
- * 빠지면 단위 테스트가 알린다)을 함께 고친다. 한 패키지가 판에 따라 다른 앱이면(북커스 2.0.0 · 1.x) 새 판의 앱 파일을 앞에 둔다([ReaderApp.handles]).
+ * 빠지면 단위 테스트가 알린다)을 함께 고친다. 한 패키지가 판에 따라 다른 앱이면(부커스 2.0.0 · 1.x) 새 판의 앱 파일을 앞에 둔다([ReaderApp.handles]).
  */
 object ReaderApps {
     val ALL = listOf(
-        KyoboLibrary, KyoboEbook, KyoboEbookMobile, Millie, MillieMobile, Aladin, Bookers2, Bookers, Ridi, RidiOneStore, Yes24Library, Yes24LibraryMobile, Yes24Ebook, MyYes, MoonReader, MoonReaderPro, EasyView, EasyViewFree, CherieViewer, Kindle, Libby, NeoReader, KOReader, KOReaderFdroid, Readest, BookFusion, Woojoo, Mihon, Kahon, PlayBooks, Kobo, Futon, Kotatsu, Librera, LibreraPro, Acoustext, IReader,
+        KyoboLibrary, KyoboEbook, KyoboEbookMobile, Millie, MillieMobile, Aladin, Bookers2, Bookers, Ridi, RidiOneStore, Yes24Library, Yes24LibraryMobile, Yes24Ebook, MyYes, MoonReader, MoonReaderPro, EasyView, EasyViewFree, CherieViewer, Kindle, Libby, NeoReader, KOReader, KOReaderFdroid, Readest, BookFusion, Woojoo, Mihon, Kahon, PlayBooks, Kobo, Futon, Kotatsu, Librera, LibreraPro, Acoustext, IReader, Wattpad,
     )
 
     /** 패키지마다 앱 파일들(판에 따라 다른 앱이면 여럿) */

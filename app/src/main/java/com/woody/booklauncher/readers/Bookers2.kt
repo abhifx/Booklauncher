@@ -3,10 +3,15 @@ package com.woody.booklauncher.readers
 import android.content.Context
 import android.os.SystemClock
 import android.view.accessibility.AccessibilityNodeInfo
+import com.woody.booklauncher.HomePrefs
+import com.woody.booklauncher.TitlePair
+import com.woody.booklauncher.WatchLog
 import com.woody.booklauncher.hasTitle
+import com.woody.booklauncher.normTitle
+import com.woody.booklauncher.sameTitle
 
 /**
- * 북커스 2.0.0(2026-10-24 Play, versionCode 205~): 1.x([Bookers])와 패키지만 같은 새 앱이라 따로 둔다([handles] 로 깔린 판을 고른다).
+ * 부커스 2.0.0(2026-10-24 Play, versionCode 205~): 1.x([Bookers])와 패키지만 같은 새 앱이라 따로 둔다([handles] 로 깔린 판을 고른다).
  * 액티비티가 `com.bookers.app.MainActivity` 하나이고, 홈·내 서재·책 상세는 웹 화면(요소 이름 없이 글자·설명만. 단추는 안의 글자를 한 줄로 합쳐 내놓는다),
  * 읽는 화면은 그 위에 겹쳐 뜨는 Compose 화면(요소 이름 없음, 화면 캡처를 막는다)이다. 그래서 읽는 화면은 웹 화면과 함께 그 밖에 글자가 보이는 동안이다
  * ([showsViewer]. 앱이 따로 띄운 창에는 웹 화면이 없어 읽는 화면으로 보지 않는다).
@@ -18,9 +23,13 @@ import com.woody.booklauncher.hasTitle
  * 서재의 진행률은 읽는 화면의 쪽보다 늦게 바뀌어(343쪽 가운데 12쪽에서 `1%`, 몇 분 뒤 `3%`) 쓰지 않는다.
  * 책 상세(`바로읽기`)는 표지 그림(설명이 제목, 딱지 없음)과 제목·저자 글자가 따로 있다.
  * 읽는 화면: 아래 가운데 쪽 `7/343` 이 늘 보이고, 가운데를 눌러 메뉴를 띄우면(책을 열면 처음에 떠 있다) 위 막대의 `닫기` 옆에 제목이 보인다
- * (같은 막대에 `검색`·`책갈피` 가 있는 것만 위 막대로 본다).
- * 서재·상세의 제목 앞 `(접근성)`(접근성 전자책)은 1.x 와 같은 책으로 이어지게 그대로 둔다. 메뉴 제목에는 그것이 없어, 목록에 `(접근성)` 이 붙은 같은 책이
- * 있으면 그 제목으로 본다([Bookers2Reader]).
+ * (같은 막대에 `검색`·`책갈피` 가 있는 것만 위 막대로 본다). 처음 연 책은 첫 실행 안내(`화면 중앙을 터치하시면…`)가 메뉴를 가려, 닫을 때까지 제목이 없다.
+ * 서재·상세의 제목은 도서관에 등록된 상품 이름(`위버멘쉬 (30만부 기념 개정판)`·`(접근성)직장 노예`·`[미리보기] …`)이고, 메뉴의 제목은 EPUB 파일의
+ * 제목(`reader.html` 이 `book.loaded.metadata.title` 을 넘긴다, `위버멘쉬`·`직장 노예`)이라 서로 다를 수 있다(2.0.1 에서 확인. 제목 말고 밖에서 읽을 수 있는
+ * 책 식별자는 없다). 그래서 책은 메뉴의 제목으로만 넣는다(서재 칸·`바로읽기` 를 눌러 열어도 그 칸의 제목으로 넣지 않는다, [Bookers2Reader]).
+ * 서재의 반납일·저자와 상세의 표지는 제목이 같은 책에만 붙어, 연 칸의 제목이 메뉴 제목과 다르면 홈에서 `같은 책인가요?` 로 묻고([HomePrefs.sameBookAsk])
+ * `같은 책` 이면 그 서재 제목의 칸·상세를 메뉴 제목의 책으로 읽는다([useAnswers]). 서재 제목이 메뉴 제목에 `(접근성)` 만 붙인 것이면 묻지 않고 같은 책으로.
+ * 1.x·예전 판이 `(접근성)` 을 붙여 넣은 책은 메뉴 제목으로 그 책을 찾는다([listedTitle]).
  */
 object Bookers2 : ReaderApp(
     pkg = "com.bookers.ebook", classPrefix = "com.bookers",
@@ -54,8 +63,19 @@ object Bookers2 : ReaderApp(
 
     override fun showsViewer(root: AccessibilityNodeInfo): Boolean = hasWebView(root) && overlay(root).isNotEmpty()
 
+    /**
+     * `같은 책` 이라고 답한 짝(정리한 서재 제목 → 읽는 화면 제목, [HomePrefs.sameBooks]). 어댑터가 서재를 읽기 전에 채운다([useAnswers]).
+     * 서재·상세의 칸 제목을 읽는 화면 제목으로 바꿔, 메뉴 제목으로 넣은 책에 반납일·저자·표지가 붙게 한다
+     */
+    @Volatile private var answers: Map<String, String> = emptyMap()
+
+    internal fun useAnswers(pairs: List<TitlePair>) { answers = pairs.associate { normTitle(it.shelf) to it.read } }
+
+    /** 답한 짝이면 칸 제목을 읽는 화면 제목으로 */
+    private fun named(cell: Cell): Cell = answers[normTitle(cell.title)]?.let { cell.copy(title = it) } ?: cell
+
     /** 내 서재의 칸(격자·리스트)과 책 상세의 책 */
-    override fun shelfCells(root: AccessibilityNodeInfo): List<Cell> = myShelf(root) + listOfNotNull(detail(root))
+    override fun shelfCells(root: AccessibilityNodeInfo): List<Cell> = (myShelf(root) + listOfNotNull(detail(root))).map(::named)
 
     /** 내 서재의 칸(격자·리스트) */
     private fun myShelf(root: AccessibilityNodeInfo): List<Cell> {
@@ -72,8 +92,12 @@ object Bookers2 : ReaderApp(
     /**
      * 누른 칸: 격자 칸 단추는 그 글자로, 리스트 보기의 표지 단추는 지금 화면의 서재 칸 가운데 그 자리의 칸(없으면 부모 묶음), 책 상세의 `바로읽기` 는 그 상세의 책.
      * 그 밖(리스트 줄의 `더보기`·`독서 감상문 쓰기`, 제목 글자 — 상세가 뜬다)은 책을 여는 것이 아니다.
+     * 누른 칸으로 책을 넣지는 않고, 그 칸의 제목이 메뉴 제목과 다르면 같은 책인지 묻는다([Bookers2Reader]).
      */
-    override fun clickedCell(source: AccessibilityNodeInfo?, text: List<CharSequence>, windows: AppWindows, last: List<Cell>?): Cell? {
+    override fun clickedCell(source: AccessibilityNodeInfo?, text: List<CharSequence>, windows: AppWindows, last: List<Cell>?): Cell? =
+        clicked(source, windows)?.let(::named)
+
+    private fun clicked(source: AccessibilityNodeInfo?, windows: AppWindows): Cell? {
         val s = source ?: return null
         val mine = lazy { windows.active?.let(::isMyShelf) == true }
         gridCell(s, mine)?.let { return it }
@@ -250,13 +274,13 @@ object Bookers2 : ReaderApp(
     private const val CLOSE = "닫기"
     /** 읽는 화면 위 막대에서 `닫기` 와 함께 있는 단추 */
     private val TOP_BAR_ICONS = listOf("검색", "책갈피")
-    private const val ACCESSIBLE = "(접근성)"
+    internal const val ACCESSIBLE = "(접근성)"
     /** 격자 칸 글자에서 표지 이름 뒤의 상태 자리 ` [D-14|만료] [다운로드] [0%] `(그 뒤가 제목 저자 수). 1 은 반납, 2 는 진행률 */
     private const val GRID_STATUS = """^\s+(?:((?i:D-\s*\d+|D-Day)|만료)\s+)?(?:다운로드\s+)?(?:(\d{1,3})%\s+)?"""
     /** 리스트 보기 표지 단추 `[D-14|만료] 0%` */
     private val COVER_BUTTON = Regex("""^(?:((?i:D-\s*\d+|D-Day)|만료)\s+)?(\d{1,3})%$""")
-    /** 격자 칸 끝의 읽는 사람 수 */
-    private val READERS = Regex("""\s*\d+$""")
+    /** 격자 칸 끝의 읽는 사람 수(`43`·`12,335`) */
+    private val READERS = Regex("""\s*\d[\d,]*$""")
     /** 읽는 화면 쪽 `7/343` */
     private val PAGE = Regex("""^(\d+)\s*/\s*(\d+)$""")
 }
@@ -265,13 +289,64 @@ private const val MAIN = "com.bookers.app.MainActivity"
 /** 읽는 화면의 이름(요소 이름이 아니라 [Bookers2.showsViewer] 로 가른다) */
 private const val VIEWER = "viewer"
 
-/** 북커스 2.0 의 판단: 바탕 그대로에, 메뉴 제목을 목록의 `(접근성)` 제목에 맞춘다([Bookers2.listedTitle]) */
+/**
+ * 부커스 2.0 의 판단: 책은 읽는 화면 메뉴의 제목으로만 넣는다. 서재 칸·상세 `바로읽기` 를 눌러 열어도 그 칸의 제목(도서관 상품 이름)으로 넣지 않고
+ * 메뉴의 제목이 보일 때까지 책 모름으로 둔다(연 때부터의 시간은 메뉴 제목의 책에 붙는다). 메뉴 제목은 `(접근성)` 을 붙여 넣은 책에 맞춘다([Bookers2.listedTitle]).
+ */
 private class Bookers2Reader : ScreenReader(Bookers2) {
+    /** 이 읽는 화면을 연 서재 칸·상세의 제목(누르지 않고 열렸으면 null). 메뉴 제목과 다르면 같은 책인지 묻는다 */
+    private var openedFrom: String? = null
+
+    override fun onEnterViewer(ctx: AppContext, from: String?, again: Boolean) {
+        val cell = takeClicked(ctx)
+        if (cell == null) {
+            if (!again) openedFrom = null
+            return
+        }
+        openedFrom = cell.title
+        ctx.unknownOpenAt = ctx.now
+        ctx.unknown(ctx.now)
+    }
+
+    override fun onShelf(ctx: AppContext) {
+        loadAnswers(ctx)
+        super.onShelf(ctx)
+    }
+
+    override fun onShelfLive(ctx: AppContext, force: Boolean) {
+        loadAnswers(ctx)
+        super.onShelfLive(ctx, force)
+    }
+
+    /** 서재를 읽기 전에 `같은 책` 이라 답한 짝을 불러 둔다(홈에서 답한 것이 다음 서재부터 먹게) */
+    private fun loadAnswers(ctx: AppContext) = Bookers2.useAnswers(HomePrefs(ctx.context).sameBooksOf(ctx.pkg))
+
     override fun onViewer(ctx: AppContext) {
         val shown = readShown(ctx) ?: return
         val info = shown.title?.let { t -> Bookers2.listedTitle(ctx, t)?.let { ViewerInfo(it, shown.author, shown.progress) } } ?: shown
         logShown(ctx, info)
         retryProgress(ctx, info.progress)
         recordShown(ctx, info)
+        info.title?.let { askSame(ctx, it) }
+    }
+
+    /**
+     * 연 칸의 제목([openedFrom])이 메뉴 제목 [read] 와 다르면 같은 책인지 묻게 적는다(읽는 화면마다 한 번, 같은 짝은 한 번만).
+     * 서재 제목이 메뉴 제목에 `(접근성)` 만 붙인 것이면(부커스의 접근성 전자책) 묻지 않고 같은 책으로 둔다
+     */
+    private fun askSame(ctx: AppContext, read: String) {
+        val shelf = openedFrom ?: return
+        openedFrom = null
+        if (sameTitle(shelf, read)) return
+        val prefs = HomePrefs(ctx.context)
+        val pair = TitlePair(ctx.pkg, shelf, read)
+        if (prefs.knowsPair(pair)) return
+        if (shelf == Bookers2.ACCESSIBLE + read) {
+            prefs.sameBooks = prefs.sameBooks + pair.key
+            ctx.log(WatchLog.Kind.NOTE, "same: $shelf = $read")
+        } else {
+            prefs.sameBookAsk = prefs.sameBookAsk + pair.key
+            ctx.log(WatchLog.Kind.NOTE, "same? $shelf ≠ $read")
+        }
     }
 }

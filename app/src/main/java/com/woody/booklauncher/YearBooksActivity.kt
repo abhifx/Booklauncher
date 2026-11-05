@@ -66,8 +66,9 @@ class YearBooksActivity : EinkActivity() {
         root.addView(titleRow("", Palette.Area.LIBRARY) { finish() }.apply {
             // 제목 줄: `‹` · 제목 · 권수 · (빈 자리) · 쪽 `‹ 1 / 2 ›`(여러 쪽일 때) · `2026 ▾`(고를 해가 둘 이상일 때)
             titleText = getChildAt(1) as TextView
-            titleCount = text("", 21f, color = Ui.GRAY)
-            addView(titleCount, lp(WRAP, WRAP).apply { marginStart = dp(14); topMargin = dp(6) })
+            // 권수. 카테고리가 있으면 보기 거르기를 겸한다(`소설 7권 ▾`, 누르면 보기 메뉴)
+            titleCount = text("", 21f, color = Ui.GRAY).apply { setPadding(dp(14), dp(20), dp(8), dp(20)) }
+            addView(titleCount, lp(WRAP, WRAP).apply { topMargin = dp(6) })
             addView(View(context), lp(0, 0, 1f))
             pageText = text("", 21f).apply {
                 setPadding(dp(16), dp(20), 0, dp(20))
@@ -165,11 +166,28 @@ class YearBooksActivity : EinkActivity() {
         val years = years(records, today)
         // 지난해의 마지막 책을 기록에서 지워 그해가 비면 올해로 돌아온다(빈 지난해에 `올해 읽은 책이 없습니다`가 뜨지 않게).
         if (year !in years) year = today.year
-        val all = yearRows(records, year)
+        val yearAll = yearRows(records, year)
+        // 보기 거르기: 고른 카테고리의 책만(`전체`면 통계에서 뺀 카테고리의 책만 빼고). 보기 메뉴의 권수도 `완독만`을 따른다.
+        val filter = StatsFilter.of(this, prefs.statsPicked(HomePrefs.StatsScreen.YEAR))
+        val all = yearAll.filter { filter.keepsBook(it.book.id) }
         val finishedOnly = prefs.yearFinishedOnly
         val list = if (finishedOnly) all.filter { it.doneInYear } else all
         titleText.text = if (year == today.year) getString(R.string.year_books) else getString(R.string.year_books_of, year)
-        titleCount.text = if (list.isEmpty()) "" else getString(R.string.year_books_count, list.size)
+        val count = if (list.isEmpty()) "" else getString(R.string.year_books_count, list.size)
+        if (filter.categories.isEmpty()) {
+            titleCount.text = count
+            titleCount.setOnClickListener(null)
+            titleCount.isClickable = false
+        } else {
+            // `19권 ▾`(전체) · `소설 7권 ▾` · 고른 카테고리에 책이 없으면 `소설 ▾`
+            val name = if (filter.all && count.isNotEmpty()) "" else filterName(filter)
+            titleCount.text = listOf(name, count).filter { it.isNotEmpty() }.joinToString(" ") + " ▾"
+            titleCount.setOnClickListener {
+                showStatsFilter(filter, getString(R.string.filter_year_sub, year), { f ->
+                    getString(R.string.year_books_count, yearAll.count { f.keepsBook(it.book.id) && (!finishedOnly || it.doneInYear) })
+                }) { prefs.setStatsPicked(HomePrefs.StatsScreen.YEAR, it); render(); rows.showPage(0) }
+            }
+        }
         yearPick.text = "$year ▾"
         yearPick.visibility = if (years.size > 1) View.VISIBLE else View.GONE
         // 월간 결산: 올해면 이번 달, 지난해면 그해 12월
@@ -183,13 +201,17 @@ class YearBooksActivity : EinkActivity() {
                 rows.showPage(0)
             }
         }
-        empty.text = getString(if (all.isEmpty()) R.string.year_books_empty else R.string.year_finished_empty)
+        empty.text = getString(when {
+            yearAll.isEmpty() -> R.string.year_books_empty
+            all.isEmpty() -> R.string.year_category_empty
+            else -> R.string.year_finished_empty
+        })
         empty.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
         val grid = prefs.yearGrid
         viewToggle.text = toggleText(R.string.fav_view_list, R.string.fav_view_grid, !grid)
         filterToggle.text = toggleText(R.string.filter_all, R.string.finish_book, !finishedOnly)
         // 그해 책이 하나도 없으면 보기·거르기를 감춘다(완독만 거른 결과가 비면 되돌릴 수 있게 둔다).
-        viewToggle.visibility = if (all.isEmpty()) View.GONE else View.VISIBLE
+        viewToggle.visibility = if (yearAll.isEmpty()) View.GONE else View.VISIBLE
         filterToggle.visibility = viewToggle.visibility
         listRows.visibility = if (grid) View.GONE else View.VISIBLE
         gridRows.visibility = if (grid) View.VISIBLE else View.GONE
@@ -280,7 +302,7 @@ class YearBooksActivity : EinkActivity() {
     }
 
     /** 홈과 같은 책 상세(완독은 늘 오늘, 완독한 날은 전체 기록에서 고친다) */
-    private fun showMenu(r: Row) = showBookDetail(r.record) { render() }
+    private fun showMenu(r: Row) = showBookDetail(r.record, onHome = false) { render() }
 
     companion object {
         /** 목록 줄 표지 위아래 여백(dp). 표지는 나머지 높이를 채운다. */

@@ -4,7 +4,7 @@ import android.view.accessibility.AccessibilityNodeInfo
 import com.woody.booklauncher.WatchLog
 
 /**
- * 책 상세에서 읽는 화면으로 가는 앱의 판단과 기억(쓰는 앱: BookFusion·밀리 e-ink·Mihon·Kahon·Kobo·Futon·Kotatsu. 바꾸면 모두 시험한다).
+ * 책 상세에서 읽는 화면으로 가는 앱의 판단과 기억(쓰는 앱: BookFusion·밀리 e-ink·Mihon·Kahon·Kobo·Futon·Kotatsu·Wattpad. 바꾸면 모두 시험한다).
  * 서재 화면 안의 책 상세([detail]: BookFusion 책 상세, 밀리 검색 상세, Mihon 작품 상세)에서 `Read`·`바로 읽기`를 누르면 그 책을 편 것으로 본다(그 단추에는 글자가 없다).
  * 상세는 멈추기를 기다리지 않고 1초마다 기억하고, 단추를 누르면 상세가 먼저 사라지기도 해(BookFusion) 사라진 뒤 [KEEP_MS] 동안은 둔다.
  * 상세를 마지막으로 본 뒤 다른 칸을 눌렀으면 그 칸이 먼저다(사라진 때는 1초마다 읽어 늦게 적힐 수 있어 본 때로 가른다). [clickOnly]: 읽는 화면에 제목이 없어 누른 칸으로만 책을 아는 앱(BookFusion) — 누른 칸도 상세도 모른 채

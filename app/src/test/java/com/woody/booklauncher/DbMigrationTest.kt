@@ -27,7 +27,7 @@ class DbMigrationTest {
         rows("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name != 'android_metadata' ORDER BY name") { it.getString(0) }
             .associateWith { columns(it) }
 
-    @Test fun `v1~v5 에서 올린 표가 새로 설치한 표와 같다(Libby 읽는 화면 viewer_mark, 네오리더 책 파일 book_file, 읽는 화 chapter, 고친 시작일 began 포함)`() {
+    @Test fun `v1~v6 에서 올린 표가 새로 설치한 표와 같다(Libby 읽는 화면 viewer_mark, 네오리더 책 파일 book_file, 읽는 화 chapter, 고친 시작일 began, 카테고리·지운 회차 round_drop 포함)`() {
         val fresh = SQLiteDatabase.create(null).apply { Db.create(this) }.schema()
         assertEquals(listOf("at", "pkg", "shown"), fresh["viewer_mark"])
         assertEquals("chapter", fresh["shelf"]?.last())
@@ -36,6 +36,10 @@ class DbMigrationTest {
         assertEquals(fresh, SQLiteDatabase.create(null).apply { OldSchemas.v3(this); Db.upgrade(this, 3) }.schema())
         assertEquals(fresh, SQLiteDatabase.create(null).apply { OldSchemas.v4(this); Db.upgrade(this, 4) }.schema())
         assertEquals(fresh, SQLiteDatabase.create(null).apply { OldSchemas.v5(this); Db.upgrade(this, 5) }.schema())
+        assertEquals(fresh, SQLiteDatabase.create(null).apply { OldSchemas.v6(this); Db.upgrade(this, 6) }.schema())
+        assertEquals(listOf("id", "uid", "name", "pos", "excluded"), fresh["category"])
+        assertEquals(listOf("book_id", "category_id"), fresh["book_category"])
+        assertEquals(listOf("id", "book_id", "after_day", "until_day"), fresh["round_drop"])
         assertEquals("began", fresh["finish"]?.last())
         assertEquals(listOf("book_id", "day"), fresh["round_began"])
     }

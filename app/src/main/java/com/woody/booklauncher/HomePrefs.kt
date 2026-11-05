@@ -104,6 +104,30 @@ class HomePrefs(context: Context) {
         get() = sp.getStringSet("file_notice_skip", emptySet())!!.toSet()
         set(v) = sp.edit().putStringSet("file_notice_skip", v).apply()
 
+    /**
+     * 같은 책인지 물을 짝([TitlePair.key]): 서재의 제목과 읽는 화면의 제목이 달라 이북 앱 파일이 적는다. 홈으로 돌아오면 하나씩 묻고([HomeActivity.askSameBook])
+     * 답하면 [sameBooks]·[otherBooks] 로 옮긴다. 답하지 않고 닫으면 남아 다음에 다시 묻는다
+     */
+    var sameBookAsk: Set<String>
+        get() = sp.getStringSet("same_book_ask", emptySet())!!.toSet()
+        set(v) = sp.edit().putStringSet("same_book_ask", v).apply()
+
+    /** `같은 책` 이라고 답한 짝([TitlePair.key]). 그 서재 제목을 읽는 화면 제목의 책으로 본다(그 앱 파일이 쓴다) */
+    var sameBooks: Set<String>
+        get() = sp.getStringSet("same_books", emptySet())!!.toSet()
+        set(v) = sp.edit().putStringSet("same_books", v).apply()
+
+    /** `다른 책` 이라고 답한 짝([TitlePair.key]). 다시 묻지 않는다 */
+    var otherBooks: Set<String>
+        get() = sp.getStringSet("other_books", emptySet())!!.toSet()
+        set(v) = sp.edit().putStringSet("other_books", v).apply()
+
+    /** [pair] 를 물은 적이 있거나 묻는 중인가(답했거나 아직 기다리는 중) */
+    fun knowsPair(pair: TitlePair): Boolean = pair.key.let { it in sameBookAsk || it in sameBooks || it in otherBooks }
+
+    /** [pkg] 앱에서 `같은 책` 이라고 답한 짝들 */
+    fun sameBooksOf(pkg: String): List<TitlePair> = sameBooks.mapNotNull(TitlePair::of).filter { it.pkg == pkg }
+
     /** 홈에서 `이 버전은 알리지 않기` 를 누른 판 */
     var updateSkip: String?
         get() = sp.getString("update_skip", null)
@@ -136,6 +160,15 @@ class HomePrefs(context: Context) {
     var yearFinishedOnly: Boolean
         get() = sp.getBoolean("year_finished_only", false)
         set(v) = sp.edit().putBoolean("year_finished_only", v).apply()
+
+    /** 통계 화면마다(독서 기록·올해 읽은 책·결산) 보기에서 고른 카테고리([Categories.NONE] = 분류 없음). 비면 `전체`. */
+    enum class StatsScreen(val key: String) { READING("filter_reading"), YEAR("filter_year"), RECAP("filter_recap") }
+
+    fun statsPicked(screen: StatsScreen): Set<Long> =
+        sp.getStringSet(screen.key, emptySet())!!.mapNotNull { it.toLongOrNull() }.toSet()
+
+    fun setStatsPicked(screen: StatsScreen, picked: Set<Long>) =
+        sp.edit().putStringSet(screen.key, picked.map { it.toString() }.toSet()).apply()
 
     // 읽는 책 자동 추가·오늘 읽은 시간은 따로 켜짐 값을 두지 않는다. 시스템의 접근성(ReaderWatchService.isEnabled)·
     // 사용 기록 액세스(ReadingLog.hasAccess)가 곧 켜짐이다(1.3.1 까지의 `auto_books`·`reading_time` 은 읽지 않는다).
@@ -320,6 +353,19 @@ class HomePrefs(context: Context) {
             edit.apply()
             return first
         }
+    }
+}
+
+/**
+ * 같은 책인지 묻는 짝: 이북 앱 [pkg] 의 서재(목록·상세)에 보인 제목 [shelf] 와 읽는 화면에 보인 제목 [read](자동 추가는 이 제목으로 넣는다).
+ * 서재 제목은 도서관에 등록된 이름(판·형태 덧붙임)이고 읽는 화면 제목은 책 파일의 제목이라 같은 책이어도 다를 수 있다
+ */
+data class TitlePair(val pkg: String, val shelf: String, val read: String) {
+    /** 설정에 적는 한 줄(`패키지\t서재 제목\t읽는 화면 제목`). 제목 안의 탭은 공백으로(나눌 수 있게. 제목 비교는 공백을 보지 않는다) */
+    val key: String get() = listOf(pkg, shelf, read).joinToString("\t") { it.replace('\t', ' ') }
+
+    companion object {
+        fun of(key: String): TitlePair? = key.split('\t').takeIf { it.size == 3 && it.none(String::isBlank) }?.let { TitlePair(it[0], it[1], it[2]) }
     }
 }
 

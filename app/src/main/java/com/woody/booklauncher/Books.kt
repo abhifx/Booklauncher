@@ -413,15 +413,24 @@ object BookShelf {
         // 누른 때. 기기 시각이 뒤로 고쳐져도 같은 책의 앞 완독보다 늦게(같은 날 회차 순서가 뒤바뀌지 않게)
         val at = maxOf(System.currentTimeMillis(), before[id].orEmpty().maxOfOrNull { (it.at ?: 0) + 1 } ?: 0)
         val rowId = Db.get(context).tx {
-            delete("review", "book_id = ?", arrayOf(id))
-            delete("round_start", "book_id = ?", arrayOf(id))
-            delete("round_began", "book_id = ?", arrayOf(id))
+            deleteOpenRound(id)
             insertOrThrow("finish", null, Db.values(
                 "uid" to UUID.randomUUID().toString().replace("-", ""), "book_id" to id, "day" to on.toEpochDay(), "at" to at,
                 "started" to started?.toEpochDay(), "stars" to r?.halves, "text" to r?.text, "began" to began?.toEpochDay(),
             ))
         }
         cachedFinishes = before + (id to (before[id].orEmpty() + Finish(rowId, on, at, started, r, began)).sortedWith(finishOrder))
+        forgetOpenRoundCache(context, id)
+    }
+
+    /** 진행 중 회차의 표시(별점·감상·`다시 읽기`한 날·고친 읽기 시작한 날)를 DB 에서 지운다(완독·회차 지우기). 캐시는 [forgetOpenRoundCache] */
+    private fun SQLiteDatabase.deleteOpenRound(id: String) {
+        delete("review", "book_id = ?", arrayOf(id))
+        delete("round_start", "book_id = ?", arrayOf(id))
+        delete("round_began", "book_id = ?", arrayOf(id))
+    }
+
+    private fun forgetOpenRoundCache(context: Context, id: String) {
         cachedReviews = reviews(context) - id
         cachedRoundStarts = roundStarts(context) - id
         cachedRoundBegans = roundBegans(context) - id
@@ -568,6 +577,7 @@ object BookShelf {
     /** 캐시를 모두 비워 다음에 DB 에서 다시 읽게 한다(트랜잭션을 되돌렸을 때, 테스트) */
     internal fun clearCaches() {
         cached = null; cachedHistory = null; cachedFinishes = null; cachedRoundStarts = null; cachedReviews = null; cachedRoundBegans = null
+        cachedRoundDrops = null
     }
 
     /** 읽고 있는 책을 목록에서 내보낸다(나간 책으로 남긴다). 표지는 남긴다. 나간 책에 넣기와 빼기를 한 번에(끊기면 같은 책이 양쪽에 남는다). */
@@ -628,6 +638,54 @@ object BookShelf {
         return true
     }
 
+    /** 지운 회차 하나: [after] 다음 날(null 이면 처음)부터 [until] 까지 읽은 시간은 그 책의 기록에 넣지 않는다([BookRecord.all]) */
+    class Drop(val after: LocalDate?, val until: LocalDate) {
+        fun covers(day: LocalDate) = (after == null || day > after) && day <= until
+    }
+
+    @Volatile private var cachedRoundDrops: Map<String, List<Drop>>? = null
+
+    /** 책(id)마다 지운 회차([forgetRound]) */
+    fun roundDrops(context: Context): Map<String, List<Drop>> = cachedRoundDrops ?: loadRoundDrops(context)
+
+    @Synchronized private fun loadRoundDrops(context: Context): Map<String, List<Drop>> {
+        cachedRoundDrops?.let { return it }
+        return Db.get(context).rows("SELECT book_id, after_day, until_day FROM round_drop ORDER BY id") { c ->
+            c.getString(0) to Drop(if (c.isNull(1)) null else LocalDate.ofEpochDay(c.getLong(1)), LocalDate.ofEpochDay(c.getLong(2)))
+        }.groupBy({ it.first }, { it.second }).also { cachedRoundDrops = it }
+    }
+
+    /**
+     * 회차가 둘 이상인 책 [id] 에서 회차 하나만 지운다(전체 기록의 휴지통). 완독한 회차면 그 완독 줄([finishId])을, 진행 중 회차(null)면 그 회차의
+     * 별점·감상·`다시 읽기`한 날·고친 읽기 시작한 날을 지우고(읽고 있는 책이면 읽고 있는 책에서도 뺀다: 읽고 있는 책에는 진행 중 회차가 늘 있다),
+     * 그 회차에 읽은 시간([drop], [BookRecord.dropOf])은 그 책의 기록에서 뺀다(하루 합계·연속일에는 그대로. 남은 회차가 그 시간을 가져가 늘어나지 않게).
+     * 읽고 있는 책도 나간 책(지운 책은 빼고)도 아니거나 그 완독 줄이 이 책의 것이 아니면(그사이 지워짐) false. 한 트랜잭션으로.
+     */
+    @Synchronized fun forgetRound(context: Context, id: String, finishId: Long?, drop: Drop): Boolean {
+        val reading = list(context).any { it.id == id }
+        if (!reading && history(context).none { it.book.id == id && !it.hidden }) return false
+        // 넣기 전에 읽어 둔다(캐시가 비어 있으면 넣은 뒤 DB 에서 읽은 목록에 같은 줄을 한 번 더 붙이게 된다)
+        val finishes = finishList(context)
+        val drops = roundDrops(context)
+        if (finishId != null && finishes[id].orEmpty().none { it.id == finishId }) return false
+        atomic(context) {
+            Db.get(context).tx {
+                if (finishId != null) delete("finish", "id = ? AND book_id = ?", arrayOf(finishId.toString(), id))
+                else deleteOpenRound(id)
+                insertOrThrow("round_drop", null, Db.values("book_id" to id, "after_day" to drop.after?.toEpochDay(), "until_day" to drop.until.toEpochDay()))
+            }
+            if (finishId != null) {
+                val left = finishes[id].orEmpty().filter { it.id != finishId }
+                cachedFinishes = if (left.isEmpty()) finishes - id else finishes + (id to left)
+            } else {
+                forgetOpenRoundCache(context, id)
+                if (reading) leave(context, id)
+            }
+            cachedRoundDrops = drops + (id to drops[id].orEmpty() + drop)
+        }
+        return true
+    }
+
     /**
      * 목록에 없던 책(읽은 시간에만 있는 제목, id 가 없다)을 고치는 순간의 그 책: 그사이 같은 제목의 책이 생겼으면(자동 추가 등) 그 책
      * (읽고 있는 책 목록 앞쪽 → 지우지 않은 나간 책 중 가장 최근), 없으면 나간 책으로 적어 둔다([keep]. 별점·감상·완독·책 정보를 그 책에 남기게).
@@ -661,7 +719,7 @@ object BookShelf {
     /** `책 추가` 로 직접 넣은 책의 id 머리([manual]) */
     const val MANUAL_PREFIX = "m-"
     /** 책 id(`book_id`)가 든 표: 책 id 를 바꾸면 모두 함께 바꾼다([migrateIds]) */
-    private val BOOK_ID_TABLES = listOf("finish", "review", "round_start", "round_began", "reading_day", "book_open", "book_file")
+    private val BOOK_ID_TABLES = listOf("finish", "review", "round_start", "round_began", "round_drop", "reading_day", "book_open", "book_file")
     private fun newId() = ID_PREFIX + UUID.randomUUID()
 
     private fun readIndex(context: Context): List<ShelfBook> =
@@ -1066,7 +1124,7 @@ object BookShelf {
         prefetchFileCover(context, id)
     }
 
-    /** 책 빼기: 읽고 있는 책에서 빼서 나간 책으로 남긴다. [review] 가 있으면(빼기 메뉴에서 고친 별점·감상) 진행 중 회차의 것으로 같이 저장한다. */
+    /** 홈에서 빼기: 읽고 있는 책에서 빼서 나간 책으로 남긴다. [review] 가 있으면(빼기 메뉴에서 고친 별점·감상) 진행 중 회차의 것으로 같이 저장한다. */
     @Synchronized fun remove(context: Context, id: String, review: Review? = null) = atomic(context) {
         // 읽고 있는 책일 때만(그사이 다른 화면에서 완독·빼기를 했으면 감상을 지금 회차에 적지 않는다)
         if (list(context).none { it.id == id }) return@atomic
@@ -1146,8 +1204,8 @@ object BookShelf {
             moved.filter { m -> books.none { it.id == m.id } }.forEach { coverFile(context, it.id).delete() }
             return books
         }
-        // 완독·감상·회차 시작·읽은 시간의 메모리 사본은 옛 id 로 읽었을 수 있다
-        cachedFinishes = null; cachedReviews = null; cachedRoundStarts = null; cachedRoundBegans = null
+        // 완독·감상·회차 시작·지운 회차·읽은 시간의 메모리 사본은 옛 id 로 읽었을 수 있다
+        cachedFinishes = null; cachedReviews = null; cachedRoundStarts = null; cachedRoundBegans = null; cachedRoundDrops = null
         ReadingLog.clearCache()
         // 목록에 없는 표지·줄인 표지(예전 id 의 것, 앞서 실패한 복사본)를 지운다. 나간 책의 표지는 남긴다.
         val keep = moved.map { it.id } + history(context).map { it.book.id }

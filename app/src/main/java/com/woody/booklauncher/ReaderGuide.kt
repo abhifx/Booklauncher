@@ -37,6 +37,7 @@ import com.woody.booklauncher.readers.ReaderApp
 import com.woody.booklauncher.readers.Readest
 import com.woody.booklauncher.readers.Ridi
 import com.woody.booklauncher.readers.RidiOneStore
+import com.woody.booklauncher.readers.Wattpad
 import com.woody.booklauncher.readers.Woojoo
 import com.woody.booklauncher.readers.Yes24Ebook
 import com.woody.booklauncher.readers.Yes24Library
@@ -223,6 +224,11 @@ internal object ReaderGuide {
         App(listOf(R.string.guide_acoustext), listOf(Acoustext), Info(
             emptyList(),
             cover = YES, title = YES, author = NO, progress = YES, due = NO,
+        )),
+        App(listOf(R.string.guide_wattpad), listOf(Wattpad), Info(
+            listOf(R.string.guide_t_wattpad_open),
+            cover = YES, title = YES, author = yes(R.string.guide_n_wattpad_author),
+            progress = yes(R.string.guide_n_wattpad_chapter), due = NO, note = R.string.guide_note_wattpad,
         )),
     )
 }

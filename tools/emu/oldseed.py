@@ -166,7 +166,7 @@ def expect(name, got, want):
 def check(kind, path):
     db = sqlite3.connect(path)
     q = lambda s, *a: db.execute(s, a).fetchall()
-    expect("버전", q("PRAGMA user_version")[0][0], 6)
+    expect("버전", q("PRAGMA user_version")[0][0], 7)
     cols = lambda t: [r[1] for r in q(f"PRAGMA table_info({t})")]
     # 버전 5: 읽고 있는 책의 읽는 화(옛 판에서 온 책은 모두 빈 값)
     # 칸이 없으면(올리기가 안 된 DB) 대조가 멈추지 않고 어긋남으로 적히게 센다
@@ -182,6 +182,11 @@ def check(kind, path):
     expect("고친 시작일 표 round_began(빈 채)", (rb, q("SELECT count(*) FROM round_began")[0][0] if rb else None), (["book_id", "day"], 0))
     expect("round_start 칸", cols("round_start"), ["book_id", "day"])
     expect("책 파일 표 book_file(빈 채)", (cols("book_file"), q("SELECT count(*) FROM book_file")[0][0]), (["book_id", "path"], 0))
+    # 버전 7: 카테고리·책에 붙인 카테고리·지운 회차(옛 판에서 온 DB 에는 모두 없다)
+    empty = lambda t: (cols(t), q(f"SELECT count(*) FROM {t}")[0][0] if cols(t) else None)
+    expect("카테고리 표 category(빈 채)", empty("category"), (["id", "uid", "name", "pos", "excluded"], 0))
+    expect("책 카테고리 표 book_category(빈 채)", empty("book_category"), (["book_id", "category_id"], 0))
+    expect("지운 회차 표 round_drop(빈 채)", empty("round_drop"), (["id", "book_id", "after_day", "until_day"], 0))
     if kind == "json":
         shelf = q("SELECT pos, id, title, author, app, progress, due, seen_title FROM shelf ORDER BY pos")
         expect("읽고 있는 책 수", len(shelf), 3)

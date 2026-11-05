@@ -139,9 +139,9 @@ fun Context.reviewHint(halves: Int): String =
     if (halves == 0) getString(R.string.review_stars_hint) else getString(R.string.review_stars_set, starsLabel(halves))
 
 /**
- * 별점·감상 메뉴(완독·책 빼기·상세의 별점 칸·전체 기록의 회차 줄이 같이 쓴다). 머리(표지·제목·[sub]) 아래 별 다섯, 여러 줄 감상,
+ * 별점·감상 메뉴(완독·홈에서 빼기·상세의 별점 칸·전체 기록의 회차 줄이 같이 쓴다). 머리(표지·제목·[sub]) 아래 별 다섯, 여러 줄 감상,
  * 맨 아래 `취소` / [action](굵게). 그 회차에 남긴 것([initial])을 채워 띄운다. [top] 이 있으면 머리 아래에 둔다. [action] 을 누르면 고른 것을 [onDone] 에(비어 있어도.
- * 별점 없이 완독·책 빼기만 해도 된다). 어떻게든 닫히면 [onDismiss](저장한 뒤에 온다).
+ * 별점 없이 완독·홈에서 빼기만 해도 된다). 어떻게든 닫히면 [onDismiss](저장한 뒤에 온다).
  */
 fun Context.reviewSheet(
     book: ShelfBook, sub: CharSequence?, action: String, initial: Review?, onDismiss: (() -> Unit)? = null, top: View? = null,

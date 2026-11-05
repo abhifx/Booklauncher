@@ -389,6 +389,11 @@ class SettingsActivity : EinkActivity() {
                 choose(getString(R.string.week_starts), dayNames, first) { prefs.firstDayOfWeek = days[it]; renderReading() }
             }
         }
+        // 카테고리: 책에 붙여 독서 기록·올해 읽은 책·결산을 거르고, 통계에서 뺄 카테고리를 정한다
+        val categories = Categories.list(this).size
+        row(getString(R.string.categories_title), if (categories == 0) null else getString(R.string.category_count, categories), next = true) {
+            startActivity(CategoriesActivity.intent(this))
+        }
         row(getString(R.string.reading_stats), null, next = true, last = true) { startActivity(ReadingActivity.intent(this)) }
     }
 
