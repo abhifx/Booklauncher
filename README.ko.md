@@ -1,4 +1,4 @@
-# Pebble Desk
+# Pebble Desk — 안드로이드 이북리더기 런처
 
 **이북리더기를 위한 전자잉크 런처.** 교보도서관·밀리의서재·킨들 같은 이북 앱에서 편 책이 홈 화면에 들어오고, 책마다 읽은 시간이 남는다. → [pebbledesk.github.io](https://pebbledesk.github.io/)
 
