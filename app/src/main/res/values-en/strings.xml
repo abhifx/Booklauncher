@@ -293,6 +293,7 @@
     <string name="auto_stalled_title">Auto-add has stopped</string>
     <string name="auto_stalled_desc">Accessibility may still show Pebble Desk as On (or \"Not working\"), but it has stopped running. Books you open won\'t be added, and reading time won\'t be tied to a book.</string>
     <string name="auto_stalled_fix">Turn Pebble Desk Off, then On again in Accessibility to restart it.</string>
+    <string name="auto_stalled_never">Turn Pebble Desk Off, then On again in Accessibility. If this message comes back, auto-add doesn\'t work on this device. Tap Don\'t show again and add your books yourself with Add a book.</string>
     <string name="auto_stalled_boox">This happens when BOOX freezes and unfreezes Pebble Desk. Turn off freezing for Pebble Desk in BOOX Settings › Apps and Notifications › Freeze Settings, then turn Pebble Desk Off and On again in Accessibility.</string>
     <string name="auto_off_desc">Books you open in e-book apps won\'t be added, and reading time won\'t know which book it was. Turn on Pebble Desk in Accessibility.</string>
     <string name="dont_show_again">Don\'t show again</string>
