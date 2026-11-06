@@ -297,6 +297,7 @@
     <string name="auto_stalled_title">읽는 책 자동 추가가 멈춰 있습니다</string>
     <string name="auto_stalled_desc">접근성 화면에 Pebble Desk 가 켜짐(또는 \'작동하지 않음\')으로 보여도 지금은 동작하지 않습니다. 이대로 읽으면 편 책이 읽고 있는 책에 들어오지 않고, 읽은 시간도 어느 책인지 모른 채 남습니다.</string>
     <string name="auto_stalled_fix">접근성에서 Pebble Desk 스위치를 껐다가 다시 켜야 다시 동작합니다.</string>
+    <string name="auto_stalled_never">접근성에서 Pebble Desk 스위치를 껐다가 다시 켜 보세요. 그래도 이 창이 다시 뜨면 이 기기에서는 자동 추가가 동작하지 않습니다. 다시 보지 않기를 누르고, 읽는 책은 책 추가로 직접 넣어 주세요.</string>
     <string name="auto_stalled_boox">BOOX 가 Pebble Desk 를 얼렸다가 풀면 이렇게 멈춥니다. BOOX 설정 › 앱 및 알림 › 설정 잠금에서 Pebble Desk 의 얼리기(freeze)를 끄고, 접근성에서 Pebble Desk 스위치를 껐다가 다시 켜 주세요.</string>
     <string name="auto_off_desc">이대로 읽으면 이북 앱에서 편 책이 읽고 있는 책에 들어오지 않고, 읽은 시간도 어느 책인지 모른 채 남습니다. 접근성에서 Pebble Desk 를 켜 주세요.</string>
     <string name="dont_show_again">다시 보지 않기</string>
