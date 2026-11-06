@@ -1,4 +1,4 @@
-# Pebble Desk
+# Pebble Desk — E Ink launcher for Android
 
 **An E Ink launcher for Android e-readers.** Books you open in Kindle, Libby, KOReader and other reading apps appear on your home screen, and reading time is kept for every book. → [pebbledesk.github.io](https://pebbledesk.github.io/en/)
 

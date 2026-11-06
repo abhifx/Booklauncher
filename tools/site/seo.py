@@ -62,7 +62,7 @@ PAGES = {
     },
     "en": {
         "file": "site/en/index.html", "url": BASE + "en/", "locale": "en_US", "img": "en-",
-        "title": "Pebble Desk — A launcher for Android E Ink readers",
+        "title": "Pebble Desk — E Ink launcher for Android e-readers",
         "desc": "A free, text-first launcher for Android E Ink readers like BOOX, Meebook, iReader, Crema and Bigme. "
                 "Books you open in Kindle, Libby, KOReader and more appear on your home screen, and reading time is kept for every book.",
         "faq_title": "Questions", "cta": "Download APK",
