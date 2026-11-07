@@ -105,6 +105,15 @@ class HomePrefs(context: Context) {
         set(v) = sp.edit().putStringSet("file_notice_skip", v).apply()
 
     /**
+     * 자동 추가 '꺼져 있습니다'·'멈춰 있습니다' 창에서 `다시 보지 않기` 를 눌렀을 때, 그 창을 띄운 때 서비스가 마지막으로 붙은 때([ReaderWatchService.lifeLog] 의 연결 때,
+     * 붙은 적이 없으면 0). 지금 연결 때가 이 값과 같으면(그 뒤로 한 번도 붙지 않았으면) 창을 띄우지 않는다. 서비스가 다시 붙으면 연결 때가 바뀌어
+     * 그 뒤에 꺼지거나 멈추면 다시 알린다. 누른 적이 없으면 -1(연결 때가 될 수 없는 값)
+     */
+    var autoNoticeSkip: Long
+        get() = sp.getLong("auto_notice_skip", -1)
+        set(v) = sp.edit().putLong("auto_notice_skip", v).apply()
+
+    /**
      * 같은 책인지 물을 짝([TitlePair.key]): 서재의 제목과 읽는 화면의 제목이 달라 이북 앱 파일이 적는다. 홈으로 돌아오면 하나씩 묻고([HomeActivity.askSameBook])
      * 답하면 [sameBooks]·[otherBooks] 로 옮긴다. 답하지 않고 닫으면 남아 다음에 다시 묻는다
      */

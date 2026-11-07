@@ -166,7 +166,7 @@ def expect(name, got, want):
 def check(kind, path):
     db = sqlite3.connect(path)
     q = lambda s, *a: db.execute(s, a).fetchall()
-    expect("버전", q("PRAGMA user_version")[0][0], 7)
+    expect("버전", q("PRAGMA user_version")[0][0], 8)
     cols = lambda t: [r[1] for r in q(f"PRAGMA table_info({t})")]
     # 버전 5: 읽고 있는 책의 읽는 화(옛 판에서 온 책은 모두 빈 값)
     # 칸이 없으면(올리기가 안 된 DB) 대조가 멈추지 않고 어긋남으로 적히게 센다
@@ -187,6 +187,9 @@ def check(kind, path):
     expect("카테고리 표 category(빈 채)", empty("category"), (["id", "uid", "name", "pos", "excluded"], 0))
     expect("책 카테고리 표 book_category(빈 채)", empty("book_category"), (["book_id", "category_id"], 0))
     expect("지운 회차 표 round_drop(빈 채)", empty("round_drop"), (["id", "book_id", "after_day", "until_day"], 0))
+    # 버전 8: 읽은 시간까지 지운 책(옛 판에서 온 나간 책·지운 책은 모두 0)
+    dropped = q("SELECT count(*) FROM past WHERE time_dropped != 0")[0][0] if "time_dropped" in cols("past") else None
+    expect("읽은 시간까지 지운 책 past.time_dropped(모두 0)", (cols("past")[-1:], dropped), (["time_dropped"], 0))
     if kind == "json":
         shelf = q("SELECT pos, id, title, author, app, progress, due, seen_title FROM shelf ORDER BY pos")
         expect("읽고 있는 책 수", len(shelf), 3)

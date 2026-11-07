@@ -93,11 +93,12 @@ class ReadingActivity : EinkActivity() {
         val today = LocalDate.now()
         // 보기 거르기(고른 카테고리의 책만, `전체`면 통계에서 뺀 카테고리의 책만 빼고). 화면 전체(연속일·링·달력·합계·이번 주 읽은 책)가 거른 기록으로 센다.
         val filter = StatsFilter.of(this, prefs.statsPicked(HomePrefs.StatsScreen.READING))
-        val days = raw?.let(filter::days)
         // 지난날이 저장되거나 기록을 고치면 DB 순번이 바뀐다(세기가 날이 바뀐 지난날을 저장하므로 DB 순번은 센 뒤에 본다)
         val state = listOf(raw?.get(today), today, Db.changes(), prefs.readingGoalMin, prefs.firstDayOfWeek, both, raw == null, filter.picked)
         if (state == shown) return
         shown = state
+        // 거르기는 다시 그릴 때만(모든 날을 거른 사본을 만든다)
+        val days = raw?.let(filter::days)
         showFilter(filter, raw, today)
         body.removeAllViews()
         hasCalendar = days != null
@@ -487,10 +488,14 @@ class ReadingActivity : EinkActivity() {
     private fun byBook(days: ReadingDays, today: LocalDate, page: TextView, fill: Boolean = false): View {
         bookRows = null
         val week = days.filterKeys { it in startOfWeek(today)..today }.values
-        val known = BookShelf.list(this).associateBy { it.id } + BookShelf.history(this).associate { it.book.id to it.book }
+        val past = BookShelf.history(this)
+        val known = BookShelf.list(this).associateBy { it.id } + past.associate { it.book.id to it.book }
+        // 기록에서 지운 책은 올해 읽은 책·결산처럼 보이지 않는다(그 시간은 합계에만)
+        val gone = past.filter { it.hidden }.map { it.book.id }.toSet()
         val perBook = linkedMapOf<String, Pair<String, Long>>()
         week.forEach { keys ->
             keys.forEach { (k, ms) ->
+                if (k.book in gone) return@forEach
                 val book = known[k.book]
                 if (book == null && k.title.isEmpty()) return@forEach
                 val id = book?.id ?: BookRecord.titleOnlyId(k.title)

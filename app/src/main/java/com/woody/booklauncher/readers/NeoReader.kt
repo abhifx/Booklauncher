@@ -90,7 +90,7 @@ object NeoReader : ReaderApp(
     /** 저장한 때가 늦은 것부터 [limit]줄. 창구가 없거나 읽지 못하면 null */
     private fun query(context: Context, where: String, args: List<String>, limit: Int = Int.MAX_VALUE): List<Meta>? = runCatching {
         context.contentResolver.query(METADATA, META_COLUMNS, where, args.toTypedArray(), "updatedAt DESC")?.use { c ->
-            buildList { while (size < limit && c.moveToNext()) meta(c)?.let(::add) }
+            ArrayList<Meta>().apply { while (size < limit && c.moveToNext()) meta(c)?.let(::add) }
         }
     }.getOrNull()
 

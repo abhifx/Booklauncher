@@ -27,7 +27,7 @@ class DbMigrationTest {
         rows("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name != 'android_metadata' ORDER BY name") { it.getString(0) }
             .associateWith { columns(it) }
 
-    @Test fun `v1~v6 에서 올린 표가 새로 설치한 표와 같다(Libby 읽는 화면 viewer_mark, 네오리더 책 파일 book_file, 읽는 화 chapter, 고친 시작일 began, 카테고리·지운 회차 round_drop 포함)`() {
+    @Test fun `v1~v7 에서 올린 표가 새로 설치한 표와 같다(Libby 읽는 화면 viewer_mark, 네오리더 책 파일 book_file, 읽는 화 chapter, 고친 시작일 began, 카테고리·지운 회차 round_drop, 읽은 시간까지 지운 책 time_dropped 포함)`() {
         val fresh = SQLiteDatabase.create(null).apply { Db.create(this) }.schema()
         assertEquals(listOf("at", "pkg", "shown"), fresh["viewer_mark"])
         assertEquals("chapter", fresh["shelf"]?.last())
@@ -37,11 +37,24 @@ class DbMigrationTest {
         assertEquals(fresh, SQLiteDatabase.create(null).apply { OldSchemas.v4(this); Db.upgrade(this, 4) }.schema())
         assertEquals(fresh, SQLiteDatabase.create(null).apply { OldSchemas.v5(this); Db.upgrade(this, 5) }.schema())
         assertEquals(fresh, SQLiteDatabase.create(null).apply { OldSchemas.v6(this); Db.upgrade(this, 6) }.schema())
+        assertEquals(fresh, SQLiteDatabase.create(null).apply { OldSchemas.v7(this); Db.upgrade(this, 7) }.schema())
+        assertEquals("time_dropped", fresh["past"]?.last())
         assertEquals(listOf("id", "uid", "name", "pos", "excluded"), fresh["category"])
         assertEquals(listOf("book_id", "category_id"), fresh["book_category"])
         assertEquals(listOf("id", "book_id", "after_day", "until_day"), fresh["round_drop"])
         assertEquals("began", fresh["finish"]?.last())
         assertEquals(listOf("book_id", "day"), fresh["round_began"])
+    }
+
+    @Test fun `v7 에서 올리면 나간 책·지운 책은 그대로이고 읽은 시간은 지우지 않은 것으로`() {
+        val db = SQLiteDatabase.create(null).apply {
+            OldSchemas.v7(this)
+            execSQL("INSERT INTO past VALUES (0, 'b-1', '데미안', '', '', 0, -1, '', 100, 1), (1, 'b-2', '수레바퀴 아래서', '', '', 0, -1, '', 200, 0)")
+            Db.upgrade(this, 7)
+        }
+        assertEquals(listOf("b-1|1|0", "b-2|0|0"), db.rows("SELECT id, hidden, time_dropped FROM past ORDER BY pos") {
+            "${it.getString(0)}|${it.getInt(1)}|${it.getInt(2)}"
+        })
     }
 
     @Test fun `v5 에서 올리면 완독은 그대로이고 고친 시작일은 비어 있다`() {

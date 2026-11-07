@@ -78,15 +78,25 @@ private fun Context.detailSheet(r: BookRecord, sub: String?, lines: Int, onHome:
         onChange()
     })
     sheet.item(getString(R.string.edit_book), action = current { showEditMenu(r, onChange) })
-    sheet.item(getString(R.string.forget_book), action = current {
-        confirm(getString(R.string.forget_confirm), book.title, getString(R.string.forget_book)) {
-            val forgotten = withBook(r) { BookShelf.forget(this, it) }
-            onChange()
-            // 그사이 읽고 있는 책이 됐으면(이북 앱에서 다시 폄) 지우지 않고 지금 상태로 다시 띄운다
-            if (!forgotten && alive()) reopen()
-        }
-    })
+    sheet.item(getString(R.string.forget_book), action = current { askForget(r, book.title, onChange, reopen) })
     return sheet
+}
+
+/**
+ * `기록에서 지우기` 확인: `읽은 책 목록에서 지울까요?` / 책, 그 책을 1분 이상 읽었으면 체크 줄 `읽은 시간 20분도 지우기`(기본 켜짐, 아래 작게
+ * `연속일·목표 달성이 바뀝니다 · 되돌릴 수 없습니다`), `기록에서 지우기`(굵게) / `취소`. 시간은 그 책의 기록 칸과 같은 시간(지운 회차 빼고).
+ */
+private fun Context.askForget(r: BookRecord, title: String, onChange: () -> Unit, reopen: () -> Unit) {
+    val ms = r.dayMs.values.sum()
+    var dropTime = ms >= 60_000
+    val sheet = Sheet(this).header(getString(R.string.forget_confirm), title)
+    if (dropTime) sheet.check(getString(R.string.forget_time, duration(ms)), sub = getString(R.string.forget_time_sub), on = { dropTime }) { dropTime = !dropTime }
+    sheet.item(getString(R.string.forget_book), bold = true) {
+        val forgotten = withBook(r) { BookShelf.forget(this, it, dropTime) }
+        onChange()
+        // 그사이 읽고 있는 책이 됐으면(이북 앱에서 다시 폄) 지우지 않고 지금 상태로 다시 띄운다
+        if (!forgotten && alive()) reopen()
+    }.item(getString(R.string.cancel)) {}.noClose().show()
 }
 
 /**

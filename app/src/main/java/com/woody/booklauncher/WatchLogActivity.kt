@@ -120,7 +120,7 @@ class WatchLogActivity : EinkActivity() {
         val now = System.currentTimeMillis()
         val start = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
         val events = getSystemService(UsageStatsManager::class.java)?.queryEvents(start, now)
-        val out = ArrayDeque<Pair<String?, String>>()
+        val out = java.util.ArrayDeque<Pair<String?, String>>()
         val e = UsageEvents.Event()
         while (events?.hasNextEvent() == true) {
             events.getNextEvent(e)

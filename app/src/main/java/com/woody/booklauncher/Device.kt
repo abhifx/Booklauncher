@@ -115,6 +115,17 @@ object Device {
     }
 
     /**
+     * BOOX SystemUI 의 E-Ink 센터(앱 최적화)를 [screen] 화면(이 앱의 화면)으로 열어 달라고 한다. 사용자가 `기타` 탭의
+     * `백그라운드에서 활성화 상태` 를 `무제한` 으로 바꾸게 하려고 연다: 처음 값(5분)이면 BOOX 가 다른 앱으로 넘어가고 그 시간이
+     * 지난 앱을 강제 종료하고(얼리기 대상이 아니어도), 그러면 안드로이드가 접근성 켜짐을 지운다(docs/DEVICES.md › 백그라운드 강제 종료).
+     * 받는 곳은 SystemUI `EACActionReceiver`(권한 없이 등록, Go6 4.2 펌웨어로 확인. 실기기 **(미확인)**).
+     */
+    fun openBooxOptimization(context: Context, screen: ComponentName) {
+        context.sendBroadcast(Intent("com.onyx.SHOW_EAC_SETTINGS_VIEW_REQUEST").setPackage("com.android.systemui")
+            .putExtra("args_component", screen.flattenToString()))
+    }
+
+    /**
      * BOOX 런처를 띄워 둔다. 얼린 앱 열기 방송은 런처가 떠 있을 때만 받는데(실행 중에 등록하는 받는 곳),
      * 런처는 부팅 때 스스로 뜨지 않아 BookLauncher 가 기본 홈이면 꺼져 있을 수 있다.
      * 런처의 공개 데이터 창구에 연결만 해 두면(읽고 쓰지 않음) 안드로이드가 런처 프로세스를 띄우고 이 앱만큼 살려 둔다.

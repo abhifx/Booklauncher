@@ -226,7 +226,7 @@ class HomeActivity : EinkActivity() {
     /**
      * 읽는 책 자동 추가(접근성)가 꺼져 있으면 홈에 돌아올 때마다 화면 가운데에 알린다: 편 책이 읽고 있는 책에 들어오지 않고 읽은 시간도
      * 어느 책인지 모르게 된다(업데이트·시스템이 저절로 끄기도 한다). 켜져 있는데 서비스가 붙지 않은 채면 조금 기다렸다 '멈춰 있습니다'([warnStalled]).
-     * 켜져 붙어 있으면 뜨지 않는다(떠 있던 창도 닫는다).
+     * 켜져 붙어 있으면 뜨지 않는다(떠 있던 창도 닫는다). 두 창의 `다시 보지 않기` 를 누른 뒤로 서비스가 한 번도 붙지 않았으면 뜨지 않는다([autoNoticeSkipped]).
      */
     private fun warnAutoOff() {
         handler.removeCallbacks(stalledLater)
@@ -235,17 +235,22 @@ class HomeActivity : EinkActivity() {
         val shown = autoOffDialog?.takeIf { it.isShowing }
         // 켜져 붙어 있으면 그사이 켠 것이다: 떠 있던 안내는 닫는다
         if (on && ReaderWatchService.bound) { shown?.dismiss(); return }
+        if (autoNoticeSkipped()) { shown?.dismiss(); return }
         // 떠 있는 창이 지금 상태와 다르면(꺼짐 창이 떠 있는데 켰으나 멈춰 있음 등) 닫고 맞는 창을
         if (shown != null) { if (autoOffStalled == on) return; shown.dismiss() }
         // 켜져 있는데 아직 안 붙었다: 앱이 막 떠 붙는 중일 수 있어 조금 기다렸다 본다([warnStalled])
         if (on) { handler.postDelayed(stalledLater, STALLED_WAIT_MS); return }
         val restricted = ReaderWatchService.mayBeRestricted
+        // BOOX 는 다른 앱으로 넘어가고 5분이 지나면 이 앱을 강제 종료해 접근성이 꺼진다: 다시 켜기 전에 백그라운드 `무제한` 을(줄여도 남긴다)
+        val boox = Device.hasBooxLauncher(this)
         fun sheet(hints: Boolean): Sheet {
-            val desc = listOfNotNull(R.string.auto_off_desc, R.string.allow_hint.takeIf { hints }, R.string.restricted_hint.takeIf { hints && restricted })
-                .joinToString("\n\n") { getString(it) }
-            val sheet = autoNotice(R.string.auto_off_title, desc)
+            val desc = listOfNotNull(
+                R.string.auto_off_desc, R.string.boox_background_hint.takeIf { boox },
+                R.string.allow_hint.takeIf { hints }, R.string.restricted_hint.takeIf { hints && restricted },
+            ).joinToString("\n\n") { getString(it) }
+            val sheet = autoNotice(R.string.auto_off_title, desc, einkCenter = boox)
             if (restricted) sheet.item(getString(R.string.open_app_info)) { ReaderWatchService.openAppInfo(this) }
-            return sheet
+            return sheet.skipItem()
         }
         // 글자를 키워 화면을 넘으면 켜는 법 안내(허용·제한된 설정)를 빼고 첫 설명과 버튼만(설정 › 독서의 같은 안내에 다 있다)
         val full = sheet(hints = true)
@@ -253,10 +258,28 @@ class HomeActivity : EinkActivity() {
         autoOffStalled = false
     }
 
-    /** 자동 추가 안내 창(화면 가운데, 기록이 바뀌어도 닫지 않는다)과 `접근성 설정 열기`. [freeze] 면 그 위에 `얼리기 설정 열기` */
-    private fun autoNotice(title: Int, desc: String, freeze: Boolean = false): Sheet =
+    /**
+     * 자동 추가 창에서 `다시 보지 않기` 를 누른 뒤로 서비스가 한 번도 붙지 않았다([HomePrefs.autoNoticeSkip]): 이미 본 상태라 다시 알리지 않는다.
+     * 한 번도 붙지 않는 기기(Viwoods AiPaper Mini)나 일부러 끈 사람은 이것으로 조용해지고, 잘 돌다 멈추는 기기(BOOX 얼리기·메모리 정리)는
+     * 멈추기 전에 붙어 연결 때가 바뀌므로 다시 알린다.
+     */
+    private fun autoNoticeSkipped(): Boolean = prefs.autoNoticeSkip == ReaderWatchService.lifeLog(this).first
+
+    /**
+     * 자동 추가 안내 창의 맨 아래 `다시 보지 않기`: 창을 만든 때의 연결 때 [at] 을 적는다([autoNoticeSkipped]). 누르는 때의 값을 적으면
+     * 창이 떠 있는 동안 서비스가 다시 붙었을 때 그 뒤의 멈춤까지 알리지 않게 된다.
+     */
+    private fun Sheet.skipItem(at: Long = ReaderWatchService.lifeLog(this@HomeActivity).first): Sheet =
+        item(getString(R.string.dont_show_again)) { prefs.autoNoticeSkip = at }
+
+    /**
+     * 자동 추가 안내 창(화면 가운데, 기록이 바뀌어도 닫지 않는다)과 `접근성 설정 열기`. [freeze] 면 그 위에 `얼리기 설정 열기`,
+     * [einkCenter] 면 그 위에 `E-Ink 센터 열기`(BOOX 백그라운드 `무제한`)
+     */
+    private fun autoNotice(title: Int, desc: String, freeze: Boolean = false, einkCenter: Boolean = false): Sheet =
         Sheet(this).header(getString(title), desc).centered().keepOnChange().apply {
             if (freeze) item(getString(R.string.boox_freeze_settings), bold = true) { Device.openBooxFreezeSettings(this@HomeActivity) }
+            if (einkCenter) item(getString(R.string.boox_eink_center), bold = true) { Device.openBooxOptimization(this@HomeActivity, componentName) }
         }.item(getString(R.string.open_accessibility), bold = true) { ReaderWatchService.openSettings(this) }
 
     /**
@@ -264,12 +287,16 @@ class HomeActivity : EinkActivity() {
      * 껐다 켜거나 앱을 업데이트해야 붙는다. 2026-10-16 에뮬레이터(안드로이드 11)에서 확인): 그동안은 편 책을 모르니 꺼짐과 같이 화면 가운데에 알린다.
      * BOOX 가 얼렸다 푼 뒤에도 이렇게 된다(2026-10-20 에뮬레이터에서 `pm disable-user`·`enable` 로 확인). 이 앱이 BOOX 얼리기
      * 대상이면([Device.booxAutoFreeze]) 얼리기에서 빼라는 말과 `얼리기 설정 열기` 를 더한다(빼지 않으면 다시 켜도 또 멈춘다).
+     * 한 번도 붙은 적이 없으면(Viwoods AiPaper Mini: 켜져 있는데 시스템이 붙이지 않는다) 껐다 켜도 안 되면 이 기기에서는 동작하지 않는다고,
+     * `다시 보지 않기` 를 누르고 책을 직접 넣으라고 한다.
      */
     private fun warnStalled() {
         autoOffDialog?.takeIf { it.isShowing }?.dismiss()
         val freeze = Device.booxAutoFreeze(this) == true
-        val desc = getString(R.string.auto_stalled_desc) + "\n\n" + getString(if (freeze) R.string.auto_stalled_boox else R.string.auto_stalled_fix)
-        autoOffDialog = autoNotice(R.string.auto_stalled_title, desc, freeze).show()
+        val connected = ReaderWatchService.lifeLog(this).first
+        val fix = when { freeze -> R.string.auto_stalled_boox; connected == 0L -> R.string.auto_stalled_never; else -> R.string.auto_stalled_fix }
+        val desc = getString(R.string.auto_stalled_desc) + "\n\n" + getString(fix)
+        autoOffDialog = autoNotice(R.string.auto_stalled_title, desc, freeze).skipItem(connected).show()
         autoOffStalled = true
     }
 
@@ -949,7 +976,7 @@ class HomeActivity : EinkActivity() {
         val on = ReaderWatchService.isEnabled(this)
         val sheet = Sheet(this).header(getString(R.string.add_guide_title), getString(if (on) R.string.add_guide_on else R.string.add_guide_off))
         if (!on) sheet.item(getString(R.string.add_guide_turn_on), bold = true) { ReaderWatchService.openSettings(this) }
-        sheet.item(getString(R.string.add_guide_manual)) { startActivity(BookSearchActivity.intent(this)) }.show()
+        sheet.item(getString(R.string.add_guide_manual)) { addBookSheet() }.show()
     }
 
     /** 표지 자리: 연한 회색으로 채우고 점선 테두리, 가운데에 + */

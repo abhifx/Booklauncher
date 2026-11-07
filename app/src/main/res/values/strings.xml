@@ -176,10 +176,13 @@
     <string name="device_recent_no_access">사용 기록 권한이 없어 볼 수 없습니다(설정 › 독서 › 오늘 읽은 시간)</string>
     <string name="on">켜짐</string>
     <string name="off">꺼짐</string>
-    <string name="book_search_title">책 추가</string>
+    <string name="add_book_title">책 추가</string>
+    <string name="add_book_desc">인터넷 없이 넣습니다. 표지는 넣은 뒤 책 정보 고치기 › 표지 다시 찾기에서 붙입니다.</string>
+    <string name="add_book_author_hint">저자 (비워도 됩니다)</string>
+    <string name="add_book_save">넣기</string>
     <string name="book_query_hint">책 제목</string>
     <string name="search">검색</string>
-    <string name="book_search_idle">제목을 입력하고 검색하세요. 표지를 고르면 읽고 있는 앱을 정합니다. 자동 추가가 되는 이북 앱은 책을 펴면 따로 들어옵니다.</string>
+    <string name="book_search_idle">제목을 입력하고 검색하세요. 표지를 고르면 이 책의 표지·제목·저자가 그것으로 바뀝니다.</string>
     <string name="searching">찾는 중…</string>
     <string name="book_results">%1$d권 찾았습니다. 표지를 고르세요.</string>
     <string name="book_none">찾지 못했습니다</string>
@@ -208,6 +211,8 @@
     <string name="finish_nth">%1$d회</string>
     <string name="edit_book">책 정보 고치기 ›</string>
     <string name="forget_confirm">읽은 책 목록에서 지울까요?</string>
+    <string name="forget_time">읽은 시간 %1$s도 지우기</string>
+    <string name="forget_time_sub">연속일·목표 달성이 바뀝니다 · 되돌릴 수 없습니다</string>
     <string name="forget_on_home">홈에서 먼저 빼 주세요</string>
     <string name="forget_on_home_note">홈에 있는 책은 기록에서 지울 수 없습니다.</string>
     <string name="forget_round_confirm">%1$s 기록을 지울까요?</string>
@@ -320,6 +325,7 @@
     <string name="auto_stalled_title">읽는 책 자동 추가가 멈춰 있습니다</string>
     <string name="auto_stalled_desc">접근성 화면에 BookLauncher 가 켜짐(또는 \'작동하지 않음\')으로 보여도 지금은 동작하지 않습니다. 이대로 읽으면 편 책이 읽고 있는 책에 들어오지 않고, 읽은 시간도 어느 책인지 모른 채 남습니다.</string>
     <string name="auto_stalled_fix">접근성에서 BookLauncher 스위치를 껐다가 다시 켜야 다시 동작합니다.</string>
+    <string name="auto_stalled_never">접근성에서 BookLauncher 스위치를 껐다가 다시 켜 보세요. 그래도 이 창이 다시 뜨면 이 기기에서는 자동 추가가 동작하지 않습니다. 다시 보지 않기를 누르고, 읽는 책은 책 추가로 직접 넣어 주세요.</string>
     <string name="auto_stalled_boox">BOOX 가 BookLauncher 를 얼렸다가 풀면 이렇게 멈춥니다. BOOX 설정 › 앱 및 알림 › 설정 잠금에서 BookLauncher 의 얼리기(freeze)를 끄고, 접근성에서 BookLauncher 스위치를 껐다가 다시 켜 주세요.</string>
     <string name="auto_off_desc">이대로 읽으면 이북 앱에서 편 책이 읽고 있는 책에 들어오지 않고, 읽은 시간도 어느 책인지 모른 채 남습니다. 접근성에서 BookLauncher 를 켜 주세요.</string>
     <string name="dont_show_again">다시 보지 않기</string>
@@ -543,6 +549,10 @@
     <string name="year_books_count">%1$d권</string>
     <string name="boox_frozen_help">BOOX 가 얼려 둔 앱이라 열지 못했어요. BOOX 얼리기(freeze) 설정에서 이 앱을 빼 주세요.</string>
     <string name="boox_freeze_settings">얼리기(freeze) 설정 열기</string>
+    <string name="onboarding_books_boox_background">백그라운드에서 활성화 상태를 무제한으로 바꿉니다. (E-Ink 센터(앱 최적화) 또는 BOOX 앱 목록에서 아이콘을 길게 눌러 최적화 › 기타 탭)</string>
+    <string name="onboarding_open_eink">E-Ink 센터  ›</string>
+    <string name="boox_background_hint">백그라운드에서 활성화 상태를 무제한으로 바꿔 주세요. (E-Ink 센터(앱 최적화) 또는 BOOX 앱 목록에서 아이콘을 길게 눌러 최적화 › 기타 탭) 그대로 두면 자동 추가가 꺼집니다.</string>
+    <string name="boox_eink_center">E-Ink 센터 열기</string>
     <!-- ⑮ 월간 결산 -->
     <string name="recap_title">%1$s 결산</string>
     <string name="recap_month_fmt">M월</string>

@@ -75,7 +75,7 @@ object IReader : ReaderApp(
         val process = process(screen)
         val ids = authorities.flatMap { authority ->
             context.contentResolver.query(Uri.parse("content://$authority"), null, null, null, null)?.use { cursor ->
-                buildList {
+                ArrayList<String>().apply {
                     val book = cursor.getColumnIndexOrThrow("k_bi")
                     val activity = cursor.getColumnIndexOrThrow("k_an")
                     val proc = cursor.getColumnIndexOrThrow("k_pn")
@@ -111,7 +111,7 @@ object IReader : ReaderApp(
 
     private fun recent(context: Context, columns: Array<String>): List<Row>? = runCatching {
         context.contentResolver.query(RECENT, columns, null, null, null)?.use { cursor ->
-            buildList {
+            ArrayList<Row>().apply {
                 fun text(column: String) = cursor.getString(cursor.getColumnIndexOrThrow(column)).orEmpty()
                 val percentColumn = cursor.getColumnIndex("readpercent")
                 while (cursor.moveToNext()) {
@@ -139,7 +139,7 @@ object IReader : ReaderApp(
      * [book] 이 책을 알아내지 못했을 때 기록 보기에 남길 단계별 진단(펌웨어 기록 Provider·최근 책 Provider 에서 얻은 것).
      * 실기기에서 어느 단계가 막히는지 사진으로 보려고 둔다. 기록 보기 한 줄에 들게 짧게, 제목은 있는지만. 화면 스레드에서 부르지 않는다.
      */
-    internal fun diagnose(context: Context, screen: String, since: Long): List<String> = buildList {
+    internal fun diagnose(context: Context, screen: String, since: Long): List<String> = ArrayList<String>().apply {
         fun tail(s: String?, n: Int = 16) = s.orEmpty().let { if (it.length > n) "…" + it.takeLast(n) else it.ifEmpty { "-" } }
         fun fail(e: Throwable) = e.javaClass.simpleName + (e.message?.let { " " + tail(it, 60) } ?: "")
         fun Cursor.text(column: String) = getColumnIndex(column).takeIf { it >= 0 }?.let { getString(it) } ?: "?"

@@ -18,9 +18,19 @@ object OldSchemas {
         db.execSQL("CREATE TABLE review (book_id TEXT PRIMARY KEY, stars INTEGER NOT NULL, text TEXT NOT NULL, updated_at INTEGER NOT NULL)")
     }
 
-    /** 버전 6: 지금 표에서 버전 7 의 `category`·`book_category`·`round_drop` 만 없다 */
-    fun v6(db: SQLiteDatabase) = with(db) {
+    /** 버전 7: 지금 표에서 버전 8 의 `past.time_dropped` 만 없다 */
+    fun v7(db: SQLiteDatabase) = with(db) {
         Db.create(this)
+        execSQL("DROP TABLE past")
+        execSQL(
+            "CREATE TABLE past (pos INTEGER NOT NULL, id TEXT PRIMARY KEY, title TEXT, author TEXT, app TEXT, " +
+                "updated_at INTEGER, progress INTEGER, seen_title TEXT, left_at INTEGER, hidden INTEGER)"
+        )
+    }
+
+    /** 버전 6: 버전 7 에서 `category`·`book_category`·`round_drop` 이 없다 */
+    fun v6(db: SQLiteDatabase) = with(db) {
+        v7(this)
         execSQL("DROP TABLE category")
         execSQL("DROP TABLE book_category")
         execSQL("DROP TABLE round_drop")

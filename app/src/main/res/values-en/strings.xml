@@ -172,10 +172,13 @@
     <string name="device_recent_no_access">Needs usage access (Settings › Reading › Today\'s reading time)</string>
     <string name="on">On</string>
     <string name="off">Off</string>
-    <string name="book_search_title">Add a book</string>
+    <string name="add_book_title">Add a book</string>
+    <string name="add_book_desc">No internet needed. Add a cover later from Edit book info › Find cover again.</string>
+    <string name="add_book_author_hint">Author (optional)</string>
+    <string name="add_book_save">Add</string>
     <string name="book_query_hint">Book title</string>
     <string name="search">Search</string>
-    <string name="book_search_idle">Type a title and search. After picking a cover, choose the app you read it in. Books in supported apps are added separately when you open them.</string>
+    <string name="book_search_idle">Type a title and search. Pick a cover to use it, with its title and author, for this book.</string>
     <string name="searching">Searching…</string>
     <string name="book_results">Found %1$d. Pick a cover.</string>
     <string name="book_none">Nothing found</string>
@@ -204,6 +207,8 @@
     <string name="finish_nth">#%1$d</string>
     <string name="edit_book">Edit book info ›</string>
     <string name="forget_confirm">Remove from your books read?</string>
+    <string name="forget_time">Also delete %1$s of reading time</string>
+    <string name="forget_time_sub">Streaks and goals may change · can\'t be undone</string>
     <string name="forget_on_home">Remove it from home first</string>
     <string name="forget_on_home_note">A book on your home can\'t be removed from the log.</string>
     <string name="forget_round_confirm">Remove read %1$s?</string>
@@ -316,6 +321,7 @@
     <string name="auto_stalled_title">Auto-add has stopped</string>
     <string name="auto_stalled_desc">Accessibility may still show BookLauncher as On (or \"Not working\"), but it has stopped running. Books you open won\'t be added, and reading time won\'t be tied to a book.</string>
     <string name="auto_stalled_fix">Turn BookLauncher Off, then On again in Accessibility to restart it.</string>
+    <string name="auto_stalled_never">Turn BookLauncher Off, then On again in Accessibility. If this message comes back, auto-add doesn\'t work on this device. Tap Don\'t show again and add your books yourself with Add a book.</string>
     <string name="auto_stalled_boox">This happens when BOOX freezes and unfreezes BookLauncher. Turn off freezing for BookLauncher in BOOX Settings › Apps and Notifications › Freeze Settings, then turn BookLauncher Off and On again in Accessibility.</string>
     <string name="auto_off_desc">Books you open in e-book apps won\'t be added, and reading time won\'t know which book it was. Turn on BookLauncher in Accessibility.</string>
     <string name="dont_show_again">Don\'t show again</string>
@@ -537,6 +543,10 @@
     <string name="year_books_count">%1$d</string>
     <string name="boox_frozen_help">BOOX froze this app, so it couldn\'t open. Remove it from BOOX app freeze settings.</string>
     <string name="boox_freeze_settings">Open freeze settings</string>
+    <string name="onboarding_books_boox_background">Set Stay active in the background to Unlimited. (EinkWise (app optimization), or long-press the icon in the BOOX app list › Optimize › Others tab)</string>
+    <string name="onboarding_open_eink">EinkWise  ›</string>
+    <string name="boox_background_hint">Set Stay active in the background to Unlimited. (EinkWise (app optimization), or long-press the icon in the BOOX app list › Optimize › Others tab) Otherwise auto-add turns off.</string>
+    <string name="boox_eink_center">Open EinkWise</string>
     <!-- ⑮ Monthly recap -->
     <string name="recap_title">%1$s recap</string>
     <string name="recap_month_fmt">MMMM</string>

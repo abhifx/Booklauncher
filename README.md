@@ -1,4 +1,4 @@
-# BookLauncher
+# BookLauncher — E Ink launcher for Android
 
 [![License: PolyForm Noncommercial 1.0.0](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-black.svg)](LICENSE)
 
@@ -34,7 +34,7 @@ All screenshots were taken on a HiBreak.
 
 ## Features
 
-- **Auto-add books** — open a book in a [supported app](#supported-apps) and it appears on Home with its cover. Books from unsupported apps can be added by hand with cover search.
+- **Auto-add books** — open a book in a [supported app](#supported-apps) and it appears on Home with its cover. Books from other apps can be added by hand with just a title and author (no internet needed), and a cover found later.
 - **Reading time for every book** — only the time the reading screen is actually up is counted. Usage access is needed once.
 - **Finish a book** — half-star rating and a short note. Read it again and every round keeps its own record.
 - **Books this year** — every book you read or finished, as a list or cover grid, for any year.

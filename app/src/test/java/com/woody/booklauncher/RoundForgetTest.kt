@@ -39,7 +39,7 @@ class RoundForgetTest {
     private fun noon(day: LocalDate) = day.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli() + 12 * 3_600_000L
 
     private fun past(id: String = "b-1", title: String = "데미안") =
-        db.execSQL("INSERT INTO past VALUES (0, '$id', '$title', '', NULL, 0, 0, '', ${noon(d("01-01"))}, 0)")
+        db.execSQL("INSERT INTO past (pos, id, title, author, app, updated_at, progress, seen_title, left_at, hidden) VALUES (0, '$id', '$title', '', NULL, 0, 0, '', ${noon(d("01-01"))}, 0)")
 
     private fun finish(id: Long, day: LocalDate, stars: Int? = null, book: String = "b-1") =
         db.execSQL("INSERT INTO finish (id, uid, book_id, day, at, stars, text) VALUES ($id, 'u$id', '$book', ${day.toEpochDay()}, ${noon(day)}, $stars, ${if (stars == null) "NULL" else "'감상'"})")
@@ -194,7 +194,7 @@ class RoundForgetTest {
     }
 
     @Test fun `지운 책·다른 책의 완독 줄은 지우지 않는다`() {
-        db.execSQL("INSERT INTO past VALUES (0, 'b-1', '데미안', '', NULL, 0, 0, '', 0, 1)")
+        db.execSQL("INSERT INTO past (pos, id, title, author, app, updated_at, progress, seen_title, left_at, hidden) VALUES (0, 'b-1', '데미안', '', NULL, 0, 0, '', 0, 1)")
         finish(1, d("03-10"))
         finish(2, d("04-10"), book = "b-2")
         BookShelf.clearCaches()

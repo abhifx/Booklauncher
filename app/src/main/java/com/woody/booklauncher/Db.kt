@@ -34,12 +34,14 @@ import java.time.LocalDate
  *   (없으면 줄이 없다, 책 하나에 하나). [Categories]. 버전 7에서 더했다.
  * - `round_drop`: 지운 회차(전체 기록의 회차 줄 휴지통, [BookShelf.forgetRound]). 그 책의 `after_day` 다음 날(null 이면 처음)부터
  *   `until_day` 까지 읽은 시간은 그 책의 기록·회차에 넣지 않는다(하루 합계·연속일에는 그대로). 버전 7에서 더했다.
+ * - `past.time_dropped`: `기록에서 지우기` 할 때 읽은 시간까지 지운 책(1, 아니면 0. [BookShelf.forget]). 그 책 id 의 `reading_day` 줄은 남겨 두고
+ *   셀 때 뺀다(하루 합계·연속일·목표 달성에서도, [ReadingLog.days]). 버전 8에서 더했다.
  * 처음 열 때 1.2.1 까지의 JSON 파일을 옮기고 `<이름>.migrated` 로 바꿔 둔다([importFiles]).
  * 낮은 버전으로 되돌리기(새 판 DB 위에 옛 판을 까는 것)는 지원하지 않는다. 안드로이드가 낮은 판 덮어 설치를 막고, 억지로 깔면 DB 를 열지 못한다.
  */
 object Db {
     private const val NAME = "pebble.db"
-    private const val VERSION = 7
+    private const val VERSION = 8
 
     @Volatile private var db: SQLiteDatabase? = null
 
@@ -94,6 +96,7 @@ object Db {
         addBegan(db)
         createCategory(db)
         createRoundDrop(db)
+        addTimeDropped(db)
     }
 
     /** [oldVersion] 의 DB 를 지금 버전으로(SQLiteOpenHelper 가 한 트랜잭션으로 돌린다. 마이그레이션 테스트도 쓴다) */
@@ -138,7 +141,12 @@ object Db {
         if (oldVersion < 7) createCategory(db)
         // 지운 회차
         if (oldVersion < 7) createRoundDrop(db)
+        // 읽은 시간까지 지운 책
+        if (oldVersion < 8) addTimeDropped(db)
     }
+
+    /** 버전 8: 나간 책에 읽은 시간까지 지웠는지 */
+    private fun addTimeDropped(db: SQLiteDatabase) = db.execSQL("ALTER TABLE past ADD COLUMN time_dropped INTEGER NOT NULL DEFAULT 0")
 
     /** 버전 7: 카테고리(이름·순서·통계에서 빼기)와 책마다 붙인 카테고리 */
     private fun createCategory(db: SQLiteDatabase) {
@@ -234,7 +242,7 @@ object Db {
 
     /** 커서의 줄마다 [row] 로 읽고 닫는다. */
     inline fun <T> SQLiteDatabase.rows(sql: String, args: Array<String>? = null, row: (Cursor) -> T): List<T> =
-        rawQuery(sql, args).use { c -> buildList { while (c.moveToNext()) add(row(c)) } }
+        rawQuery(sql, args).use { c -> ArrayList<T>().apply { while (c.moveToNext()) add(row(c)) } }
 
     fun values(vararg pairs: Pair<String, Any?>) = ContentValues().apply {
         for ((k, v) in pairs) when (v) {

@@ -593,14 +593,18 @@ class SettingsActivity : EinkActivity() {
      * 자동 추가 창: 무엇을 읽는지 + `접근성 설정 열기`. 안드로이드 13+ 이면 `앱 정보 열기` 도 두고,
      * 꺼져 있으면([watching] 이 false) 허용이 안 보일 때 안내(BOOX Leaf2)와 13+ 의 제한된 설정 안내를 설명 아래 단락으로 붙인다.
      * 서비스가 한 번이라도 연결된 적이 있으면(이미 켜 본 것. 제한된 설정도 풀려 있다) 두 안내와 `앱 정보 열기` 는 두지 않는다.
+     * BOOX 면 켜져 있어도 백그라운드 `무제한` 안내와 `E-Ink 센터 열기` 를 둔다(켠 뒤 5분 강제 종료로 꺼지므로).
      */
     private fun autoBooksSheet(watching: Boolean) {
         val turnedOnBefore = ReaderWatchService.lifeLog(this).first > 0
         val restricted = ReaderWatchService.mayBeRestricted && !turnedOnBefore
         val hints = if (watching || turnedOnBefore) emptyList() else listOfNotNull(R.string.allow_hint, R.string.restricted_hint.takeIf { restricted })
-        val desc = (listOf(R.string.auto_books_desc) + hints).joinToString("\n\n") { getString(it) }
+        val boox = Device.hasBooxLauncher(this)
+        val desc = (listOfNotNull(R.string.auto_books_desc, R.string.boox_background_hint.takeIf { boox }) + hints)
+            .joinToString("\n\n") { getString(it) }
         val sheet = Sheet(this).header(getString(R.string.auto_books), desc)
-            .item(getString(R.string.open_accessibility), bold = true) { ReaderWatchService.openSettings(this) }
+        if (boox) sheet.item(getString(R.string.boox_eink_center), bold = true) { Device.openBooxOptimization(this, componentName) }
+        sheet.item(getString(R.string.open_accessibility), bold = true) { ReaderWatchService.openSettings(this) }
         if (restricted) sheet.item(getString(R.string.open_app_info)) { ReaderWatchService.openAppInfo(this) }
         sheet.show()
     }

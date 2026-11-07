@@ -242,9 +242,21 @@ class BookRecord(
          * 않는다. 같은 제목의 새 책이 생기거나 제목을 고쳐도 그대로), 책을 모르는 칸은 제목만 든 기록(목록에 없던 책).
          * 완독한 책은 읽은 시간이 없어도(기록을 켜기 전에 읽은 책) 들어간다.
          */
-        fun all(context: Context): List<BookRecord> =
+        fun all(context: Context): List<BookRecord> {
             // 사용 기록 권한이 없으면(꺼 둠·잠금 해제 전) 저장해 둔 지난 기록으로(회차 판단과 책 기록이 사라지지 않게)
-            all(context, ReadingLog.days(context, ReadingLog.readerPackages(context)) ?: ReadingLog.savedDays(context))
+            val days = ReadingLog.days(context, ReadingLog.readerPackages(context)) ?: ReadingLog.savedDays(context)
+            // 지난날·책·완독은 DB 에 있어 DB(테스트는 시험마다 새 DB)와 그 순번이 같으면 그대로고, 오늘은 사용 기록으로 센다.
+            // 목록에 없던 책의 앱은 앱 목록으로 정한다(앱을 깔거나 지우면 다른 목록이 된다). 모두 같으면 지난번 목록(상세에서 누를 때마다 모든 책을 다시 만들지 않게)
+            val today = LocalDate.now()
+            val key = listOf(Db.get(context), Db.changes(), today, days[today], days.size, AppStore.load(context))
+            return allCache?.takeIf { it.first == key }?.second ?: all(context, days).also { allCache = key to it }
+        }
+
+        /** [all] 의 지난번 목록과 그때의 (DB·DB 순번·오늘·오늘 칸별 시간·날 수·앱 목록) */
+        @Volatile private var allCache: Pair<List<Any?>, List<BookRecord>>? = null
+
+        /** [all] 의 지난번 목록을 버린다([BookShelf.clearCaches]: 되돌린 트랜잭션 안에서 고쳤던 메모리 사본으로 만든 목록이 남지 않게) */
+        internal fun clearCache() { allCache = null }
 
         /** [all] 의 몸통: 날마다 칸별 읽은 시간([days], 사용 기록 권한이 없으면 null)을 책에 붙인다(테스트는 읽은 시간을 직접 넣는다) */
         internal fun all(context: Context, days: ReadingDays?): List<BookRecord> {

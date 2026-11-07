@@ -90,7 +90,8 @@ class CategoriesTest {
         // 통계에서 뺀 카테고리도 직접 고르면 보인다
         assertEquals(20L, StatsFilter(setOf(2L), cats, books).days(days).total(day))
         assertEquals(40L + 80, StatsFilter(setOf(Categories.NONE), cats, books).days(days).total(day))
-        assertEquals(10L + 40 + 80, StatsFilter(setOf(1L, Categories.NONE), cats, books).days(days).total(day))
+        // 통계에서 빼지 않은 것을 모두 고르면 전체(모르는 시간까지)
+        assertEquals(10L + 40 + 80 + 160, StatsFilter(setOf(1L, Categories.NONE), cats, books).days(days).total(day))
         // 날은 그대로 둔다(기록이 있는 날)
         assertEquals(setOf(day), StatsFilter(setOf(1L), cats, books).days(days).keys)
     }
@@ -99,5 +100,19 @@ class CategoriesTest {
         val f = StatsFilter(setOf(9L), cats, books)
         assertTrue(f.all)
         assertEquals(setOf(1L), StatsFilter(setOf(1L, 9L), cats, books).picked)
+    }
+
+    @Test fun `전체를 한 번 더 누르면 켜는 것은 통계에서 빼지 않은 카테고리와 분류 없음, 꼭 그만큼 고르면 전체`() {
+        val three = cats + Category(3, "에세이", false)
+        val f = StatsFilter(emptySet(), three, books)
+        assertEquals(setOf(1L, 3L, Categories.NONE), f.selectable)
+        assertTrue(f.with(setOf(1L, 3L, Categories.NONE)).all)
+        // 하나 빼면 그대로(모르는 시간은 빠진다)
+        assertEquals(setOf(1L, Categories.NONE), f.with(setOf(1L, Categories.NONE)).picked)
+        assertEquals(10L + 40 + 80, f.with(setOf(1L, Categories.NONE)).days(days).total(day))
+        // 통계에서 뺀 카테고리까지 켜면 전체와 다른 보기
+        assertEquals(setOf(1L, 2L, 3L, Categories.NONE), f.with(setOf(1L, 2L, 3L, Categories.NONE)).picked)
+        // 없어진 카테고리를 빼고 남은 것이 꼭 그만큼이면 전체
+        assertTrue(f.with(setOf(1L, 3L, 9L, Categories.NONE)).all)
     }
 }

@@ -38,8 +38,9 @@ PAGES = {
     "ko": {
         "file": "site/index.html", "url": BASE, "locale": "ko_KR", "img": "",
         "title": "BookLauncher — 이북리더기 런처",
-        "desc": "크레마, BOOX, 메이북, 아이리더, 교보 sam 같은 안드로이드 이북리더기를 위한 무료 런처(홈 앱). "
-                "이북 앱에서 편 책이 홈 화면에 저절로 들어오고, 읽은 시간과 완독 기록이 책마다 남습니다.",
+        # 네이버 서치어드바이저가 80자 안을 권한다
+        "desc": "크레마·BOOX·메이북 같은 안드로이드 이북리더기용 무료 런처. "
+                "이북 앱에서 편 책이 홈 화면에 들어오고, 책마다 읽은 시간이 남습니다.",
         "faq_title": "자주 묻는 질문", "cta": "APK 받기",
         "faq": [
             ("어떤 기기에서 쓸 수 있나요?",
@@ -62,7 +63,7 @@ PAGES = {
     },
     "en": {
         "file": "site/en/index.html", "url": BASE + "en/", "locale": "en_US", "img": "en-",
-        "title": "BookLauncher — A launcher for Android E Ink readers",
+        "title": "BookLauncher — E Ink launcher for Android e-readers",
         "desc": "A free, text-first launcher for Android E Ink readers like BOOX, Meebook, iReader, Crema and Bigme. "
                 "Books you open in Kindle, Libby, KOReader and more appear on your home screen, and reading time is kept for every book.",
         "faq_title": "Questions", "cta": "Download APK",

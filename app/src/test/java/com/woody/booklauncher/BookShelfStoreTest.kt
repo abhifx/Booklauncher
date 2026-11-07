@@ -179,7 +179,7 @@ class BookShelfStoreTest {
 
     @Test fun `같은 제목의 지운 책이 더 최근이어도 지우지 않은 나간 책을 되살린다`() {
         BookShelf.remove(app, "b-1")
-        db.execSQL("INSERT INTO past VALUES (1, 'b-2', '데미안', '', NULL, 0, 0, '', ${System.currentTimeMillis()}, 1)")
+        db.execSQL("INSERT INTO past (pos, id, title, author, app, updated_at, progress, seen_title, left_at, hidden) VALUES (1, 'b-2', '데미안', '', NULL, 0, 0, '', ${System.currentTimeMillis()}, 1)")
         BookShelf.clearCaches()
         assertEquals("b-1", BookShelf.addOpened(app, "데미안", "", null, 0, -1)?.id)
         assertEquals(listOf("b-2"), BookShelf.history(app).map { it.book.id })
@@ -201,7 +201,7 @@ class BookShelfStoreTest {
     @Test fun `제목을 고친 책도 고치기 전 제목으로 찾을 때 가장 최근 나간 책을 되살린다`() {
         BookShelf.remove(app, "b-1")
         // 더 최근에 나간 같은 책의 다른 판: 제목을 고쳤지만 이북 앱이 보여 준 제목은 '데미안'
-        db.execSQL("INSERT INTO past VALUES (1, 'b-2', '헤세의 소설', '', NULL, 0, 0, '데미안', ${System.currentTimeMillis()}, 0)")
+        db.execSQL("INSERT INTO past (pos, id, title, author, app, updated_at, progress, seen_title, left_at, hidden) VALUES (1, 'b-2', '헤세의 소설', '', NULL, 0, 0, '데미안', ${System.currentTimeMillis()}, 0)")
         BookShelf.clearCaches()
         assertEquals("b-2", BookShelf.findLivePast(app, "데미안")?.book?.id)
     }
@@ -381,6 +381,46 @@ class BookShelfStoreTest {
         assertEquals(setOf(today.minusDays(1)), ReadingLog.savedDays(app).keys)
     }
 
+    @Test fun `읽은 시간까지 지우면 그 책의 칸만 셀 때 빠지고 DB 의 줄은 남는다`() {
+        val day = today.minusDays(1).toEpochDay()
+        db.execSQL("INSERT INTO reading_day VALUES ($day, 'pkg', '데미안', 'b-1', 600000), ($day, 'pkg', '싯다르타', 'b-2', 300000), ($day, 'pkg', '', '', 60000)")
+        ReadingLog.clearCache()
+        BookShelf.remove(app, "b-1")
+        assertTrue(BookShelf.forget(app, "b-1", dropTime = true))
+        assertEquals(360000L, ReadingLog.savedDays(app).total(today.minusDays(1)))
+        assertEquals(3L, db.rows("SELECT COUNT(*) FROM reading_day") { it.getLong(0) }.single())
+        // DB 에서 다시 읽어도 같다
+        BookShelf.clearCaches()
+        ReadingLog.clearCache()
+        assertEquals(true, BookShelf.history(app).single { it.book.id == "b-1" }.timeDropped)
+        assertEquals(360000L, ReadingLog.savedDays(app).total(today.minusDays(1)))
+    }
+
+    @Test fun `읽은 시간까지 지운 책은 오늘 센 칸에서도 그 책 칸만 빠지고 날은 남는다`() {
+        val gone = PastBook(ShelfBook("b-1", "데미안", "", null, 0), 0, hidden = true, timeDropped = true)
+        val kept = PastBook(ShelfBook("b-2", "싯다르타", "", null, 0), 0, hidden = true)
+        val days: ReadingDays = mapOf(
+            today to mapOf(ReadKey("pkg", "데미안", "b-1") to 10L, ReadKey("pkg", "싯다르타", "b-2") to 20L, ReadKey("pkg") to 40L),
+            today.minusDays(1) to mapOf(ReadKey("pkg", "데미안", "b-1") to 80L),
+        )
+        val out = ReadingLog.withoutDropped(days, listOf(gone, kept))
+        assertEquals(60L, out.total(today))
+        assertEquals(0L, out.total(today.minusDays(1)))
+        assertEquals(days.keys, out.keys)
+        // 시간까지 지운 책이 없으면 그대로(사본을 만들지 않는다)
+        assertTrue(ReadingLog.withoutDropped(days, listOf(kept)) === days)
+    }
+
+    @Test fun `읽은 시간을 남기고 지우면 합계에 그대로`() {
+        db.execSQL("INSERT INTO reading_day VALUES (${today.minusDays(1).toEpochDay()}, 'pkg', '데미안', 'b-1', 600000)")
+        ReadingLog.clearCache()
+        BookShelf.remove(app, "b-1")
+        assertTrue(BookShelf.forget(app, "b-1", dropTime = false))
+        BookShelf.clearCaches()
+        assertEquals(false, BookShelf.history(app).single { it.book.id == "b-1" }.timeDropped)
+        assertEquals(600000L, ReadingLog.savedDays(app).total(today.minusDays(1)))
+    }
+
     @Test fun `지운 책은 다시 읽기로 되살리지 않는다(오래 열어 둔 상세)`() {
         BookShelf.remove(app, "b-1")
         assertTrue(BookShelf.forget(app, "b-1"))
@@ -435,7 +475,7 @@ class BookShelfStoreTest {
 
     @Test fun `옛 판이 끊겨 같은 책이 읽고 있는 책과 나간 책 양쪽에 남아 있어도 완독·빼기가 된다`() {
         // 1.3.0~1.5.3 의 빼기·다시 읽기는 두 표를 따로 저장해, 그 사이 끊기면 같은 책이 양쪽에 남는다
-        db.execSQL("INSERT INTO past VALUES (0, 'b-1', '데미안', '', NULL, 0, -1, '', 1000, 0)")
+        db.execSQL("INSERT INTO past (pos, id, title, author, app, updated_at, progress, seen_title, left_at, hidden) VALUES (0, 'b-1', '데미안', '', NULL, 0, -1, '', 1000, 0)")
         BookShelf.clearCaches()
         assertTrue(BookShelf.finish(app, "b-1", Review(6)))
         BookShelf.clearCaches()
@@ -443,7 +483,7 @@ class BookShelfStoreTest {
         assertEquals(1, BookShelf.history(app).count { it.book.id == "b-1" })
         // 빼기도
         db.execSQL("INSERT INTO shelf VALUES (0, 'b-2', '싯다르타', '', NULL, 0, 10, -1, '', '')")
-        db.execSQL("INSERT INTO past VALUES (1, 'b-2', '싯다르타', '', NULL, 0, -1, '', 1000, 0)")
+        db.execSQL("INSERT INTO past (pos, id, title, author, app, updated_at, progress, seen_title, left_at, hidden) VALUES (1, 'b-2', '싯다르타', '', NULL, 0, -1, '', 1000, 0)")
         BookShelf.clearCaches()
         BookShelf.remove(app, "b-2")
         BookShelf.clearCaches()
@@ -451,7 +491,7 @@ class BookShelfStoreTest {
     }
 
     @Test fun `옛 판이 끊겨 나간 책에도 남은 읽고 있는 책은 기록에서 지우지 않고 표지도 남긴다`() {
-        db.execSQL("INSERT INTO past VALUES (0, 'b-1', '데미안', '', NULL, 0, -1, '', 1000, 0)")
+        db.execSQL("INSERT INTO past (pos, id, title, author, app, updated_at, progress, seen_title, left_at, hidden) VALUES (0, 'b-1', '데미안', '', NULL, 0, -1, '', 1000, 0)")
         BookShelf.clearCaches()
         val cover = java.io.File(Storage.of(app).filesDir, "books/b-1.jpg").apply { parentFile!!.mkdirs(); writeText("x") }
         assertEquals(false, BookShelf.forget(app, "b-1"))
@@ -504,8 +544,7 @@ class BookShelfStoreTest {
     }
 
     @Test fun `직접 넣은 책은 읽은 시간이 없어도 넣은 날 회차가 시작해 기록·올해 읽은 책에 들어가고, 완독하면 그 기간으로`() {
-        val png = java.util.Base64.getDecoder().decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=")
-        val added = BookShelf.add(app, BookResult("y1", "모모", "미하엘 엔데", "", ""), png)
+        val added = BookShelf.add(app, "모모", "미하엘 엔데")
         assertEquals(today, BookShelf.roundStarts(app)[added.id])
         fun record() = BookRecord.all(app, emptyMap()).single { it.book.id == added.id }
         val reading = record()
@@ -523,21 +562,31 @@ class BookShelfStoreTest {
         assertEquals(today, done.lastRound.to)
         assertEquals(listOf(today.year), done.readYears)
         // 완독하지 않고 뺀 직접 추가 책도 시작한 해에 남는다
-        val other = BookShelf.add(app, BookResult("y2", "끝없는 이야기", "", "", ""), png)
+        val other = BookShelf.add(app, "끝없는 이야기", "")
         BookShelf.remove(app, other.id)
         assertEquals(listOf(today.year), BookRecord.all(app, emptyMap()).single { it.book.id == other.id }.readYears)
     }
 
-    @Test fun `직접 넣다 회차 시작 저장이 실패하면 책도 표지도 남지 않는다`() {
-        val png = java.util.Base64.getDecoder().decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=")
+    @Test fun `직접 넣다 회차 시작 저장이 실패하면 책이 남지 않는다`() {
         val before = BookShelf.list(app).map { it.id }
         db.execSQL("DROP TABLE round_start")
-        assertTrue(runCatching { BookShelf.add(app, BookResult("y1", "모모", "", "", ""), png) }.isFailure)
+        assertTrue(runCatching { BookShelf.add(app, "모모", "") }.isFailure)
         assertEquals(before, BookShelf.list(app).map { it.id })
         BookShelf.clearCaches()
         assertEquals(before, BookShelf.list(app).map { it.id })
-        val books = java.io.File(Storage.of(app).filesDir, "books")
-        assertTrue(books.listFiles().orEmpty().none { it.name.startsWith(BookShelf.MANUAL_PREFIX) })
+    }
+
+    @Test fun `직접 넣은 책은 표지 그림 없이 들어가고, 표지 다시 찾기로 표지·제목·저자를 바꾼다`() {
+        val png = java.util.Base64.getDecoder().decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=")
+        val added = BookShelf.add(app, "모모", "")
+        assertEquals(added.id, BookShelf.list(app).first().id)
+        assertEquals("모모" to "", BookShelf.list(app).first().let { it.title to it.author })
+        val cover = java.io.File(java.io.File(Storage.of(app).filesDir, "books"), "${added.id}.jpg")
+        assertTrue(!cover.exists())
+        BookShelf.replace(app, added.id, BookResult("y1", "모모", "미하엘 엔데", "", ""), png)
+        assertTrue(cover.exists())
+        BookShelf.clearCaches()
+        assertEquals("미하엘 엔데", BookShelf.list(app).single { it.id == added.id }.author)
     }
 
     /** 사용 기록 권한을 주고, 오늘 읽는 화면을 연 구간 하나를 사용 기록에 넣는다. 그 구간 길이(ms) */
