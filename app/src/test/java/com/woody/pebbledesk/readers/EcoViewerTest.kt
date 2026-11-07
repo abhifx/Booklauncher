@@ -111,21 +111,21 @@ class EcoViewerTest {
     private val known = setOf("레 미제라블 3(한글판)")
 
     @Test fun `표지 단추를 아는 제목과 저자로 나누고 장 순서로 진행률`() {
-        val info = EcoViewer.readWeb(web(menu = bottomMenu)) { it in known }
+        val info = EcoViewer.readWeb(web(menu = bottomMenu)) { it in known }.info
         assertEquals("레 미제라블 3(한글판)", info.title)
         assertEquals("빅토르 위고", info.author)
         assertEquals(58, info.progress)
     }
 
     @Test fun `모르는 제목이면 제목은 비우고 진행률만`() {
-        val info = EcoViewer.readWeb(web(menu = bottomMenu)) { false }
+        val info = EcoViewer.readWeb(web(menu = bottomMenu)) { false }.info
         assertNull(info.title)
         assertEquals(58, info.progress)
     }
 
     @Test fun `장 순서 세 글자가 없으면 한 글자 7 슬래시 12, 둘 다 없으면 모름`() {
-        assertEquals(25, EcoViewer.readWeb(web(null, text(35, 1269, 101, 1297, "3 / 12"))) { false }.progress)
-        assertEquals(-1, EcoViewer.readWeb(web(null)) { false }.progress)
+        assertEquals(25, EcoViewer.readWeb(web(null, text(35, 1269, 101, 1297, "3 / 12"))) { false }.info.progress)
+        assertEquals(-1, EcoViewer.readWeb(web(null)) { false }.info.progress)
     }
 
     @Test fun `제목 나누기는 가장 긴 아는 앞부분, 저자가 없으면 통째`() {
@@ -146,6 +146,16 @@ class EcoViewerTest {
         assertEquals(true, EcoViewer.knownTitle("레미제라블 3 (한글판)", titles))
         assertEquals("★ 레 미제라블 3(한글판)" to "빅토르 위고",
             EcoViewer.splitCover("★ 레 미제라블 3(한글판) 빅토르 위고") { EcoViewer.knownTitle(it, sequenceOf("", "★ 레 미제라블 3(한글판)")) })
+    }
+
+    @Test fun `PDF 뷰어(쪽 수 요소 numPages)는 PDF 로 알아보고, EPUB 뷰어는 아니다`() {
+        val pages = node("android.widget.TextView", 508, 0, 598, 0, "/ 348").apply { viewIdResourceName = "numPages" }
+        val pdf = node("android.webkit.WebView", 0, 0, 1072, 1456, null, null, true,
+            node("android.widget.EditText", 399, 0, 502, 0, "1").apply { viewIdResourceName = "pageNumber" }, pages)
+        val shown = EcoViewer.readWeb(pdf) { true }
+        assertEquals(true, shown.pdf)
+        assertNull(shown.info.title)
+        assertEquals(false, EcoViewer.readWeb(web(menu = bottomMenu)) { it in known }.pdf)
     }
 
     @Test fun `지금 장이 전체보다 크면 버린다`() = assertEquals(-1, EcoViewer.chapterPercent(listOf("13", "/", "12")))

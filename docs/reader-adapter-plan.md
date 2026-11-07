@@ -358,7 +358,7 @@ class CoverSpot(val title: String, val rect: Rect, val id: String? = null, val k
 | 알라딘 | `onViewer` 대신(서재를 떠난 뒤 메뉴로 처음 안 책이면 앞서 편 책과 같아도 다시 편 것으로 — `recordShown(force = 첫 메뉴)`, 그리고 "메뉴로 이미 앎" 기억), `onShelf` 는 최근 줄 판단 **먼저** 그 뒤 `super` | `readViewer` 의 `first = readSince && readKnown.add(pkg)`, `settleShelf` 의 `recent` 갈래(칸 진행률·표지 앞) |
 | 문리더 | `onViewer` 대신(`readShown` → `recordShown` → 메뉴 제목이 보였으면 저장소에서 파일 찾기) | `readViewer` 의 `searchesBookFile` |
 | BookFusion·밀리 e-ink | `onEnterViewer` 대신(아래), `onShelf` 대신(상세를 다시 기억하고 상세 표지 자리를 서재 칸 자리와 **한 번에** 찍음 — `readShelfCells`·`shelfStatuses`·`shelfCoverSpots` 사용) | `enterScreen` 의 `webBook`·`clickOnly`, `settleShelf` 의 상세(칸 표지와 같은 `captureCovers` 한 번) |
-| 이씨오 범용뷰어 3.0 | `onViewer` 대신(`onContent` 로 붙잡아 둔 웹 화면에서 읽고 — 창 뿌리로는 닿지 않는다 — 표지 단추로 제목을 알았을 때만 `recordShown`. 웹 화면을 못 붙잡았으면 다시 예약), `onEnterViewer`(아래) | (2026-11-07 새 앱) |
+| 이씨오 범용뷰어 3.0 | `onViewer` 대신(`onContent` 로 붙잡아 둔 웹 화면에서 읽고 — 창 뿌리로는 닿지 않는다 — 표지 단추로 제목을 알았을 때만 `recordShown`. PDF 뷰어면 그 읽는 화면이 열린 때로 `unknown` 한 번(지원하지 않음). 웹 화면을 못 붙잡았으면 다시 예약), `onEnterViewer`(아래) | (2026-11-07 새 앱) |
 
 - 서재 멈춤에서 찍기는 한 번이다(지금 `settleShelf` 끝의 `captureCovers` 하나). 앱 것을 `super` 뒤에 따로 찍으면 1.1초 간격에 걸려 멈춤이 다시 예약되므로, 찍을 자리를 더하는 앱은 `onShelf` 를 대신하고 조각으로 자리를 모아 한 번 찍는다.
 - `ScreenReader.onClick` 은 서재에서 누른 것이 책 칸이 아니면(제목 못 읽은 누름 기록 뒤) `onClickNoCell(ctx)` 를 부른다(바탕: 아무것도 안 함, `ScreenReader` 안의 덮는 자리). 지금 `shelfClicked` 의 `cell == null` 갈래.

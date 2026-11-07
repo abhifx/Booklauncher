@@ -445,6 +445,7 @@
     <string name="guide_t_wattpad_open">Open stories from your Library or with Start reading or Continue reading on a story\'s page. If you pick up mid-part another way, it continues with the story you opened last.</string>
     <string name="guide_n_wattpad_author">Added when your Library is in list view or you view the story\'s page</string>
     <string name="guide_n_wattpad_chapter">Shows the part name at the top of the page instead of a percentage</string>
+    <string name="guide_note_eco">PDF books aren\'t added automatically.</string>
     <string name="guide_note_wattpad">Each story counts as one book (parts don\'t become separate books).</string>
     <string name="guide_note_librera">The free version from the Play Store adds only books opened from the Library or with the menu open.</string>
     <string name="book_files">Read book files</string>
