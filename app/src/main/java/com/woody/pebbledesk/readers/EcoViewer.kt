@@ -1,6 +1,7 @@
 package com.woody.pebbledesk.readers
 
 import android.view.accessibility.AccessibilityNodeInfo
+import com.woody.pebbledesk.WatchLog
 
 /**
  * 이씨오 범용뷰어 3.0(도서관 전자책 대출, 3.0.44): 서재(`MyWorkspaceActivity`, 대출한 책)와 읽는 화면(`ViewerActivity`)이 모두 Compose 라 요소 이름이 없다.
@@ -10,6 +11,8 @@ import android.view.accessibility.AccessibilityNodeInfo
  * 읽는 화면은 웹 화면(epub.eco.co.kr 의 웹 뷰어, 책 파일을 받지 않는다)이 Compose 안에 들어 있어 창 뿌리에서 훑으면 닿지 않고(Compose 가 내보내지 않는다),
  * 웹 화면이 보내는 내용 바뀜 알림의 요소로만 닿는다([ReaderAdapter.onContent]). 화면 캡처는 막혀 있다(표지는 서재에서 자른다).
  * 웹 화면 안에는 메뉴를 닫아도 옆 메뉴의 표지 단추 `표지 이미지 <제목> <저자>` 와 아래 메뉴의 장 순서(`7` `/` `12`, 진행 막대 위 `7 / 12`: 목차의 몇 번째 장)가 있다.
+ * PDF 책은 다른 웹 뷰어(앱 안의 pdf.js, 문서 제목 `PDF 뷰어` 고정)로 열리고 화면 어디에도 책 제목이 없어(쪽 `1` `/ 348`·목차뿐, 파일은 DRM 이라 읽을 수 없다)
+ * 지원하지 않는다: 그 읽는 화면이 열린 때부터 책 모름으로 적어 앞서 편 책에 시간이 붙지 않게 한다([WebShown.pdf]).
  * 뒤로를 2초 안에 두 번 눌러야 닫힌다. Play 라이선스 확인이 있어 Play 스토어 없는 기기·에뮬레이터에서는 켜자마자 닫힌다.
  */
 object EcoViewer : ReaderApp(
@@ -54,12 +57,14 @@ object EcoViewer : ReaderApp(
     /**
      * 읽는 화면의 웹 화면 [web] 에서 제목·저자(표지 단추)와 장 순서로 셈한 진행률. 제목과 저자는 한 글자로 붙어 있어,
      * 앞에서부터 아는 제목([known]: 서재에서 본 제목·읽고 있는 책)인 부분을 제목으로 하고 나머지를 저자로 본다. 모르면 제목 없음.
-     * 본문 글자는 모으지 않는다(짧은 글자와 표지 단추만 본다).
+     * 본문 글자는 모으지 않는다(짧은 글자와 표지 단추만 본다). PDF 뷰어(쪽 수 요소 [PDF_PAGES])면 [WebShown.pdf].
      */
-    internal fun readWeb(web: AccessibilityNodeInfo, known: (String) -> Boolean): ViewerInfo {
+    internal fun readWeb(web: AccessibilityNodeInfo, known: (String) -> Boolean): WebShown {
         val short = mutableListOf<String>()
         var cover: String? = null
+        var pdf = false
         fun walk(n: AccessibilityNodeInfo, depth: Int) {
+            if (n.viewIdResourceName == PDF_PAGES) pdf = true
             n.text?.let(::plain)?.takeIf { it.isNotEmpty() }?.let { t ->
                 if (cover == null && t.startsWith(COVER)) cover = t.removePrefix(COVER).trim()
                 else if (t.length <= SHORT_TEXT) short += t
@@ -68,8 +73,11 @@ object EcoViewer : ReaderApp(
         }
         walk(web, 0)
         val (title, author) = cover?.let { splitCover(it, known) } ?: (null to "")
-        return ViewerInfo(title, author, chapterPercent(short))
+        return WebShown(ViewerInfo(title, author, chapterPercent(short)), pdf)
     }
+
+    /** 웹 화면에서 읽은 것과, 그것이 PDF 뷰어인가(PDF 책은 제목을 알 수 없어 지원하지 않는다) */
+    internal class WebShown(val info: ViewerInfo, val pdf: Boolean)
 
     /** `레 미제라블 3(한글판) 빅토르 위고` → 아는 제목인 가장 긴 앞부분과 나머지(저자). 아는 제목이 없으면 null */
     internal fun splitCover(text: String, known: (String) -> Boolean): Pair<String, String>? {
@@ -112,6 +120,8 @@ object EcoViewer : ReaderApp(
         return if (c > t) -1 else pagePercent(cur, total, roundUp = false)
     }
 
+    /** PDF 뷰어 위 막대의 전체 쪽 수(`/ 348`)의 HTML id. EPUB 뷰어에는 없다 */
+    private const val PDF_PAGES = "numPages"
     /** 옆 메뉴 표지 단추 글자의 앞(그림 설명). 앱이 한국어뿐이다 */
     private const val COVER = "표지 이미지 "
     /** 메뉴 글자로 볼 길이(본문 문단은 이보다 길다) */
@@ -131,9 +141,17 @@ private class EcoReader(app: ReaderApp) : ScreenReader(app) {
     private var web: AccessibilityNodeInfo? = null
     /** 서재에서 본 제목 */
     private val shelfTitles = mutableSetOf<String>()
+    /** 이 읽는 화면이 PDF 라 책 모름으로 적었다(읽는 화면에 새로 들어올 때마다 한 번) */
+    private var pdfUnknown = false
+    /** 읽는 화면에 새로 들어온 때(같은 화면 알림이 한 번 더 와도 바꾸지 않는다). PDF 면 이때부터 책 모름 */
+    private var enteredAt = 0L
 
     override fun onEnterViewer(ctx: AppContext, from: String?, again: Boolean) {
-        if (!again) web = null
+        if (!again) {
+            web = null
+            pdfUnknown = false
+            enteredAt = ctx.now
+        }
         super.onEnterViewer(ctx, from, again)
     }
 
@@ -160,11 +178,21 @@ private class EcoReader(app: ReaderApp) : ScreenReader(app) {
         val lookup = ctx.recorder.lookup
         // 이 앱에서 앞서 편 책은 늘 안다(찾기는 같은 책으로 보이는 첫 책만 주어 『X』가 『X: 2권』보다 먼저 나올 수 있다)
         val recorded = ctx.recorder.recordedBook(ctx.pkg)?.let { listOf(it.title, it.seenTitle) }.orEmpty()
-        val shown = EcoViewer.readWeb(node) { t ->
+        val seen = EcoViewer.readWeb(node) { t ->
             // 목록의 책도 부제까지 같은지 다시 본다(찾기는 한쪽에만 있는 부제를 무시한다)
             val candidates = shelfTitles.asSequence() + recorded + lookup.byTitle(t)?.let { b -> sequenceOf(b.title, b.seenTitle) }.orEmpty()
             EcoViewer.knownTitle(t, candidates)
         }
+        if (seen.pdf) {
+            // PDF 책은 지원하지 않는다: 이 읽는 화면이 열린 때부터 책 모름(앞서 편 책에 시간이 붙지 않게)
+            if (!pdfUnknown) {
+                pdfUnknown = true
+                ctx.unknown(enteredAt.takeIf { it > 0 } ?: ctx.now)
+                ctx.log(WatchLog.Kind.NOTE, "pdf")
+            }
+            return
+        }
+        val shown = seen.info
         logShown(ctx, shown)
         retryProgress(ctx, shown.progress)
         // 제목을 못 나눴으면 앞서 편 책이 아니다(그 책은 목록에 있어 늘 나뉜다): 그 진행률을 앞 책에 적지 않는다

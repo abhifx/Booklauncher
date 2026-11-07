@@ -228,7 +228,7 @@ internal object ReaderGuide {
         )),
         App(listOf(R.string.guide_eco), listOf(EcoViewer), Info(
             emptyList(),
-            cover = YES, title = YES, author = YES, progress = YES, due = YES,
+            cover = YES, title = YES, author = YES, progress = YES, due = YES, note = R.string.guide_note_eco,
         )),
     )
 }

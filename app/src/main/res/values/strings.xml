@@ -450,6 +450,7 @@
     <string name="guide_t_wattpad_open">이야기는 서재에서 누르거나 이야기 화면의 Start reading·Continue reading 으로 여세요. 다른 길로 화 중간부터 이어 열면 마지막으로 연 이야기로 이어 갑니다.</string>
     <string name="guide_n_wattpad_author">서재가 목록 보기이거나 이야기 화면을 보면 들어옵니다</string>
     <string name="guide_n_wattpad_chapter">% 대신 화면 맨 위에 보이는 화 이름 그대로 들어옵니다</string>
+    <string name="guide_note_eco">PDF 책은 자동으로 들어오지 않습니다.</string>
     <string name="guide_note_wattpad">이야기 하나를 책 한 권으로 봅니다(화마다 따로 책을 만들지 않습니다).</string>
     <string name="guide_note_librera">Play 스토어 무료판은 라이브러리에서 연 책과 메뉴를 띄운 책만 들어옵니다.</string>
     <string name="book_files">책 파일 읽기</string>
