@@ -162,7 +162,17 @@ object ReadingLog {
         val days = saved.days + counted
         // 새로 끝난 날(센 날 중 오늘 빼고)만 저장한다.
         if (!back && (saved.through != today.minusDays(1) || saved.since == null)) save(context, Saved(today.minusDays(1), since, days - today), counted - today)
-        return days
+        return withoutDropped(days, past)
+    }
+
+    /**
+     * 읽은 시간까지 지운 책([PastBook.timeDropped])의 칸을 뺀 날들. 저장은 뺀 것 없이 하고(DB 의 줄은 남는다) 내줄 때만 뺀다:
+     * 오늘·아직 저장하지 않은 날은 사용 기록으로 다시 세므로 줄을 지워도 되살아난다. 날은 그대로 둔다(기록이 있는 날). 그런 책이 없으면 그대로.
+     */
+    internal fun withoutDropped(days: ReadingDays, past: List<PastBook>): ReadingDays {
+        val dropped = past.filter { it.timeDropped }.mapTo(HashSet()) { it.book.id }
+        if (dropped.isEmpty()) return days
+        return days.mapValues { (_, keys) -> if (keys.keys.none { it.book in dropped }) keys else keys.filterKeys { it.book !in dropped } }
     }
 
     /** 저장한 날들([days])의 [firstReadDays] 와 그 날들(같은 사본이면 다시 세지 않는다) */
@@ -340,10 +350,16 @@ object ReadingLog {
 
     /**
      * 저장해 둔 날마다 기록(끝난 날, 사용 기록 권한이 없거나 잠금 해제 전이어도). 권한을 끈 동안에도 지난 기록으로 회차를 판단하고
-     * 책 기록을 보이게([BookRecord.all]).
+     * 책 기록을 보이게([BookRecord.all]). 읽은 시간까지 지운 책의 칸은 뺀다([withoutDropped]).
      */
-    @Synchronized
     fun savedDays(context: Context): ReadingDays {
+        // 나간 책은 잠금 밖에서 읽는다(잠금 순서는 늘 BookShelf → ReadingLog)
+        val past = BookShelf.history(context)
+        return withoutDropped(savedRaw(context), past)
+    }
+
+    @Synchronized
+    private fun savedRaw(context: Context): ReadingDays {
         // 끝난 날만(오늘은 사용 기록으로 세는 날이라 저장하지 않는다. 기기 날짜가 뒤로 가 오늘·미래가 된 줄도 빼서 다시 보이지 않게)
         val today = LocalDate.now()
         return load(context).days.filterKeys { it < today }

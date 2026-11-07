@@ -40,7 +40,7 @@ class BookRecordAllTest {
         db.execSQL("INSERT INTO shelf VALUES ($pos, '$id', '$title', '', NULL, 0, 0, -1, '$seen', '')")
 
     private fun past(pos: Int, id: String, title: String, left: String, hidden: Boolean = false) =
-        db.execSQL("INSERT INTO past VALUES ($pos, '$id', '$title', '', NULL, 0, 0, '', ${noon(left)}, ${if (hidden) 1 else 0})")
+        db.execSQL("INSERT INTO past (pos, id, title, author, app, updated_at, progress, seen_title, left_at, hidden) VALUES ($pos, '$id', '$title', '', NULL, 0, 0, '', ${noon(left)}, ${if (hidden) 1 else 0})")
 
     /** 그날 그 제목을 몇 분, 붙은 책 id(모르면 "") */
     private class Read(val day: String, val title: String, val min: Int, val book: String = "")

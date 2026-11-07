@@ -405,14 +405,7 @@ class Sheet(private val context: Context) {
             if (!split || i > 0) addView(c.hline(1, Ui.DIVIDER))
             addView(content, lp(MATCH, c.rowDp(Ui.ROW_DP)))
         }.also { rows += it }
-        items.forEach { item ->
-            row(rows.size, c.hbox().apply {
-                setPadding(c.dp(Ui.MARGIN), 0, c.dp(Ui.MARGIN), 0)
-                addView(c.text(item.label, 24f, if (item.bold) Ui.bold else Ui.regular), if (item.right == null) lp(MATCH, WRAP) else lp(WRAP, WRAP))
-                item.right?.let { addView(c.text(it, 21f, color = Ui.GRAY).apply { gravity = Gravity.END }, lp(0, WRAP, 1f).apply { marginStart = c.dp(16) }) }
-                setOnClickListener { dismissThen(item.action) }
-            })
-        }
+        // 고르는 줄(체크)이 할 일(항목) 위에: 고른 뒤 아래 항목으로 정한다
         val marks = mutableListOf<Pair<CheckMark, Check>>()
         checks.forEach { check ->
             val mark = CheckMark(c).apply { on = check.on() }
@@ -435,6 +428,14 @@ class Sheet(private val context: Context) {
                     // 바뀐 칸만 다시 그린다
                     marks.forEach { (m, ch) -> ch.on().let { v -> if (m.on != v) m.on = v } }
                 }
+            })
+        }
+        items.forEach { item ->
+            row(rows.size, c.hbox().apply {
+                setPadding(c.dp(Ui.MARGIN), 0, c.dp(Ui.MARGIN), 0)
+                addView(c.text(item.label, 24f, if (item.bold) Ui.bold else Ui.regular), if (item.right == null) lp(MATCH, WRAP) else lp(WRAP, WRAP))
+                item.right?.let { addView(c.text(it, 21f, color = Ui.GRAY).apply { gravity = Gravity.END }, lp(0, WRAP, 1f).apply { marginStart = c.dp(16) }) }
+                setOnClickListener { dismissThen(item.action) }
             })
         }
         val per = perPage

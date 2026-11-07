@@ -476,10 +476,14 @@ class ReadingActivity : EinkActivity() {
     private fun byBook(days: ReadingDays, today: LocalDate, page: TextView, fill: Boolean = false): View {
         bookRows = null
         val week = days.filterKeys { it in startOfWeek(today)..today }.values
-        val known = BookShelf.list(this).associateBy { it.id } + BookShelf.history(this).associate { it.book.id to it.book }
+        val past = BookShelf.history(this)
+        val known = BookShelf.list(this).associateBy { it.id } + past.associate { it.book.id to it.book }
+        // 기록에서 지운 책은 올해 읽은 책·결산처럼 보이지 않는다(그 시간은 합계에만)
+        val gone = past.filter { it.hidden }.map { it.book.id }.toSet()
         val perBook = linkedMapOf<String, Pair<String, Long>>()
         week.forEach { keys ->
             keys.forEach { (k, ms) ->
+                if (k.book in gone) return@forEach
                 val book = known[k.book]
                 if (book == null && k.title.isEmpty()) return@forEach
                 val id = book?.id ?: BookRecord.titleOnlyId(k.title)

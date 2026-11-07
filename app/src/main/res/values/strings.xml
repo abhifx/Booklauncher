@@ -185,6 +185,8 @@
     <string name="finish_nth">%1$d회</string>
     <string name="edit_book">책 정보 고치기 ›</string>
     <string name="forget_confirm">읽은 책 목록에서 지울까요?</string>
+    <string name="forget_time">읽은 시간 %1$s도 지우기</string>
+    <string name="forget_time_sub">연속일·목표 달성이 바뀝니다 · 되돌릴 수 없습니다</string>
     <string name="forget_on_home">홈에서 먼저 빼 주세요</string>
     <string name="forget_on_home_note">홈에 있는 책은 기록에서 지울 수 없습니다.</string>
     <string name="forget_round_confirm">%1$s 기록을 지울까요?</string>
