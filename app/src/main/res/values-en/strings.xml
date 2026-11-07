@@ -184,6 +184,8 @@
     <string name="finish_nth">#%1$d</string>
     <string name="edit_book">Edit book info ›</string>
     <string name="forget_confirm">Remove from your books read?</string>
+    <string name="forget_time">Also delete %1$s of reading time</string>
+    <string name="forget_time_sub">Streaks and goals may change · can\'t be undone</string>
     <string name="forget_on_home">Remove it from home first</string>
     <string name="forget_on_home_note">A book on your home can\'t be removed from the log.</string>
     <string name="forget_round_confirm">Remove read %1$s?</string>

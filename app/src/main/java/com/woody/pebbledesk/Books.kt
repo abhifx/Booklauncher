@@ -250,9 +250,10 @@ data class ShelfBook(
 
 /**
  * 읽고 있는 책 목록에서 나간 책(완독했거나 뺀 책). 올해 읽은 책 목록에 보인다. 완독은 따로 [BookShelf.finishList].
- * 표지는 읽던 때 그대로 `books/<id>.jpg`. [hidden] 은 올해 읽은 책에서 지운 책(읽은 시간이 남아 있어도 다시 보이지 않게).
+ * 표지는 읽던 때 그대로 `books/<id>.jpg`. [hidden] 은 올해 읽은 책에서 지운 책(읽은 시간이 남아 있어도 다시 보이지 않게),
+ * [timeDropped] 는 지울 때 읽은 시간까지 지운 책(그 책의 시간을 하루 합계·연속일에서도 뺀다, [ReadingLog.days]).
  */
-data class PastBook(val book: ShelfBook, val leftAt: Long, val hidden: Boolean = false)
+data class PastBook(val book: ShelfBook, val leftAt: Long, val hidden: Boolean = false, val timeDropped: Boolean = false)
 
 /**
  * 홈·목록·상세에 붙이는 읽는 화 또는 진행률, 반납일 `[Ch. 12, 반납 4일 남음]`·`[47% 읽음]`. 읽는 화(만화 앱 메뉴의 화 이름)를 알면 % 대신 그것만
@@ -366,12 +367,12 @@ object BookShelf {
     @Synchronized private fun loadHistory(context: Context): List<PastBook> {
         cachedHistory?.let { return it }
         return Db.get(context).rows(
-            "SELECT id, title, author, app, updated_at, progress, seen_title, left_at, hidden FROM past ORDER BY pos"
+            "SELECT id, title, author, app, updated_at, progress, seen_title, left_at, hidden, time_dropped FROM past ORDER BY pos"
         ) { c ->
             PastBook(
                 ShelfBook(c.getString(0), c.getString(1).orEmpty(), c.getString(2).orEmpty(), c.getString(3)?.ifEmpty { null },
                     c.getLong(4), c.getInt(5), seenTitle = c.getString(6).orEmpty()),
-                c.getLong(7), c.getInt(8) != 0,
+                c.getLong(7), c.getInt(8) != 0, c.getInt(9) != 0,
             )
         }.also { cachedHistory = it }
     }
@@ -534,7 +535,7 @@ object BookShelf {
                 insertOrThrow("past", null, Db.values(
                     "pos" to i, "id" to b.id, "title" to b.title, "author" to b.author, "app" to b.app.orEmpty(),
                     "updated_at" to b.updatedAt, "progress" to b.progress, "seen_title" to b.seenTitle,
-                    "left_at" to p.leftAt, "hidden" to p.hidden,
+                    "left_at" to p.leftAt, "hidden" to p.hidden, "time_dropped" to p.timeDropped,
                 ))
             }
         }
@@ -626,8 +627,11 @@ object BookShelf {
         }
     }
 
-    /** 올해 읽은 책에서 지운다(읽은 시간은 합계에 그대로, 다시 보이지 않게 나간 책에 지운 표시). 표지와 책 파일 경로는 버린다. 읽고 있는 책이면 지우지 않고 false. */
-    @Synchronized fun forget(context: Context, id: String): Boolean {
+    /**
+     * 올해 읽은 책에서 지운다(다시 보이지 않게 나간 책에 지운 표시). [dropTime] 이면 그 책의 읽은 시간도 하루 합계·연속일에서 빼고([PastBook.timeDropped],
+     * DB 의 읽은 시간 줄은 남긴다), 아니면 합계에 그대로. 표지와 책 파일 경로는 버린다. 읽고 있는 책이면 지우지 않고 false.
+     */
+    @Synchronized fun forget(context: Context, id: String, dropTime: Boolean = false): Boolean {
         // 1.3.0~1.5.3 의 끊긴 저장으로 나간 책에도 같은 id 가 남아 있을 수 있다: 읽고 있는 책이면 그래도 지우지 않는다(표지를 버리지 않게)
         if (list(context).any { it.id == id }) return false
         val past = history(context)
@@ -635,7 +639,7 @@ object BookShelf {
         // 이미 지운 책이면 그대로(지운 날을 덮지 않는다. 두 화면에서 지운 경우)
         if (past.any { it.book.id == id && it.hidden }) return true
         val now = System.currentTimeMillis()
-        writeHistory(context, past.map { if (it.book.id == id) it.copy(hidden = true, leftAt = now) else it })
+        writeHistory(context, past.map { if (it.book.id == id) it.copy(hidden = true, leftAt = now, timeDropped = dropTime) else it })
         dropFiles(context, id)
         Db.get(context).tx { delete("book_file", "book_id = ?", arrayOf(id)) }
         return true

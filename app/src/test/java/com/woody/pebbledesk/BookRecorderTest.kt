@@ -30,8 +30,8 @@ class BookRecorderTest {
 
     @Before fun setUp() {
         db.execSQL("INSERT INTO shelf VALUES (0, 'b-1', '데미안', '', 'x/y', 0, 10, -1, '데미안', '')")
-        db.execSQL("INSERT INTO past VALUES (0, 'p-1', '싯다르타', '', 'x/y', 0, 50, '싯다르타', 1000, 0)")
-        db.execSQL("INSERT INTO past VALUES (1, 'p-2', '데미안', '', 'x/y', 0, 30, '데미안', 2000, 0)")
+        db.execSQL("INSERT INTO past (pos, id, title, author, app, updated_at, progress, seen_title, left_at, hidden) VALUES (0, 'p-1', '싯다르타', '', 'x/y', 0, 50, '싯다르타', 1000, 0)")
+        db.execSQL("INSERT INTO past (pos, id, title, author, app, updated_at, progress, seen_title, left_at, hidden) VALUES (1, 'p-2', '데미안', '', 'x/y', 0, 30, '데미안', 2000, 0)")
         db.execSQL("INSERT INTO book_file VALUES ('p-2', '/sd/d.epub')")
         BookShelf.clearCaches()
         ReadingLog.clearCache()

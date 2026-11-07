@@ -129,11 +129,16 @@ object Categories {
 /**
  * 통계 거르기. [picked] 가 비면 `전체`: 통계에서 뺀 카테고리의 책만 빼고 모두(어떤 책인지 모르는 시간도 든다).
  * 아니면 고른 카테고리([Categories.NONE] 은 `분류 없음`)의 책만(어떤 책인지 모르는 시간은 뺀다. 제목만 아는 책은 `분류 없음`).
- * 없어진 카테고리를 고른 것은 무시하고, 남는 것이 없으면 `전체`.
+ * 없어진 카테고리를 고른 것은 무시하고, 남는 것이 없거나 [selectable] 을 꼭 그만큼 고른 것이면 `전체`.
  */
 class StatsFilter(picked: Set<Long>, val categories: List<Category>, private val books: Map<String, Long>) {
-    val picked: Set<Long> = picked.filter { it == Categories.NONE || categories.any { c -> c.id == it } }.toSet()
     private val excluded = categories.filter { it.excluded }.map { it.id }.toSet()
+
+    /** 보기 메뉴에서 `전체`를 한 번 더 누르면 켜는 것: 통계에서 빼지 않은 카테고리와 `분류 없음`(꼭 이것만 고르면 `전체`와 같게 본다) */
+    val selectable: Set<Long> = categories.map { it.id }.filter { it !in excluded }.toSet() + Categories.NONE
+
+    val picked: Set<Long> = picked.filter { it == Categories.NONE || categories.any { c -> c.id == it } }.toSet()
+        .takeIf { it != selectable }.orEmpty()
 
     /** `전체` */
     val all get() = picked.isEmpty()

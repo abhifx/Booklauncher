@@ -55,7 +55,7 @@ class ReadingBookIdTest {
     private fun shelf(pos: Int, id: String, title: String) = db.execSQL("INSERT INTO shelf VALUES ($pos, '$id', '$title', '', NULL, 0, -1, -1, '', '')")
 
     private fun past(pos: Int, id: String, title: String, hidden: Boolean = false) =
-        db.execSQL("INSERT INTO past VALUES ($pos, '$id', '$title', '', NULL, 0, -1, '', 0, ${if (hidden) 1 else 0})")
+        db.execSQL("INSERT INTO past (pos, id, title, author, app, updated_at, progress, seen_title, left_at, hidden) VALUES ($pos, '$id', '$title', '', NULL, 0, -1, '', 0, ${if (hidden) 1 else 0})")
 
     @Test fun `빈 칸을 그 책으로 채우고 이미 있는 칸에는 더한다`() {
         read(1, "데미안", 10)
