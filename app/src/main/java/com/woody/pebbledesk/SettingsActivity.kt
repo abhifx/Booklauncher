@@ -491,12 +491,11 @@ class SettingsActivity : EinkActivity() {
         }
         blocks += PagedBlocks.Block(listOf(perms))
 
-        // 할 것: 점 하나에 한 묶음, 소제목은 첫 점과 함께
-        val todo = info.todo.ifEmpty { null }
-        (todo ?: listOf(R.string.guide_todo_none)).forEachIndexed { i, res ->
+        // 할 것: 점 하나에 한 묶음, 소제목은 첫 점과 함께. 없으면 묶음을 두지 않는다
+        info.todo.forEachIndexed { i, res ->
             val box = vbox()
             if (i == 0) box.addView(sectionView(getString(R.string.guide_todo)))
-            box.addView(if (todo == null) guidePara(getString(res), Ui.BLACK) else bullet(getString(res)))
+            box.addView(bullet(getString(res)))
             blocks += PagedBlocks.Block(listOf(box))
         }
 

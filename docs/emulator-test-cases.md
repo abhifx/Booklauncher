@@ -384,6 +384,7 @@ ANDROID_SERIAL=emulator-5554 tools/emu/watch-cycle.sh <결과 폴더> [<비교�
 - 한 바퀴 밖의 순서(`tools/emu/watch-e2e.sh <순서> <결과 폴더>`, 바꾸기 전 빌드와 같은 상태에서 한 번씩 돌려 비교):
   - `libby`(대출한 책 열고 닫기: 열림·닫힘 표시), `bookfusion2`(지금 읽는 책 `Continue`), `koreader`(책 둘 번갈아), `kohome`(`KO_FILE` 새 책 → 홈에서 파일로 열기),
     `moonreader`(책 둘 번갈아), `easyview2`(`EV_FILE` 을 다른 앱처럼 열기 → 책 모름, ▶ 마지막 파일), `mihon`(서재 첫 칸 → 작품 상세 → 화 → 메뉴. `MH_PKG=com.amanoteam.kahon` 이면 Kahon, 그 앱 서재에 같은 만화를 넣어 둔 것), `wattpad`(로그인한 계정 서재 목록 보기 첫 칸 → 쪽 넘김 → 뒤로 → 홈: 저자·표지·화 이름), `kobo`(게스트 미리보기 두 권: My Books 둘째 칸 → 메뉴 → 돌아와 맨 위 칸으로 앎), `kobo2`(홈 `Latest Purchases` 둘째 칸 → 책 상세 → `Read Preview`. 둘 다 Kobo 만 강제 종료해 홈 탭에서 시작), `librera`(라이브러리 칸 → 쪽 넘김 → 메뉴 → 뒤로 책 닫기. `LB_PKG=com.foobnix.pdf.reader` 면 무료판, 무료판 라이브러리에는 데모 책 둘만 있어 좌표가 맞지 않는다): `CremaPebble_A11_Play`.
+  - `eco`(이씨오 범용뷰어 3.0, `CremaPebble_A11_Play` 에 Play 로 깔고 도서관 로그인·대출한 책: 서재 첫 칸 → 읽는 화면 → 메뉴 → 뒤로 두 번. 읽는 화면이 화면 캡처를 막아 2-viewer 사진은 없다).
   - `readest`: `CremaPebble_A11_Play_Readest`. `kindle`(서재 칸 두 권 번갈아·메뉴 진행률)·문리더 유료판(`MN_PKG=com.flyersoft.moonreaderp`): `CremaPebble_A11`(킨들 로그인, 홈은 `cmd package set-home-activity` 로 이 앱).
   - 새 책 순서(`kohome`)는 한 번만 되므로 빌드마다 다른 파일(`ko-a`/`ko-b`…, 제목만 다른 EPUB)로 돌리고 제목을 바꿔 비교한다. 이지뷰어 서재는 위 도구 줄이 보였다 안 보였다 해 `easyview2` 의 ▶ 자리가 칸에 걸리기도 한다.
 - 로그인이 필요한 한국 이북 앱(교보도서관·교보eBook·밀리·알라딘·부커스·리디·YES24)은 어느 에뮬에도 로그인돼 있지 않아 단위 테스트와 실기기로 본다.

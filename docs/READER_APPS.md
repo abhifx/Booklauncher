@@ -32,6 +32,7 @@ Pebble Desk 가 이북 앱에서 무엇을 알아내고 무엇을 할 수 있는
 | Librera `com.foobnix.pdf.reader`(무료, 광고)·Librera Pro `com.foobnix.pro.pdf.reader`(Play 유료, GitHub·F-Droid 판도 이 패키지. 오픈소스 내 파일 리더, 우주의 원본) | `com.foobnix.pdf.search.activity.HorizontalViewActivity`(책 넘김)·`org.ebookdroid.ui.viewer.VerticalViewActivity`(스크롤) | O (`file://` 를 `com.foobnix.OpenerActivity` 로, 읽던 쪽으로) | O (그냥 열면 라이브러리) | ? | 사용자가 둔 곳(공유 저장소). Librera 기록은 `/sdcard/Librera`(모든 파일 액세스가 없으면 `Download/Librera`) |
 | 아이리더 기본 리더 `com.zhangyue.iReader.Eink`(掌阅 iReader SmartOS 기기의 시스템 앱. Tango·Ocean 5C 에서 확인) | `com.zhangyue.iReader.Eink.Activity.ActivityRead`·`ActivityReadP1` | O (`ActivityAliasOpenBook` 에 파일 경로 `file`) | O (`ActivityAliasBookShelf`. 실행 화면은 기기에 따라 서점 별칭) | X | 앱 전용 DB |
 | Wattpad `wp.wattpad`(웹 소설, 로그인 필요. 한국 Play 스토어에 없음) | `wp.wattpad.reader.ReaderActivity` | O `wattpad://story/<이야기 번호>`(읽던 자리. 번호는 공개 검색으로) | 그냥 열면 이어 보기 | ? | 앱 전용 저장소 (미확인) |
+| 이씨오 범용뷰어 3.0 `com.mackerly.eco.ecobookviewer3`(도서관 전자책 대출. Play 라이선스 확인이 있어 Play 스토어 없는 기기에서는 열리지 않음) | `com.mackerly.eco.viewer.ViewerActivity` | X (책 정보를 앱 안 화면끼리만 넘긴다) | 그냥 열면 내 서재(로그인한 도서관) | X | 없음(웹 뷰어 `epub.eco.co.kr` 로 그때그때 받는다) |
 | YES24 `com.yes24.ebook.einkstore`(my YES, 시스템 앱. USB 디버깅 중에는 쓸 수 없음) | O | X (스토어 상세만) | O | X | `Android/data` |
 
 - 사용 기록에는 **앱·화면 이름과 시각만** 남는다. 어떤 책인지는 알 수 없다.
@@ -93,6 +94,7 @@ Pebble Desk 가 이북 앱에서 무엇을 알아내고 무엇을 할 수 있는
 | Librera·Librera Pro | 서재·파일 | 서재·메뉴·파일 | 서재·파일 | 서재·메뉴·파일 | X |
 | iReader 기기 내장판 4.1.0 | 공개 Provider 의 표지 | 최근 책 Provider(펌웨어 식별자로 맞추거나, 없으면 맨 위 줄) | 최근 책 Provider | 저장한 진행률(`readpercent`, 읽는 화면을 나올 때) | X |
 | Wattpad | 서재·이야기 화면 | 서재·이야기 화면·읽는 화면(화 처음의 툴바) | 서재(목록 보기)·이야기 화면 | 읽는 화면(화 이름) | X |
+| 이씨오 범용뷰어 3.0 | 서재 | 읽는 화면(옆 메뉴 표지 단추) | 읽는 화면(옆 메뉴 표지 단추) | 읽는 화면(장 순서) | 서재 |
 
 #### 아이리더 기본 리더 `com.zhangyue.iReader.Eink`
 
@@ -124,6 +126,16 @@ Pebble Desk 가 이북 앱에서 무엇을 알아내고 무엇을 할 수 있는
 - **진행률**: % 는 없다(서재 칸의 막대·읽는 화면 아래 막대는 값을 내주지 않는다). 화마다 맨 위에 보이는 화 이름(작가가 붙인 이름 그대로, `Chapter IV`)을 읽는 화로 둔다(Mihon 과 같이 홈·목록·상세에 % 대신 화 이름). 화 중간에서 다시 열면 그 화의 머리가 보일 때까지 앞서 적은 화 그대로다. 몇 번째 화인지는 알 수 없다(목차 서랍도 지금 화를 색으로만 표시한다).
 - **반납일**: 없다.
 - **제약**: 이야기 하나를 책 한 권으로 본다. 로그인해야 쓸 수 있다. 한국 Play 스토어에서는 받을 수 없다. 홈에서 책을 누르면 `wattpad://story/<이야기 번호>` 로 그 이야기를 읽던 자리에서 바로 연다. 번호는 저자를 아는 책이 들어올 때 Wattpad 공개 검색으로 제목·저자가 같은 이야기를 찾아 둔 것이고(인터넷), 저자를 모르거나 못 찾았으면 앱을 연다.
+
+### 이씨오 범용뷰어 3.0 `com.mackerly.eco.ecobookviewer3`
+
+- **권한**: 공통.
+- **할 것**: 없다(책은 대출한 책 목록에서만 열 수 있어 서재를 늘 거친다). 자동 추가 서비스가 다시 붙은 직후 앱이 읽는 화면으로 바로 떴는데 그 책이 아직 목록에 없으면 제목과 저자를 나눌 수 없어, 서재를 본 뒤 다시 열 때 들어온다(드물어 안내에는 적지 않았다).
+- **표지**: 서재 칸(목록·격자 보기)에서 잘라 온다(안드로이드 11 부터). 읽는 화면은 화면 캡처가 막혀 있다.
+- **제목·저자**: 읽는 화면 옆 메뉴의 표지 단추 글자 `표지 이미지 <제목> <저자>`(메뉴를 닫아도 있다). 한 글자에 붙어 있어 서재에서 본 제목·목록의 책 제목으로 앞부분을 맞춰 나눈다.
+- **진행률**: 아래 메뉴의 장 순서 `7 / 12`(목차의 몇 번째 장, 메뉴를 닫아도 있다)로 셈한다(7/12 → 58%). 장 안의 쪽은 없다. 서재 칸의 진행 막대(서버의 읽은 %)는 읽어도 0 그대로라 쓰지 않는다.
+- **반납일**: 서재 칸의 `반납예정일`.
+- **제약**: 서재·읽는 화면이 Compose 라 칸을 눌러도 누름 알림이 오지 않는다(편 책은 읽는 화면으로만 안다). 읽는 화면의 웹 화면은 창에서 훑어 닿지 않고 웹 화면이 보내는 내용 바뀜 알림의 요소로만 닿는다(공통 자리 `ReaderAdapter.onContent`). 뒤로를 2초 안에 두 번 눌러야 닫힌다.
 
 ## 교보도서관 `kr.co.kyobobook.KEL`
 
@@ -930,3 +942,12 @@ Bilingify 의 오픈소스 리더(https://github.com/readest/readest, Tauri). �
     홈 탭 추천 → 상세 `Don't Give Up` → `Start reading`(Chapter 1 처음, 툴바 보임)으로 새 책이 들어왔다(처음 판은 상세를 서재 칸으로만 읽어 저자가 비었다 → `WattpadReader` 로 상세에서 연 이야기·목록에 있는 이야기의 저자 `RiceLover` 를 채움).
     서재에서 P&P 를 연 뒤 홈 탭 → 상세 `Don't Give Up` → `Start reading`(화 중간, 툴바 없음)으로 열자 편 책이 `Don't Give Up` 으로 바뀌었다. 홈으로 나갔다 앱을 다시 열어 이어 읽어도 '책 모름' 없이 그대로였다.
   - **책 바로 열기**: `wattpad://story/<이야기 번호>`(매니페스트에 `www.wattpad.com/story/…` 도)가 상세 없이 읽는 화면을 읽던 자리에서 연다(툴바 없음). 이야기 번호는 화면에 없고, 공개 검색 `https://www.wattpad.com/api/v3/stories?query=<제목>&fields=stories(id,title,user(name))` 이 로그인 없이 제목·사용자 이름과 함께 준다(`Pride and Prejudice (1813)`·`JaneAusten` → 6630775, `Don't Give Up`·`RiceLover` → 1536667. 같은 제목이 많아 저자까지 맞춰야 한다). 넣었다(`WattpadReader.findStory`·`Wattpad.open`): 서재에서 P&P 를 다시 열자 번호 6630775, 상세로 연 `The Cellar`(natashapreston) 는 73997 이 찾아졌고, The Cellar 를 마지막으로 편 뒤 Pebble Desk 홈에서 P&P 를 누르자 Wattpad 가 읽던 자리(툴바 없음)로 열리고 편 책이 P&P 로 바뀌었다(`HomeSignals.bookOpened`). 바로 열기 전 판에서 넣은 책은 Wattpad 에서 한 번 다시 열어야 번호가 찾아진다.
+
+### 이씨오 범용뷰어 3.0 `com.mackerly.eco.ecobookviewer3` (2026-11-07, 에뮬레이터 `CremaPebble_A11_Play`(안드로이드 11) · WebView 155, Play 스토어 3.0.44 (44), minSdk 23, 경기도서관 계정, **지원**)
+
+- **받기**: Pixel_Tablet 에서 Play 로 받아 꺼낸 분할 APK 를 `CremaPebble_A11`(Play 없음)에 깔면 켜자마자 닫힌다: pairip 라이선스 확인(`com.pairip.licensecheck.LicenseActivity`). Play 가 있는 `CremaPebble_A11_Play` 에 Play 로 깔았다.
+- **코드**(jadx): 이씨오가 짠 코드는 작다(`ui.IntroActivity`·`LibraryListActivity`(도서관 고르기)·`LoginActivity`·`MyWorkspaceActivity`(내 서재), `com.mackerly.eco.viewer.ViewerActivity`). 화면은 모두 Compose. 읽는 화면은 Compose `AndroidView` 안의 `WebView` 로 `https://epub.eco.co.kr/Viewer/index.html?userId=…&contentKey=…`(PDF 는 `…/minified/web/viewer.html`)를 연다. 책 파일을 기기에 받지 않는다. 책 정보 `LoanItem`(제목·표지 주소·EPUB/PDF·대출일·반납 예정일·`readingProgress`)은 인텐트 extra 로만 넘긴다. 읽는 화면은 `FLAG_SECURE`, 뒤로는 2초 안에 두 번, EPUB 는 음량 키로 쪽을 넘긴다. JS 다리 `bridge` 는 화면 방향·닫기·TTS 상태뿐이다.
+- **서재**: 목록·격자 보기(위 오른쪽 단추) 모두 누를 수 있는 칸 > 묶음 > [표지 묶음(그림 설명 `책 표지 이미지` + `ProgressBar`), 제목 `TextView`, `대출일`·`반납예정일`·두 날짜 `2026. 11. 7.`·`2026. 11. 14.`, `반납`(·`연장`) 단추]. 진행 막대는 `readingProgress × 0.01` 인데 7/12 장까지 읽고 새로고침해도 0 이었다. 칸을 눌러도 `TYPE_VIEW_CLICKED` 가 오지 않는다(Compose 는 터치 누름을 알리지 않는다). 누르면 `도서를 여는 중입니다.` 창(`Z0.t`)이 뜬 뒤 읽는 화면.
+- **읽는 화면**: `uiautomator dump` 도 서비스의 창 뿌리 훑기도 Compose 묶음 아래 빈 `View` 둘뿐이다(뷰 계층에는 `B0.u0 › Y0.o › WebView` 가 있지만 Compose 가 내보내지 않는다). 그런데 웹 화면이 `TYPE_WINDOW_CONTENT_CHANGED`(요소 `WebView`·`View`)를 보내고, 그 요소에서 웹 화면 안을 다 훑을 수 있다: 본문, 아래 메뉴(`3. 할아버지와 손자`, `7` `/` `12`, 진행 막대 위 `7 / 12`, `이전 페이지`·`음성재생`), 위 메뉴 단추(`목차 메뉴`·`뷰어 종료`·`책갈피 설정`·`메뉴`), 화면 밖 옆 메뉴(`표지 이미지 레 미제라블 3(한글판) 빅토르 위고`, 책갈피·하이라이트·메모 수, 보기 설정), 목차(`7 3. 할아버지와 손자` 등, 번호는 장 순서). 메뉴를 닫아도 이 글자들은 그대로 있다. `7 / 12` 의 12 는 목차 장 수다(장 안 쪽 번호는 없다).
+- **Pebble Desk**(`readers/EcoViewer.kt`, `ScreenReader` 상속): 서재 칸은 모양으로 찾고(표지·반납일, 진행률은 버림), 웹 화면은 내용 바뀜 알림의 요소에서 가장 바깥 `WebView` 를 붙잡아 두었다가(`onContent`, 읽는 화면에 새로 들어올 때마다 다시) 잠잠해지면 표지 단추와 장 순서를 읽는다. 표지 단추 글자는 서재에서 본 제목·목록의 책 제목 가운데 가장 긴 앞부분을 제목, 나머지를 저자로 나눈다.
+  - 에뮬레이터에서 확인: 격자 보기 서재를 본 뒤 칸을 누르자 `레 미제라블 3(한글판)`·저자 `빅토르 위고`·58%(7/12)로 들어왔고 표지는 서재에서 잘렸다. 서재로 돌아오자 반납일 2026-11-14, 목록 보기로 다시 열어 목차에서 다음 장으로 옮기자 66%(8/12). 홈 함께 읽는 책에 `이씨오 범용뷰어 · 66% 읽음 · 반납 7일 남음`.

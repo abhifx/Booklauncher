@@ -346,10 +346,10 @@
     <string name="guide_kotatsu">Kotatsu</string>
     <string name="guide_librera">Librera</string>
     <string name="guide_wattpad">Wattpad</string>
+    <string name="guide_eco">ECO Viewer 3.0</string>
     <string name="guide_librera_pro">Librera Pro</string>
     <string name="guide_permissions">Permissions</string>
     <string name="guide_todo">In the app</string>
-    <string name="guide_todo_none">Nothing to change.</string>
     <string name="guide_fields">Book info added automatically</string>
     <string name="guide_notes">Good to know</string>
     <string name="guide_cover">Cover</string>
@@ -408,7 +408,6 @@
     <string name="guide_t_kindle_menu">Books not yet downloaded, and progress while reading, come in only when you tap the middle to open the menu.</string>
     <string name="guide_t_libby_time">Reading time is counted only while auto-add is on.</string>
     <string name="guide_t_neo_open">Open books from the BOOX library or files.</string>
-    <string name="guide_t_ko_files">Nothing to change. KOReader shows no book title on screen, so the history files KOReader keeps are read instead.</string>
     <string name="guide_note_ez">Tapping the book on the home screen opens its file. A folder of pictures counts as one book.</string>
     <string name="guide_note_neo">Tapping the book on the home screen opens its file in NeoReader.</string>
     <string name="guide_note_ko">Books opened in KOReader come in when you return home. Tapping the book on the home screen opens its file.</string>

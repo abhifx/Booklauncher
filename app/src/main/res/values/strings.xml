@@ -350,10 +350,10 @@
     <string name="guide_kotatsu">Kotatsu</string>
     <string name="guide_librera">Librera</string>
     <string name="guide_wattpad">Wattpad</string>
+    <string name="guide_eco">이씨오 범용뷰어 3.0</string>
     <string name="guide_librera_pro">Librera Pro</string>
     <string name="guide_permissions">필요한 권한</string>
     <string name="guide_todo">앱에서 할 것</string>
-    <string name="guide_todo_none">따로 바꿀 것은 없습니다.</string>
     <string name="guide_fields">자동으로 들어오는 책 정보</string>
     <string name="guide_notes">알아 둘 것</string>
     <string name="guide_cover">표지</string>
@@ -412,7 +412,6 @@
     <string name="guide_t_kindle_menu">받지 않았던 책과 읽는 중 진행률은 가운데를 눌러 메뉴를 띄워야 들어옵니다.</string>
     <string name="guide_t_libby_time">오늘 읽은 시간도 자동 추가를 켜 둬야 셉니다.</string>
     <string name="guide_t_neo_open">BOOX 서재나 파일에서 책을 여세요.</string>
-    <string name="guide_t_ko_files">따로 바꿀 것은 없습니다. KOReader 는 화면에 책 제목을 내놓지 않아 KOReader 가 남기는 기록 파일을 읽습니다.</string>
     <string name="guide_note_ez">홈에서 책을 누르면 그 파일을 바로 엽니다. 그림 폴더는 한 권으로 봅니다.</string>
     <string name="guide_note_neo">홈에서 책을 누르면 그 파일을 네오리더로 바로 엽니다.</string>
     <string name="guide_note_ko">KOReader 에서 연 책은 홈으로 돌아오면 들어옵니다. 홈에서 책을 누르면 그 파일을 바로 엽니다.</string>

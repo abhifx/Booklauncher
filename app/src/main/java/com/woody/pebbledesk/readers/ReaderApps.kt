@@ -9,7 +9,7 @@ import android.content.Context
  */
 object ReaderApps {
     val ALL = listOf(
-        KyoboLibrary, KyoboEbook, KyoboEbookMobile, Millie, MillieMobile, Aladin, Bookers2, Bookers, Ridi, RidiOneStore, Yes24Library, Yes24LibraryMobile, Yes24Ebook, MyYes, MoonReader, MoonReaderPro, EasyView, EasyViewFree, CherieViewer, Kindle, Libby, NeoReader, KOReader, KOReaderFdroid, Readest, BookFusion, Woojoo, Mihon, Kahon, PlayBooks, Kobo, Futon, Kotatsu, Librera, LibreraPro, IReader, Wattpad,
+        KyoboLibrary, KyoboEbook, KyoboEbookMobile, Millie, MillieMobile, Aladin, Bookers2, Bookers, Ridi, RidiOneStore, Yes24Library, Yes24LibraryMobile, Yes24Ebook, MyYes, MoonReader, MoonReaderPro, EasyView, EasyViewFree, CherieViewer, Kindle, Libby, NeoReader, KOReader, KOReaderFdroid, Readest, BookFusion, Woojoo, Mihon, Kahon, PlayBooks, Kobo, Futon, Kotatsu, Librera, LibreraPro, IReader, Wattpad, EcoViewer,
     )
 
     /** 패키지마다 앱 파일들(판에 따라 다른 앱이면 여럿) */
