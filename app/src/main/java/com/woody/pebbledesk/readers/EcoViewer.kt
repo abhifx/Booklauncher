@@ -100,6 +100,12 @@ object EcoViewer : ReaderApp(
      */
     internal fun titleKey(title: String): String = title.filter { it.isLetterOrDigit() }.lowercase()
 
+    /** [title] 이 [titles] 가운데 하나와 같은가([titleKey]). 열쇠가 빈 것(빈 제목·기호뿐)은 아무것과도 맞추지 않는다 */
+    internal fun knownTitle(title: String, titles: Sequence<String>): Boolean {
+        val key = titleKey(title).ifEmpty { return false }
+        return titles.any { titleKey(it) == key }
+    }
+
     private fun part(cur: String, total: String): Int {
         val c = cur.toLongOrNull() ?: return -1
         val t = total.toLongOrNull() ?: return -1
@@ -123,7 +129,7 @@ object EcoViewer : ReaderApp(
 private class EcoReader(app: ReaderApp) : ScreenReader(app) {
     /** 읽는 화면의 웹 화면(바깥 WebView 요소). 읽는 화면에 새로 들어오면 다시 붙잡는다 */
     private var web: AccessibilityNodeInfo? = null
-    /** 서재에서 본 제목([EcoViewer.titleKey]) */
+    /** 서재에서 본 제목 */
     private val shelfTitles = mutableSetOf<String>()
 
     override fun onEnterViewer(ctx: AppContext, from: String?, again: Boolean) {
@@ -140,7 +146,7 @@ private class EcoReader(app: ReaderApp) : ScreenReader(app) {
 
     override fun onShelf(ctx: AppContext) {
         super.onShelf(ctx)
-        ctx.root?.let { r -> app.shelfCells(r).forEach { shelfTitles += EcoViewer.titleKey(it.title) } }
+        ctx.root?.let { r -> app.shelfCells(r).forEach { shelfTitles += it.title } }
     }
 
     override fun onViewer(ctx: AppContext) {
@@ -152,10 +158,12 @@ private class EcoReader(app: ReaderApp) : ScreenReader(app) {
             return
         }
         val lookup = ctx.recorder.lookup
+        // 이 앱에서 앞서 편 책은 늘 안다(찾기는 같은 책으로 보이는 첫 책만 주어 『X』가 『X: 2권』보다 먼저 나올 수 있다)
+        val recorded = ctx.recorder.recordedBook(ctx.pkg)?.let { listOf(it.title, it.seenTitle) }.orEmpty()
         val shown = EcoViewer.readWeb(node) { t ->
-            val key = EcoViewer.titleKey(t)
-            // 목록의 책도 부제까지 같은지 다시 본다(찾기는 부제를 떼고 맞춘다)
-            key in shelfTitles || lookup.byTitle(t)?.let { b -> EcoViewer.titleKey(b.title) == key || EcoViewer.titleKey(b.seenTitle) == key } == true
+            // 목록의 책도 부제까지 같은지 다시 본다(찾기는 한쪽에만 있는 부제를 무시한다)
+            val candidates = shelfTitles.asSequence() + recorded + lookup.byTitle(t)?.let { b -> sequenceOf(b.title, b.seenTitle) }.orEmpty()
+            EcoViewer.knownTitle(t, candidates)
         }
         logShown(ctx, shown)
         retryProgress(ctx, shown.progress)

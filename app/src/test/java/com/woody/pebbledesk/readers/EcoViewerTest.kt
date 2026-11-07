@@ -136,9 +136,16 @@ class EcoViewerTest {
     }
 
     @Test fun `부제가 있는 제목도 저자를 떼어 나눈다`() {
-        val keys = setOf(EcoViewer.titleKey("사피엔스: 유인원에서 사이보그까지"))
         assertEquals("사피엔스: 유인원에서 사이보그까지" to "유발 하라리",
-            EcoViewer.splitCover("사피엔스: 유인원에서 사이보그까지 유발 하라리") { EcoViewer.titleKey(it) in keys })
+            EcoViewer.splitCover("사피엔스: 유인원에서 사이보그까지 유발 하라리") { EcoViewer.knownTitle(it, sequenceOf("사피엔스: 유인원에서 사이보그까지")) })
+    }
+
+    @Test fun `빈 제목·기호뿐인 앞부분은 아는 제목이 아니다`() {
+        val titles = sequenceOf("", "레 미제라블 3(한글판)")
+        assertEquals(false, EcoViewer.knownTitle("★", titles))
+        assertEquals(true, EcoViewer.knownTitle("레미제라블 3 (한글판)", titles))
+        assertEquals("★ 레 미제라블 3(한글판)" to "빅토르 위고",
+            EcoViewer.splitCover("★ 레 미제라블 3(한글판) 빅토르 위고") { EcoViewer.knownTitle(it, sequenceOf("", "★ 레 미제라블 3(한글판)")) })
     }
 
     @Test fun `지금 장이 전체보다 크면 버린다`() = assertEquals(-1, EcoViewer.chapterPercent(listOf("13", "/", "12")))

@@ -199,7 +199,7 @@ interface BookRecorder {
 /** 화면·데이터에서 본 것: 앱이 보여 준 제목, 저자, 진행률, 반납일 */
 data class Seen(val title: String, val author: String, val progress: Int, val due: Long)
 sealed interface Target {
-    /** 제목으로 찾기(부제·공백 무시, seenTitle). 나간 책은 같은 제목이면 되살린다 — 지금 byFile = false */
+    /** 제목으로 찾기(sameTitle: 공백 무시, 부제는 한쪽에만 있으면 무시. seenTitle). 나간 책은 같은 제목이면 되살린다 — 지금 byFile = false */
     object ByTitle : Target
     /**
      * 앱이 정한 책: [id] 의 책(읽고 있는 책이면 맨 앞으로, 나간 책이면 그 책만 되살림), null 이면 같은 제목이 있어도 새 책 — 지금 byFile = true.

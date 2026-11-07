@@ -291,8 +291,20 @@ fun normTitle(title: String): String {
 /**
  * 같은 책인가: 정리한 제목([normTitle], 부제·공백·기호·대소문자 무시)이 전부 같다. 앞부분만 같은 제목(『데미안』과 『데미안 2』)은 다른 책
  * (1.5.3 까지는 앞부분이 같아도 같은 책으로 봤다. 읽은 시간의 책은 한 번 정하면 바뀌지 않아 속편이 앞 책에 붙지 않게).
+ * 부제는 한쪽에만 있으면 무시하고(서재가 부제를 빼고 보여 주는 앱), 둘 다 있는데 다르면 다른 책이다(『해리포터: 1권』과 『해리포터: 2권』. 1.7.8 까지는 같은 책).
  */
-fun sameTitle(a: String, b: String): Boolean = normTitle(a) == normTitle(b)
+fun sameTitle(a: String, b: String): Boolean {
+    if (normTitle(a) != normTitle(b)) return false
+    val sa = subtitleKey(a)
+    val sb = subtitleKey(b)
+    return sa.isEmpty() || sb.isEmpty() || sa == sb
+}
+
+/** 부제(`:` 뒤)를 [normTitle] 처럼 정리한 것. 부제가 없으면(`:` 앞이 비어 부제로 나누지 않는 제목도) "" */
+private fun subtitleKey(title: String): String {
+    if (title.substringBefore(':').isBlank()) return ""
+    return title.substringAfter(':', "").filter { it.isLetterOrDigit() || it == '+' || it == '#' }.lowercase()
+}
 
 /**
  * `책 추가` 로 직접 넣은 책(지원하지 않는 이북 앱용). 이북 앱이 보여 주는 제목으로 찾지 않는다([hasTitle]): 지원하는 앱에서 펴면 자동 추가가 따로 넣고,
@@ -305,7 +317,7 @@ val ShelfBook.manual: Boolean get() = id.startsWith(BookShelf.MANUAL_PREFIX)
  * 직접 넣은 책([manual])은 제목으로 찾지 않는다(자동 추가·읽은 시간의 책 정하기·목록에 없던 책 모두).
  */
 fun ShelfBook.hasTitle(title: String): Boolean =
-    !manual && (sameTitle(this.title, title) || (seenTitle.isNotEmpty() && normTitle(seenTitle) == normTitle(title)))
+    !manual && (sameTitle(this.title, title) || (seenTitle.isNotEmpty() && sameTitle(seenTitle, title)))
 
 /** 나간 책이 나간 날(지운 책은 지운 날) */
 fun leftOn(p: PastBook, zone: ZoneId = ZoneId.systemDefault()): LocalDate = Instant.ofEpochMilli(p.leftAt).atZone(zone).toLocalDate()
@@ -960,7 +972,7 @@ object BookShelf {
     }
 
     /**
-     * 제목이 같은 책(부제·공백 무시). 사용자가 제목을 고친 자동 추가 책은 앱이 보여 준 제목([ShelfBook.seenTitle])으로도 찾는다
+     * 제목이 같은 책([sameTitle]: 공백 무시, 부제는 한쪽에만 있으면 무시). 사용자가 제목을 고친 자동 추가 책은 앱이 보여 준 제목([ShelfBook.seenTitle])으로도 찾는다
      * (그러지 않으면 다음에 펼 때 새 책으로 들어간다).
      */
     fun findByTitle(context: Context, title: String): ShelfBook? = list(context).firstOrNull { it.hasTitle(title) }
