@@ -67,8 +67,14 @@ class Sheet(private val context: Context) {
     /** 부제의 최대 줄 수(넘으면 끝에 줄임표) */
     private var subtitleLines = 16
     private val items = mutableListOf<Item>()
-    /** 글자 입력 줄(지금 값, 다 쓰면 부를 일). 있으면 머리 아래에 두고 `저장`을 맨 위 항목으로 둔다. */
-    private var input: Pair<String, (String) -> Unit>? = null
+    /**
+     * 글자 입력 줄들(지금 값, 비었을 때 회색 빈칸 글)과 다 쓰면 부를 일(줄마다 다듬은 값). 있으면 머리 아래에 두고 [saveLabel](없으면 `저장`)을
+     * 맨 위 항목으로 둔다. 첫 줄은 비우면 저장하지 않고, 나머지 줄은 비워도 된다.
+     */
+    private var fields: List<Pair<String, String?>> = emptyList()
+    private var onFields: ((List<String>) -> Unit)? = null
+    private var saveLabel: String? = null
+    private val hasInput get() = onFields != null
     private var numeric = false
     /** 입력이 날짜인가(날짜 자판) */
     private var date = false
@@ -148,17 +154,25 @@ class Sheet(private val context: Context) {
      * [check] 가 있으면 저장 전에 본다(틀렸으면 입력 줄 아래에 그 글을 굵게 알리고 저장하지 않는다. 처음에는 빈 줄).
      */
     fun input(initial: String, numeric: Boolean = false, check: ((String) -> String?)? = null, onDone: (String) -> Unit) = apply {
-        input = initial to onDone; this.numeric = numeric
+        fields = listOf(initial to null); onFields = { onDone(it[0]) }; this.numeric = numeric
         if (check != null) { validate = check; inputHint = inputHint ?: "" }
+    }
+
+    /**
+     * 여러 줄 입력([fields]: 줄마다 지금 값·빈칸 글). 첫 줄은 비우면 저장하지 않고 나머지는 비워도 된다. 자판의 다음 키로 아래 줄로,
+     * 마지막 줄의 완료 키나 [save] 줄로 저장한다([onDone] 에 줄마다 다듬은 값).
+     */
+    fun inputs(fields: List<Pair<String, String>>, save: String, onDone: (List<String>) -> Unit) = apply {
+        this.fields = fields; onFields = onDone; saveLabel = save
     }
 
     /** 날짜 한 줄 입력(날짜 자판): 아래에 [hint], 저장 전에 [check](틀렸으면 그 글을 굵게 알리고 저장하지 않는다). */
     fun dateInput(initial: String, hint: String, check: (String) -> String?, onDone: (String) -> Unit) = apply {
-        input = initial to onDone; date = true; inputHint = hint; validate = check
+        fields = listOf(initial to null); onFields = { onDone(it[0]) }; date = true; inputHint = hint; validate = check
     }
 
     /** 가로 화면에서 두 칸으로 나누는가: 아래에 붙는 메뉴이고 항목이 있으며 별점·감상·입력 칸이 없을 때(키보드와 함께 쓰는 메뉴는 한 칸) */
-    private val split get() = !centered && review == null && input == null && (items.isNotEmpty() || checks.isNotEmpty()) && context.landscape()
+    private val split get() = !centered && review == null && !hasInput && (items.isNotEmpty() || checks.isNotEmpty()) && context.landscape()
 
     /** 두 칸 메뉴의 오른쪽(항목) 칸 폭 */
     private fun menuWidth() = maxOf(context.dp(SPLIT_MENU_DP), (context.resources.displayMetrics.widthPixels * SPLIT_MENU_RATIO).toInt())
@@ -217,7 +231,7 @@ class Sheet(private val context: Context) {
      */
     private fun fitRows() {
         val count = items.size + checks.size
-        if (perPage != null || count < 2 || centered || review != null || input != null) return
+        if (perPage != null || count < 2 || centered || review != null || hasInput) return
         val avail = (context as? android.app.Activity)?.findViewById<View>(android.R.id.content)?.height?.takeIf { it > 0 }
             ?: context.resources.displayMetrics.heightPixels
         val over = height() - avail
@@ -247,7 +261,7 @@ class Sheet(private val context: Context) {
             setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT)
             decorView.setPadding(0, 0, 0, 0)
             // 입력 줄이 있으면 키보드를 띄우고, 메뉴가 키보드 위로 올라오게 한다.
-            if (input != null) setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE or WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+            if (hasInput) setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE or WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
             if (review != null) setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN or WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
         }
         // 감상을 쓰다 바깥을 잘못 눌러 글이 날아가지 않게(뒤로 가기·`취소`로 닫는다).
@@ -360,43 +374,49 @@ class Sheet(private val context: Context) {
             root.isFocusableInTouchMode = true
         }
 
-        input?.let { (initial, onDone) ->
-            val field = EditText(c).apply {
-                setText(initial)
-                setSelection(text.length)
-                setSp(24f)
-                setTextColor(Ui.BLACK)
-                background = null
-                setPadding(0, c.dp(8), 0, c.dp(8))
-                isSingleLine = true
-                inputType = when {
-                    date -> InputType.TYPE_CLASS_DATETIME or InputType.TYPE_DATETIME_VARIATION_DATE
-                    numeric -> InputType.TYPE_CLASS_NUMBER
-                    else -> InputType.TYPE_CLASS_TEXT
+        onFields?.let { onDone ->
+            val edits = fields.mapIndexed { i, (initial, placeholder) ->
+                EditText(c).apply {
+                    setText(initial)
+                    setSelection(text.length)
+                    setSp(24f)
+                    setTextColor(Ui.BLACK)
+                    placeholder?.let { hint = it; setHintTextColor(Ui.LIGHT_GRAY) }
+                    background = null
+                    setPadding(0, c.dp(8), 0, c.dp(8))
+                    isSingleLine = true
+                    inputType = when {
+                        date -> InputType.TYPE_CLASS_DATETIME or InputType.TYPE_DATETIME_VARIATION_DATE
+                        numeric -> InputType.TYPE_CLASS_NUMBER
+                        else -> InputType.TYPE_CLASS_TEXT
+                    }
+                    // 마지막 줄이 아니면 자판의 다음 키로 아래 줄로(안드로이드가 다음 입력 줄로 옮긴다)
+                    imeOptions = (if (i == fields.lastIndex) EditorInfo.IME_ACTION_DONE else EditorInfo.IME_ACTION_NEXT) or EditorInfo.IME_FLAG_NO_EXTRACT_UI
                 }
-                imeOptions = EditorInfo.IME_ACTION_DONE or EditorInfo.IME_FLAG_NO_EXTRACT_UI
             }
             val hint = inputHint?.let { c.text(it, 15f, color = Ui.LIGHT_GRAY, lines = 2) }
             val save = {
-                val v = field.text.toString().trim()
-                val error = validate?.invoke(v)
+                val values = edits.map { it.text.toString().trim() }
+                val error = validate?.invoke(values[0])
                 if (error != null) hint?.apply { text = error; typeface = Ui.bold; setTextColor(Ui.BLACK) }
-                else if (v.isNotEmpty()) {
+                else if (values[0].isNotEmpty()) {
                     // 키보드를 내리고 닫는다(아래 메뉴 위에 떠서 열었을 때 키보드가 남아 그 메뉴의 아래 줄을 가리지 않게).
-                    c.getSystemService(InputMethodManager::class.java)?.hideSoftInputFromWindow(field.windowToken, 0)
-                    dismissThen { onDone(v) }
+                    c.getSystemService(InputMethodManager::class.java)?.hideSoftInputFromWindow(edits[0].windowToken, 0)
+                    dismissThen { onDone(values) }
                 }
             }
-            field.setOnEditorActionListener { _, action, _ -> if (action == EditorInfo.IME_ACTION_DONE) { save(); true } else false }
-            root.addView(field, lp(MATCH, WRAP).apply { marginStart = c.dp(Ui.MARGIN); marginEnd = c.dp(Ui.MARGIN) })
-            root.addView(c.hline(2))
+            edits.last().setOnEditorActionListener { _, action, _ -> if (action == EditorInfo.IME_ACTION_DONE) { save(); true } else false }
+            edits.forEach { field ->
+                root.addView(field, lp(MATCH, WRAP).apply { marginStart = c.dp(Ui.MARGIN); marginEnd = c.dp(Ui.MARGIN) })
+                root.addView(c.hline(2))
+            }
             hint?.let { root.addView(it, lp(MATCH, WRAP).apply { marginStart = c.dp(Ui.MARGIN); marginEnd = c.dp(Ui.MARGIN); topMargin = c.dp(8); bottomMargin = c.dp(10) }) }
             root.addView(c.hbox().apply {
                 setPadding(c.dp(Ui.MARGIN), 0, c.dp(Ui.MARGIN), 0)
-                addView(c.text(c.getString(R.string.save), 24f, Ui.bold), lp(MATCH, WRAP))
+                addView(c.text(saveLabel ?: c.getString(R.string.save), 24f, Ui.bold), lp(MATCH, WRAP))
                 setOnClickListener { save() }
             }, lp(MATCH, c.rowDp(Ui.ROW_DP)))
-            field.requestFocus()
+            edits[0].requestFocus()
         }
 
         // 항목·체크 줄(줄마다 위에 옅은 선). 두 칸이면 첫 줄 위 선은 두지 않는다(메뉴 위 굵은 선 바로 아래라)
@@ -471,7 +491,7 @@ class Sheet(private val context: Context) {
         }, lp(MATCH, c.dp(CLOSE_ROW_DP)))
 
         // 입력이 없는 메뉴는 초점을 받지 않는다(받을 수 있으면 기기 버튼을 눌렀을 때 누를 수 있는 글자에 회색 초점 표시가 남는다).
-        if (input == null && review == null) root.descendantFocusability = ViewGroup.FOCUS_BLOCK_DESCENDANTS
+        if (!hasInput && review == null) root.descendantFocusability = ViewGroup.FOCUS_BLOCK_DESCENDANTS
         return root
     }
 }

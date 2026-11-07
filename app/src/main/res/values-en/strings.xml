@@ -153,10 +153,13 @@
     <string name="device_recent_no_access">Needs usage access (Settings › Reading › Today\'s reading time)</string>
     <string name="on">On</string>
     <string name="off">Off</string>
-    <string name="book_search_title">Add a book</string>
+    <string name="add_book_title">Add a book</string>
+    <string name="add_book_desc">No internet needed. Add a cover later from Edit book info › Find cover again.</string>
+    <string name="add_book_author_hint">Author (optional)</string>
+    <string name="add_book_save">Add</string>
     <string name="book_query_hint">Book title</string>
     <string name="search">Search</string>
-    <string name="book_search_idle">Type a title and search. After picking a cover, choose the app you read it in. Books in supported apps are added separately when you open them.</string>
+    <string name="book_search_idle">Type a title and search. Pick a cover to use it, with its title and author, for this book.</string>
     <string name="searching">Searching…</string>
     <string name="book_results">Found %1$d. Pick a cover.</string>
     <string name="book_none">Nothing found</string>

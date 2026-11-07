@@ -936,7 +936,7 @@ class HomeActivity : EinkActivity() {
         val on = ReaderWatchService.isEnabled(this)
         val sheet = Sheet(this).header(getString(R.string.add_guide_title), getString(if (on) R.string.add_guide_on else R.string.add_guide_off))
         if (!on) sheet.item(getString(R.string.add_guide_turn_on), bold = true) { ReaderWatchService.openSettings(this) }
-        sheet.item(getString(R.string.add_guide_manual)) { startActivity(BookSearchActivity.intent(this)) }.show()
+        sheet.item(getString(R.string.add_guide_manual)) { addBookSheet() }.show()
     }
 
     /** 표지 자리: 연한 회색으로 채우고 점선 테두리, 가운데에 + */
