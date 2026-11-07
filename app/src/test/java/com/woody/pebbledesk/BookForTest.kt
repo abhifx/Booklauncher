@@ -102,4 +102,14 @@ class BookForTest {
         assertFalse(sameTitle(": 부제", ": 다른 부제"))
         assertTrue(sameTitle(": 부제", ":부제"))
     }
+
+    @Test fun `부제는 한쪽에만 있으면 무시하고 둘 다 있는데 다르면 다른 책`() {
+        assertTrue(sameTitle("달러구트 꿈 백화점", "달러구트 꿈 백화점 : 잠들어야만 입장 가능합니다"))
+        assertTrue(sameTitle("해리포터: 1권", "해리포터 : 1 권"))
+        assertFalse(sameTitle("해리포터: 1권", "해리포터: 2권"))
+        val shelf = listOf(book("b-1", "해리포터: 1권"), book("b-2", "해리포터: 2권"))
+        assertEquals("b-2", of("해리포터: 2권", "10-01", shelf = shelf))
+        // 앱이 보여 준 제목(제목을 고친 책)도 같은 규칙
+        assertEquals("b-3", of("시리즈: 2권", "10-01", shelf = listOf(book("b-4", "고친 1권", seen = "시리즈: 1권"), book("b-3", "고친 2권", seen = "시리즈: 2권"))))
+    }
 }
