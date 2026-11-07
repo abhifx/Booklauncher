@@ -17,8 +17,8 @@ import android.widget.ImageView
 import android.widget.TextView
 
 /**
- * 읽는 책 추가: 제목으로 표지를 찾아([BookSearch]: 한국어는 YES24, 그 밖은 Apple Books·Open Library) 고르면 책 목록 맨 앞에 넣고, 이어서 그 책을 읽는 앱을 고른다.
- * 결과는 표지 4열 그리드(한 페이지 두 줄)로 보여 주고 페이지로 넘긴다.
+ * 표지 다시 찾기: 책 제목(과 저자)으로 표지를 찾아([BookSearch]: 한국어는 YES24, 그 밖은 Apple Books·Open Library) 고르면 그 책의 표지·제목·저자를 바꾼다
+ * (자리·앱·진행률은 그대로). 결과는 표지 4열 그리드(한 페이지 두 줄)로 보여 주고 페이지로 넘긴다. 책 추가는 인터넷 없이 제목·저자만 적는다([addBookSheet]).
  */
 class BookSearchActivity : EinkActivity() {
     private lateinit var input: EditText
@@ -31,8 +31,8 @@ class BookSearchActivity : EinkActivity() {
     /** 늦게 끝난 옛 검색이 새 결과를 덮지 않도록 검색마다 번호를 붙인다. */
     private var searchId = 0
     private var busy = false
-    /** 표지 다시 찾기: 이 책의 표지·제목만 바꾼다(자리·앱·진행률은 그대로). */
-    private val replaceId by lazy { intent.getStringExtra(EXTRA_REPLACE) }
+    /** 표지를 바꿀 책 */
+    private val replaceId by lazy { intent.getStringExtra(EXTRA_REPLACE).orEmpty() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,7 +40,7 @@ class BookSearchActivity : EinkActivity() {
         coverH = fit.cellW * 3 / 2
 
         val root = vbox()
-        root.addView(titleRow(getString(if (replaceId != null) R.string.find_cover else R.string.book_search_title), Palette.Area.LIBRARY) { finish() })
+        root.addView(titleRow(getString(R.string.find_cover), Palette.Area.LIBRARY) { finish() })
         root.addView(hline(2))
 
         // 제목 입력 줄: 박스 없이 아래 굵은 선만
@@ -93,8 +93,8 @@ class BookSearchActivity : EinkActivity() {
         setContentView(root)
 
         val preset = intent.getStringExtra(EXTRA_QUERY)
-        if (preset != null) {
-            // 표지 다시 찾기: 제목으로 바로 찾는다.
+        if (!preset.isNullOrBlank()) {
+            // 그 책의 제목·저자로 바로 찾는다.
             input.setText(preset)
             search()
         } else {
@@ -163,26 +163,11 @@ class BookSearchActivity : EinkActivity() {
     }
 
     /**
-     * 표지를 받아 새 책으로 맨 앞에 넣고 읽는 앱을 고르러 간다. 지원하지 않는 이북 앱용이라 제목으로 다른 책·읽은 시간과 잇지 않는다
-     * ([BookShelf.add], [manual]. 지원하는 앱의 책은 펴면 자동 추가가 넣는다. 이어 읽으려면 상세의 `다시 읽기`).
+     * 표지를 받아 이 책의 표지·제목·저자를 바꾸고 닫는다. 저장은 받은 뒤 화면 스레드에서 바로 한다(뒤로 가기도 화면 스레드라 '살아 있나' 확인과
+     * 저장 사이에 끼어들 수 없다. 받는 사이 뒤로 갔으면 저장하지 않는다). 받기·저장이 실패하면 오류만 보인다.
      */
     private fun pick(book: BookResult) {
         if (busy) return
-        replaceId?.let { old -> replaceCover(old, book); return }
-        withCover(book, { bytes -> BookShelf.add(this, book, bytes) }) { added ->
-            startActivity(AppListActivity.intent(this, AppListActivity.Mode.PICK_READER, added.id))
-            finish()
-        }
-    }
-
-    private fun replaceCover(oldId: String, book: BookResult) =
-        withCover(book, { bytes -> BookShelf.replace(this, oldId, book, bytes) }) { finish() }
-
-    /**
-     * 표지를 받은 뒤 [save] 하고 [then]. 저장은 받은 뒤 화면 스레드에서 바로 한다(뒤로 가기도 화면 스레드라 '살아 있나' 확인과 저장 사이에
-     * 끼어들 수 없다. 받는 사이 뒤로 갔으면 저장하지 않아 취소한 것처럼 보였는데 나중에 책이 나타나지 않는다). 받기·저장이 실패하면 오류만 보인다.
-     */
-    private fun <T> withCover(book: BookResult, save: (ByteArray) -> T, then: (T) -> Unit) {
         busy = true
         // 진행 중인 검색은 버린다(늦게 온 결과가 `표지 받는 중`과 고른 표지를 덮지 않게. 표지를 받는 동안은 다른 표지를 누를 수 없다)
         searchId++
@@ -190,7 +175,7 @@ class BookSearchActivity : EinkActivity() {
         Bg.run({ runCatching { BookSearch.download(book.coverUrl) }.getOrElse { BookSearch.download(book.thumbUrl) } }) { got ->
             busy = false
             if (isFinishing || isDestroyed) return@run
-            got.mapCatching(save).onSuccess(then).onFailure { status.text = errorText(R.string.cover_error, it) }
+            got.mapCatching { BookShelf.replace(this, replaceId, book, it) }.onSuccess { finish() }.onFailure { status.text = errorText(R.string.cover_error, it) }
         }
     }
 
@@ -209,9 +194,9 @@ class BookSearchActivity : EinkActivity() {
         private const val EXTRA_REPLACE = "replace"
         private const val EXTRA_QUERY = "query"
 
-        /** 책 추가. [replace] 를 주면 그 책의 표지 다시 찾기(제목으로 바로 검색). */
-        fun intent(context: Context, replace: ShelfBook? = null) = Intent(context, BookSearchActivity::class.java).apply {
-            replace?.let { putExtra(EXTRA_REPLACE, it.id); putExtra(EXTRA_QUERY, listOf(it.title, it.author).filter(String::isNotBlank).joinToString(" ")) }
+        /** [replace] 의 표지 다시 찾기(제목·저자로 바로 검색) */
+        fun intent(context: Context, replace: ShelfBook) = Intent(context, BookSearchActivity::class.java).apply {
+            putExtra(EXTRA_REPLACE, replace.id); putExtra(EXTRA_QUERY, listOf(replace.title, replace.author).filter(String::isNotBlank).joinToString(" "))
         }
     }
 }
