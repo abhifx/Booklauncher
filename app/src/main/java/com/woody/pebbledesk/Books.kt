@@ -808,24 +808,18 @@ object BookShelf {
     }
 
     /**
-     * 검색에서 고른 책을 새 책([manual], 지원하지 않는 이북 앱용)으로 맨 앞에 넣는다.
-     * 책은 사용자가 직접 뺄 때만 빠진다(자동으로 밀어내지 않는다). 이미지가 아니면 IOException.
+     * 사용자가 적은 제목·저자로 새 책([manual], 지원하지 않는 이북 앱용)을 맨 앞에 넣는다. 인터넷을 쓰지 않아 표지 그림은 없고(제목으로 그린 빈 표지),
+     * 표지는 나중에 책 정보 고치기의 `표지 다시 찾기`([replace])로 붙인다.
+     * 책은 사용자가 직접 뺄 때만 빠진다(자동으로 밀어내지 않는다).
      * 같은 제목의 책이 있어도 늘 새 책이고, 제목으로 다른 책·읽은 시간과 잇지 않는다(그 제목으로 읽은 어느 책에도 붙지 않은 시간도 가져오지 않는다.
      * 그 시간은 지원하는 앱에서 읽은 것이라 자동 추가가 넣은 책의 것이다).
      * 읽은 시간이 붙지 않으니 넣은 날 첫 회차가 시작한다([roundStarts]. 독서 기록·회차·올해 읽은 책에 넣은 날부터 보인다, [BookRecord.readYears]).
      */
-    @Throws(IOException::class)
-    @Synchronized fun add(context: Context, book: BookResult, coverBytes: ByteArray): ShelfBook {
-        val added = ShelfBook(MANUAL_PREFIX + UUID.randomUUID(), book.title, book.author, null, System.currentTimeMillis())
-        saveCover(context, added.id, coverBytes)
-        try {
-            atomic(context) {
-                write(context, listOf(added) + list(context))
-                startRound(context, added.id)
-            }
-        } catch (e: Exception) {
-            dropFiles(context, added.id)  // 들어가지 못한 책의 표지를 남기지 않는다
-            throw e
+    @Synchronized fun add(context: Context, title: String, author: String): ShelfBook {
+        val added = ShelfBook(MANUAL_PREFIX + UUID.randomUUID(), title, author, null, System.currentTimeMillis())
+        atomic(context) {
+            write(context, listOf(added) + list(context))
+            startRound(context, added.id)
         }
         return added
     }

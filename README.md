@@ -9,7 +9,7 @@
 ## Features
 
 - **The book you're reading, on Home**: cover, title, author, progress and due date, big. More books sit under `Also reading`. Tap a book to open its app.
-- **Auto-add books**: open a book in a [supported app](#supported-apps) and it's added to Home with its cover. Books from other apps can be added by hand, with cover search.
+- **Auto-add books**: open a book in a [supported app](#supported-apps) and it's added to Home with its cover. Books from other apps can be added by hand with just a title and author (no internet needed), and a cover found later.
 - **Reading time for every book**: counts only the time the reading screen is up. Today's time and your streak on Home; a reading log with a four-week calendar or graph, a daily goal and weekly totals.
 - **Finish a book**: rate it in half stars and write a few words. Read it again and each round keeps its own record.
 - **Books this year**: every book you read or finished, as a list or a cover grid, for any year.

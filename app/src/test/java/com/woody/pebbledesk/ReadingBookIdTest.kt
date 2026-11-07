@@ -108,7 +108,7 @@ class ReadingBookIdTest {
         read(1, "데미안", 10, "p-1")
         read(2, "데미안", 5)
         BookShelf.clearCaches()
-        val added = BookShelf.add(app, BOOK, png)
+        val added = BookShelf.add(app, BOOK.title, BOOK.author)
         assertTrue(added.manual && added.id.startsWith("m-"))
         assertEquals(listOf("p-1"), BookShelf.history(app).map { it.book.id })
         assertEquals(listOf("1|데미안|p-1|10", "2|데미안||5"), rows(added.id))

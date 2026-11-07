@@ -46,7 +46,7 @@ class BooksActivity : EinkActivity() {
         addLink = text(getString(R.string.add_book_link), 21f, Ui.bold).apply {
             gravity = Gravity.CENTER_VERTICAL
             setPadding(dp(Ui.MARGIN), 0, dp(24), 0)
-            setOnClickListener { startActivity(BookSearchActivity.intent(this@BooksActivity)) }
+            setOnClickListener { addBookSheet() }
         }
         footer.addView(addLink, FrameLayout.LayoutParams(WRAP, MATCH, Gravity.START))
         pageText = text("", 21f).apply {
@@ -124,4 +124,16 @@ class BooksActivity : EinkActivity() {
 
         fun intent(context: Context) = Intent(context, BooksActivity::class.java)
     }
+}
+
+/**
+ * ⑨ 책 추가(지원하지 않는 이북 앱용): 아래 메뉴에 제목·저자(비워도 됨) 두 줄을 적고 `넣기` 면 인터넷 없이 표지 그림 없는 새 책으로 맨 앞에 넣고([BookShelf.add])
+ * 그 책의 읽고 있는 앱을 고르러 간다. 표지는 나중에 책 정보 고치기의 `표지 다시 찾기`. 읽고 있는 책 목록의 `책 추가 ›` 와 빈 홈의 `직접 추가 ›` 가 부른다.
+ */
+fun Context.addBookSheet() {
+    Sheet(this).header(getString(R.string.add_book_title), getString(R.string.add_book_desc))
+        .inputs(listOf("" to getString(R.string.book_query_hint), "" to getString(R.string.add_book_author_hint)), getString(R.string.add_book_save)) { (title, author) ->
+            val added = BookShelf.add(this, title, author)
+            startActivity(AppListActivity.intent(this, AppListActivity.Mode.PICK_READER, added.id))
+        }.show()
 }

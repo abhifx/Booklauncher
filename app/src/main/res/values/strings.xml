@@ -157,10 +157,13 @@
     <string name="device_recent_no_access">사용 기록 권한이 없어 볼 수 없습니다(설정 › 독서 › 오늘 읽은 시간)</string>
     <string name="on">켜짐</string>
     <string name="off">꺼짐</string>
-    <string name="book_search_title">책 추가</string>
+    <string name="add_book_title">책 추가</string>
+    <string name="add_book_desc">인터넷 없이 넣습니다. 표지는 넣은 뒤 책 정보 고치기 › 표지 다시 찾기에서 붙입니다.</string>
+    <string name="add_book_author_hint">저자 (비워도 됩니다)</string>
+    <string name="add_book_save">넣기</string>
     <string name="book_query_hint">책 제목</string>
     <string name="search">검색</string>
-    <string name="book_search_idle">제목을 입력하고 검색하세요. 표지를 고르면 읽고 있는 앱을 정합니다. 자동 추가가 되는 이북 앱은 책을 펴면 따로 들어옵니다.</string>
+    <string name="book_search_idle">제목을 입력하고 검색하세요. 표지를 고르면 이 책의 표지·제목·저자가 그것으로 바뀝니다.</string>
     <string name="searching">찾는 중…</string>
     <string name="book_results">%1$d권 찾았습니다. 표지를 고르세요.</string>
     <string name="book_none">찾지 못했습니다</string>

@@ -544,8 +544,7 @@ class BookShelfStoreTest {
     }
 
     @Test fun `직접 넣은 책은 읽은 시간이 없어도 넣은 날 회차가 시작해 기록·올해 읽은 책에 들어가고, 완독하면 그 기간으로`() {
-        val png = java.util.Base64.getDecoder().decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=")
-        val added = BookShelf.add(app, BookResult("y1", "모모", "미하엘 엔데", "", ""), png)
+        val added = BookShelf.add(app, "모모", "미하엘 엔데")
         assertEquals(today, BookShelf.roundStarts(app)[added.id])
         fun record() = BookRecord.all(app, emptyMap()).single { it.book.id == added.id }
         val reading = record()
@@ -563,21 +562,31 @@ class BookShelfStoreTest {
         assertEquals(today, done.lastRound.to)
         assertEquals(listOf(today.year), done.readYears)
         // 완독하지 않고 뺀 직접 추가 책도 시작한 해에 남는다
-        val other = BookShelf.add(app, BookResult("y2", "끝없는 이야기", "", "", ""), png)
+        val other = BookShelf.add(app, "끝없는 이야기", "")
         BookShelf.remove(app, other.id)
         assertEquals(listOf(today.year), BookRecord.all(app, emptyMap()).single { it.book.id == other.id }.readYears)
     }
 
-    @Test fun `직접 넣다 회차 시작 저장이 실패하면 책도 표지도 남지 않는다`() {
-        val png = java.util.Base64.getDecoder().decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=")
+    @Test fun `직접 넣다 회차 시작 저장이 실패하면 책이 남지 않는다`() {
         val before = BookShelf.list(app).map { it.id }
         db.execSQL("DROP TABLE round_start")
-        assertTrue(runCatching { BookShelf.add(app, BookResult("y1", "모모", "", "", ""), png) }.isFailure)
+        assertTrue(runCatching { BookShelf.add(app, "모모", "") }.isFailure)
         assertEquals(before, BookShelf.list(app).map { it.id })
         BookShelf.clearCaches()
         assertEquals(before, BookShelf.list(app).map { it.id })
-        val books = java.io.File(Storage.of(app).filesDir, "books")
-        assertTrue(books.listFiles().orEmpty().none { it.name.startsWith(BookShelf.MANUAL_PREFIX) })
+    }
+
+    @Test fun `직접 넣은 책은 표지 그림 없이 들어가고, 표지 다시 찾기로 표지·제목·저자를 바꾼다`() {
+        val png = java.util.Base64.getDecoder().decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=")
+        val added = BookShelf.add(app, "모모", "")
+        assertEquals(added.id, BookShelf.list(app).first().id)
+        assertEquals("모모" to "", BookShelf.list(app).first().let { it.title to it.author })
+        val cover = java.io.File(java.io.File(Storage.of(app).filesDir, "books"), "${added.id}.jpg")
+        assertTrue(!cover.exists())
+        BookShelf.replace(app, added.id, BookResult("y1", "모모", "미하엘 엔데", "", ""), png)
+        assertTrue(cover.exists())
+        BookShelf.clearCaches()
+        assertEquals("미하엘 엔데", BookShelf.list(app).single { it.id == added.id }.author)
     }
 
     /** 사용 기록 권한을 주고, 오늘 읽는 화면을 연 구간 하나를 사용 기록에 넣는다. 그 구간 길이(ms) */
