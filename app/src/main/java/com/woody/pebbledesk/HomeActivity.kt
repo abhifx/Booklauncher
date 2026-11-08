@@ -100,8 +100,6 @@ class HomeActivity : EinkActivity() {
 
     /** 하단 가운데: 오늘 읽은 시간 · 연속 독서일(켜 두었고 권한이 있을 때만) */
     private lateinit var readingText: TextView
-    /** 하단 왼쪽 `모든 앱 ›`(가운데 글자가 닿는지 잰다) */
-    private lateinit var allAppsLink: TextView
 
     private var apps: List<AppEntry> = emptyList()
     /**
@@ -541,24 +539,19 @@ class HomeActivity : EinkActivity() {
 
         root.addView(hline(1, inset = false))
         val footer = FrameLayout(this)
-        allAppsLink = text(getString(R.string.all_apps_link), 24f, Ui.bold).apply {
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(Ui.MARGIN), 0, dp(32), 0)
-            setOnClickListener { startActivity(AppListActivity.intent(this@HomeActivity, AppListActivity.Mode.ALL)) }
-        }
-        footer.addView(allAppsLink, FrameLayout.LayoutParams(WRAP, MATCH, Gravity.START))
+        // 왼쪽 모든 앱(사각형 넷)·오른쪽 설정(톱니)은 거울처럼 같은 칸이다
+        footer.addView(footerIcon(R.drawable.ic_all_apps, R.string.all_apps, Gravity.START) {
+            startActivity(AppListActivity.intent(this, AppListActivity.Mode.ALL))
+        })
         readingText = text("", 15f, color = Ui.GRAY).apply {
             gravity = Gravity.CENTER
             setPadding(dp(16), 0, dp(16), 0)
             setOnClickListener { startActivity(ReadingActivity.intent(this@HomeActivity)) }
         }
         footer.addView(readingText, FrameLayout.LayoutParams(WRAP, MATCH, Gravity.CENTER))
-        footer.addView(PictureView(this).apply {
-            drawable = getDrawable(R.drawable.ic_settings)
-            contentDescription = getString(R.string.settings)
-            setPadding(dp(24), dp((Ui.FOOTER_DP - 28) / 2), dp(Ui.MARGIN), dp((Ui.FOOTER_DP - 28) / 2))
-            setOnClickListener { startActivity(Intent(this@HomeActivity, SettingsActivity::class.java)) }
-        }, FrameLayout.LayoutParams(dp(24 + 32 + Ui.MARGIN), MATCH, Gravity.END))
+        footer.addView(footerIcon(R.drawable.ic_settings, R.string.settings, Gravity.END) {
+            startActivity(Intent(this, SettingsActivity::class.java))
+        })
         root.addView(footer, lp(MATCH, dp(Ui.FOOTER_DP)))
 
         favRows.onPageChanged = {
@@ -566,6 +559,17 @@ class HomeActivity : EinkActivity() {
         }
         setContentView(root)
         window.setBackgroundDrawable(null)
+    }
+
+    /** 하단 줄 양 끝 아이콘: 여백 쪽에 그림 칸, 안쪽에 누르는 자리를 더 둔다([side] 는 붙는 쪽 START·END) */
+    private fun footerIcon(icon: Int, name: Int, side: Int, onClick: () -> Unit): View = PictureView(this).apply {
+        drawable = getDrawable(icon)
+        contentDescription = getString(name)
+        val v = dp((Ui.FOOTER_DP - FOOTER_ICON_DP) / 2)
+        val (start, end) = if (side == Gravity.START) Ui.MARGIN to FOOTER_TAP_DP else FOOTER_TAP_DP to Ui.MARGIN
+        setPadding(dp(start), v, dp(end), v)
+        setOnClickListener { onClick() }
+        layoutParams = FrameLayout.LayoutParams(dp(Ui.MARGIN + FOOTER_ICON_BOX_DP + FOOTER_TAP_DP), MATCH, side)
     }
 
     /** 앱 목록과 설정을 다시 읽어 그린다. 홈으로 돌아올 때마다 부른다. */
@@ -709,15 +713,14 @@ class HomeActivity : EinkActivity() {
     }
 
     /**
-     * 하단 가운데 글자는 화면 가운데에 두되, `모든 앱 ›`·설정 아이콘에 닿으면 둘 사이 가운데로 옮기고 그래도 들지 않으면 짧은 글로 바꾼다
-     * (기기가 앱의 밀도를 덮어써 폭이 좁은 화면·키운 글자. HiBreak 에서 `모든 앱 ›` 에 겹쳤다). [lines] 는 긴 것부터.
+     * 하단 가운데 글자는 화면 가운데에 두되, 모든 앱·설정 아이콘에 닿으면 둘 사이 가운데로 옮기고 그래도 들지 않으면 짧은 글로 바꾼다
+     * (기기가 앱의 밀도를 덮어써 폭이 좁은 화면·키운 글자. HiBreak 에서 1.7.9 까지의 `모든 앱 ›` 글자에 겹쳤다). [lines] 는 긴 것부터.
      */
     private fun fitReading(lines: List<String>) {
         val width = resources.displayMetrics.widthPixels
-        // 글자 폭만 잰다(뷰를 다시 measure 하면 TextView 가 세로 가운데를 그 높이로 잡아 `모든 앱 ›` 이 위로 붙는다)
-        val left = allAppsLink.paddingStart + allAppsLink.paint.measureText(allAppsLink.text.toString()).toInt() + dp(FOOTER_GAP_DP)
-        // 설정 아이콘 칸(24 + 32 + 여백)에서 왼쪽 24dp 는 누르는 자리
-        val right = width - dp(32 + Ui.MARGIN) - dp(FOOTER_GAP_DP)
+        // 양쪽 아이콘 칸([footerIcon])의 안쪽 누르는 자리에는 글자가 들어가도 된다
+        val left = dp(Ui.MARGIN + FOOTER_ICON_BOX_DP + FOOTER_GAP_DP)
+        val right = width - dp(Ui.MARGIN + FOOTER_ICON_BOX_DP + FOOTER_GAP_DP)
         val paint = readingText.paint
         val line = lines.firstOrNull { paint.measureText(it) <= right - left } ?: lines.last()
         val half = paint.measureText(line) / 2
@@ -1044,8 +1047,12 @@ class HomeActivity : EinkActivity() {
     private fun showBookMenu(book: ShelfBook) = showBookDetail(BookRecord.of(this, book), onHome = true) { refresh() }
 
     companion object {
-        /** 하단 가운데 글자와 양쪽(`모든 앱 ›`·설정 아이콘) 사이 최소 간격 */
+        /** 하단 가운데 글자와 양쪽(모든 앱·설정 아이콘) 사이 최소 간격 */
         private const val FOOTER_GAP_DP = 12
+        /** 하단 아이콘: 그림 크기, 그림 칸 폭(여백 쪽), 칸 안쪽에 더 둔 누르는 자리 */
+        private const val FOOTER_ICON_DP = 28
+        private const val FOOTER_ICON_BOX_DP = 32
+        private const val FOOTER_TAP_DP = 24
         /** 자주 쓰는 앱 고정 줄 수 */
         private const val FAV_ROWS = 3
         /** 기억해 두는 함께 읽는 책 쪽 높이 수(넘으면 비운다) */

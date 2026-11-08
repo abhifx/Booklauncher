@@ -7,7 +7,6 @@
     <string name="language_system">시스템(%s)</string>
     <string name="favorites">자주 쓰는 앱</string>
     <string name="all_apps">모든 앱</string>
-    <string name="all_apps_link">모든 앱  ›</string>
     <string name="settings">설정</string>
     <string name="favorites_empty">모든 앱에서 앱을 길게 눌러 자주 쓰는 앱에 넣으세요</string>
     <string name="fav_remove">자주 쓰는 앱에서 빼기</string>
