@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 모든 앱: 선으로 그린 사각형 넷. 설정 톱니(ic_settings)와 같은 선 굵기·크기라 홈 하단 줄 양 끝이 맞는다 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <path android:strokeColor="#000000" android:strokeWidth="1.15" android:strokeLineJoin="round"
+        android:pathData="M4,2.5 H9 A1.5,1.5 0 0 1 10.5,4 V9 A1.5,1.5 0 0 1 9,10.5 H4 A1.5,1.5 0 0 1 2.5,9 V4 A1.5,1.5 0 0 1 4,2.5 Z
+            M15,2.5 H20 A1.5,1.5 0 0 1 21.5,4 V9 A1.5,1.5 0 0 1 20,10.5 H15 A1.5,1.5 0 0 1 13.5,9 V4 A1.5,1.5 0 0 1 15,2.5 Z
+            M4,13.5 H9 A1.5,1.5 0 0 1 10.5,15 V20 A1.5,1.5 0 0 1 9,21.5 H4 A1.5,1.5 0 0 1 2.5,20 V15 A1.5,1.5 0 0 1 4,13.5 Z
+            M15,13.5 H20 A1.5,1.5 0 0 1 21.5,15 V20 A1.5,1.5 0 0 1 20,21.5 H15 A1.5,1.5 0 0 1 13.5,20 V15 A1.5,1.5 0 0 1 15,13.5 Z" />
+</vector>
