@@ -207,6 +207,7 @@ def head(lang, p):
 <link rel="alternate" hreflang="x-default" href="{BASE}">
 <meta name="theme-color" content="#fbfbf9">
 <link rel="icon" href="{icon}icon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="{icon}icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="{icon}icon-180.png">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Pebble Desk">
