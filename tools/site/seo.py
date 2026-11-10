@@ -59,7 +59,7 @@ PAGES = {
              "앱을 지우면 기록도 함께 지워집니다."),
         ],
         "features": ["이북 앱에서 편 책을 홈 화면에 자동으로 추가(표지·제목·진행률·반납일)", "책마다 읽은 시간, 하루 목표, 연속일",
-                     "올해 읽은 책과 완독 기록(별점·감상, 다시 읽기 회차)", "스크롤 대신 쪽 넘김, 애니메이션 없음", "흑백·컬러 화면, 글자 크기·줄 간격"],
+                     "올해 읽은 책과 완독 기록(별점·감상, 다시 읽기 회차)", "스크롤 대신 쪽 넘김, 애니메이션 없음", "흑백·컬러 테마 여섯 가지, 글자 크기·줄 간격"],
     },
     "en": {
         "file": "site/en/index.html", "url": BASE + "en/", "locale": "en_US", "img": "en-",
@@ -85,7 +85,7 @@ PAGES = {
         ],
         "features": ["Books you open in reading apps are added to the home screen automatically (cover, title, progress, due date)",
                      "Reading time per book, daily goal and streak", "Books this year with finish history (ratings, notes, re-reads)",
-                     "Pages instead of scrolling, no animations", "Black-and-white or color, adjustable text size and spacing"],
+                     "Pages instead of scrolling, no animations", "Black-and-white or six color themes, adjustable text size and spacing"],
     },
 }
 
