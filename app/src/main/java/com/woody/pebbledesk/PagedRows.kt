@@ -30,14 +30,14 @@ fun Paged.turn(next: Boolean): Boolean {
 /**
  * 스크롤 없이 페이지 단위로 넘기는 목록. 주어진 높이에 들어가는 만큼만 줄을 그리고, 줄 사이에 가는 회색 선을 둔다.
  * 전자잉크라 넘길 때 애니메이션을 쓰지 않는다.
- * [fixedRows] 가 0보다 크면 높이에 맞추지 않고 늘 그 줄 수(격자면 그 높이 안에 gridRows 줄)를 쓴다. 높이는 WRAP 으로 둔다.
+ * [fixedRows] 가 0보다 크면 높이에 맞추지 않고 늘 그 줄 수(격자면 그 높이 안에 gridRows 줄)를 쓴다. 높이는 WRAP 으로 둔다. 나중에 [setShape] 로 바꿀 수 있다.
  * [insetDividers] 가 false 면 줄 사이 선을 좌우 여백 없이 끝까지 긋는다(이미 여백 안에 놓인 좁은 칸).
  * [dividers] 가 false 면 줄 사이 선을 긋지 않는다(표지 격자처럼 줄마다 칸이 나뉘어 보이는 목록). 높이 계산은 같다.
  */
 class PagedRows(
     context: Context,
     private val listRowPx: Int,
-    private val fixedRows: Int = 0,
+    private var fixedRows: Int = 0,
     private val insetDividers: Boolean = true,
     private val dividers: Boolean = true,
 ) : LinearLayout(context), Paged {
@@ -50,13 +50,22 @@ class PagedRows(
      */
     private var gridRows = 0
 
+    /** 격자 한 줄의 높이를 정해 둔 값(0 이면 목록 높이를 줄 수로 나눈다, [setShape]) */
+    private var gridRowPx = 0
+
     /** 지금 한 줄의 높이(격자면 목록 높이를 나눈 값) */
     var rowHeightPx: Int = listRowPx
         private set
 
-    fun setGrid(gridRows: Int) {
-        if (gridRows == this.gridRows) return
+    /**
+     * 격자 줄 수 [gridRows](0 이면 목록)와 고정 줄 수 [fixedRows] 를 함께 바꾼다. [gridRowPx] 가 0보다 크면 격자 한 줄을 그 높이로
+     * (목록 높이를 나누지 않는다. 홈 자주 쓰는 앱 격자 1줄은 2줄일 때의 한 줄 높이 그대로).
+     */
+    fun setShape(gridRows: Int, fixedRows: Int, gridRowPx: Int = 0) {
+        if (gridRows == this.gridRows && fixedRows == this.fixedRows && gridRowPx == this.gridRowPx) return
         this.gridRows = gridRows
+        this.fixedRows = fixedRows
+        this.gridRowPx = gridRowPx
         perPage = 0
         if (!fitRows(height)) render()
     }
@@ -125,7 +134,7 @@ class PagedRows(
         val rowPx: Int
         if (gridRows != 0) {
             fit = if (gridRows == GRID_AUTO) maxOf(1, listFit * 2 / 3) else minOf(gridRows, listFit)
-            rowPx = (listFit * (listRowPx + dividerPx) - dividerPx) / fit
+            rowPx = if (gridRowPx > 0) gridRowPx else listHeightPx(listFit) / fit
         } else {
             fit = listFit
             rowPx = listRowPx
@@ -136,6 +145,9 @@ class PagedRows(
         renderBeforeDraw()
         return true
     }
+
+    /** 목록 [rows] 줄(줄 사이 선 포함)의 높이 */
+    fun listHeightPx(rows: Int) = rows * (listRowPx + dividerPx) - dividerPx
 
     /** 머리 뷰 높이 합([measuredHeightIn]) */
     private fun headerHeight(): Int = header.sumOf { measuredHeightIn(it) }
@@ -173,7 +185,7 @@ class PagedRows(
     }
 
     companion object {
-        /** [setGrid]: 격자 줄 수를 높이에 맞춰 목록 줄 수의 2/3 로(홈 격자가 목록 세 줄 높이에 두 줄인 것과 같은 비율. 가로 화면의 자주 쓰는 앱) */
+        /** [setShape]: 격자 줄 수를 높이에 맞춰 목록 줄 수의 2/3 로(홈 격자가 목록 세 줄 높이에 두 줄인 것과 같은 비율. 가로 화면의 자주 쓰는 앱) */
         const val GRID_AUTO = -1
     }
 }

@@ -10,7 +10,7 @@ import android.widget.FrameLayout
 import android.widget.TextView
 
 /**
- * 자주 쓰는 앱 관리(설정 > 앱 관리 > 자주 쓰는 앱). 맨 위 홈 `보기 목록 ›`(목록 / 격자), 줄마다 앱 이름(누르면 이름 바꾸기)과 `↑ ↓`·`빼기`, 하단 `앱 추가 ›`.
+ * 자주 쓰는 앱 관리(설정 > 앱 관리 > 자주 쓰는 앱). 맨 위 홈 `보기 격자 ›`(목록 / 격자)와 `줄 2줄 ›`(목록 3줄 / 2줄, 격자 2줄 / 1줄), 줄마다 앱 이름(누르면 이름 바꾸기)과 `↑ ↓`·`빼기`, 하단 `앱 추가 ›`.
  * 홈에 이 순서대로 보인다.
  */
 class FavoritesActivity : EinkActivity() {
@@ -20,6 +20,7 @@ class FavoritesActivity : EinkActivity() {
     private lateinit var rows: PagedRows
     private lateinit var pageText: TextView
     private lateinit var viewValue: TextView
+    private lateinit var rowsValue: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,18 +30,29 @@ class FavoritesActivity : EinkActivity() {
             addView(titleCount, lp(WRAP, WRAP).apply { marginStart = dp(14); topMargin = dp(6) })
         })
         root.addView(hline(2))
-        // 홈에서 보는 꼴(목록 / 격자). 설정 줄과 같은 모양.
+        // 홈에서 보는 꼴(목록 / 격자)과 줄 수(높이). 설정 줄과 같은 모양.
         viewValue = text("", 20f, Ui.medium)
-        root.addView(hbox().apply {
-            setPadding(dp(Ui.MARGIN), 0, dp(Ui.MARGIN), 0)
-            addView(text(getString(R.string.fav_view), 22f), lp(0, WRAP, 1f))
-            addView(viewValue)
-            setOnClickListener {
-                val views = listOf(getString(R.string.fav_view_list), getString(R.string.fav_view_grid))
-                choose(getString(R.string.fav_view), views, if (prefs.favGrid) 1 else 0) { prefs.favGrid = it == 1; showView() }
+        rowsValue = text("", 20f, Ui.medium)
+        fun settingRow(label: Int, value: TextView, onClick: () -> Unit) {
+            root.addView(hbox().apply {
+                setPadding(dp(Ui.MARGIN), 0, dp(Ui.MARGIN), 0)
+                addView(text(getString(label), 22f), lp(0, WRAP, 1f))
+                addView(value)
+                setOnClickListener { onClick() }
+            }, lp(MATCH, rowDp(Ui.SETTING_ROW_DP)))
+            root.addView(hline(1, Ui.DIVIDER))
+        }
+        settingRow(R.string.fav_view, viewValue) {
+            val views = listOf(getString(R.string.fav_view_list), getString(R.string.fav_view_grid))
+            choose(getString(R.string.fav_view), views, if (prefs.favGrid) 1 else 0) { prefs.favGrid = it == 1; showView() }
+        }
+        // 줄 수는 보기에 따라 목록 3줄 / 2줄, 격자 2줄 / 1줄(값은 하나: 지금 높이 / 낮게)
+        settingRow(R.string.fav_rows, rowsValue) {
+            choose(getString(R.string.fav_rows), listOf(false, true).map { rowsLabel(prefs.favGrid, it) }, if (prefs.favShort) 1 else 0) {
+                prefs.favShort = it == 1
+                showView()
             }
-        }, lp(MATCH, rowDp(Ui.SETTING_ROW_DP)))
-        root.addView(hline(1, Ui.DIVIDER))
+        }
         showView()
         hint = text(getString(R.string.favorites_order_hint), 15f, color = Ui.GRAY, lines = 2).apply {
             setPadding(dp(Ui.MARGIN), dp(12), dp(Ui.MARGIN), dp(4))
@@ -75,6 +87,13 @@ class FavoritesActivity : EinkActivity() {
 
     private fun showView() {
         viewValue.text = getString(if (prefs.favGrid) R.string.fav_view_grid else R.string.fav_view_list) + "  ›"
+        rowsValue.text = rowsLabel(prefs.favGrid, prefs.favShort) + "  ›"
+    }
+
+    /** `1줄`: 그 보기에서 홈에 보이는 줄 수([HomeActivity.favListRows]·[HomeActivity.favGridRows]) */
+    private fun rowsLabel(grid: Boolean, short: Boolean): String {
+        val rows = if (grid) HomeActivity.favGridRows(short) else HomeActivity.favListRows(short)
+        return resources.getQuantityString(R.plurals.fav_rows_n, rows, rows)
     }
 
     override fun onResume() {

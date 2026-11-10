@@ -240,6 +240,11 @@
     <string name="fav_view">View</string>
     <string name="fav_view_list">List</string>
     <string name="fav_view_grid">Grid</string>
+    <string name="fav_rows">Rows</string>
+    <plurals name="fav_rows_n">
+        <item quantity="one">%1$d row</item>
+        <item quantity="other">%1$d rows</item>
+    </plurals>
     <string name="app_icons_hint">in list view</string>
     <string name="status_bar">System status bar</string>
     <string name="status_bar_hint">on home too</string>
