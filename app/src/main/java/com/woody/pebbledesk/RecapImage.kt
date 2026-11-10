@@ -92,14 +92,14 @@ object RecapImage {
         return Bitmap.createBitmap(full, l, t, W - 2 * l, b - t)
     }
 
-    fun draw(context: Context, m: Recap.Month, palette: Palette): Bitmap {
+    fun draw(context: Context, m: Recap.Month, color: Boolean): Bitmap {
         val out = Bitmap.createBitmap(W, H, Bitmap.Config.ARGB_8888)
-        Painter(context, Canvas(out), m, palette).draw()
+        Painter(context, Canvas(out), m, color).draw()
         return out
     }
 
-    private class Painter(val ctx: Context, val c: Canvas, val m: Recap.Month, palette: Palette) {
-        val mono = !palette.color
+    private class Painter(val ctx: Context, val c: Canvas, val m: Recap.Month, color: Boolean) {
+        val mono = !color
         /** 색: 컬러면 그달 읽은 책 표지에서 가장 많이 보인 색(읽은 시간만큼 센다), 못 고르면 그달 계절 색 */
         val k by lazy {
             Colors(mono, if (mono) MONTHS[0] else coverTheme() ?: MONTHS[m.month.monthValue - 1])

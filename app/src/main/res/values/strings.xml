@@ -279,7 +279,12 @@
     <string name="this_year">올해</string>
     <string name="color">색</string>
     <string name="palette_mono">흑백</string>
-    <string name="palette_color">컬러</string>
+    <string name="palette_amber">등불 아래</string>
+    <string name="palette_ink">먹과 한지</string>
+    <string name="palette_moss">이끼 돌담</string>
+    <string name="palette_camellia">겨울 동백</string>
+    <string name="palette_canola">유채꽃 들판</string>
+    <string name="palette_indigo">새벽 호수</string>
     <string name="books_this_week">이번 주 읽은 책</string>
     <string name="reading_empty">이번 주에 읽은 기록이 아직 없습니다</string>
     <string name="reading_no_access">설정에서 오늘 읽은 시간을 켜고 사용 기록 액세스에서 Pebble Desk를 허용하면 기록이 보입니다.</string>

@@ -900,10 +900,10 @@ class HomeActivity : EinkActivity() {
     /** 컬러면 맨 앞 책 자리를 칠하는 색면의 아래 여백(dp). 흑백이면 0. */
     private val fieldBottom get() = if (Palette.current.color) heroPad else 0
 
-    /** 맨 앞 책 자리(표지·제목): 컬러면 홈 색면([Palette.Area.HOME])을 칠하고 아래로 [fieldBottom] 만큼 넓힌다. */
+    /** 맨 앞 책 자리(표지·제목): 컬러면 테마 색면([Palette.field])을 칠하고 아래로 [fieldBottom] 만큼 넓힌다. */
     private fun View.heroField() {
         setPadding(dp(Ui.MARGIN), dp(heroPad), dp(Ui.MARGIN), dp(fieldBottom))
-        Palette.current.field(Palette.Area.HOME)?.let { setBackgroundColor(it) }
+        Palette.current.field?.let { setBackgroundColor(it) }
     }
 
     /**

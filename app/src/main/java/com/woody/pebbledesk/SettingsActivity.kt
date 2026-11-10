@@ -216,13 +216,11 @@ class SettingsActivity : EinkActivity() {
         list.removeAllViews()
         // 글자 크기·줄 간격은 한 화면에서 슬라이더로 보며 고른다.
         row(getString(R.string.text_spacing), "${prefs.textScalePercent}% · ${prefs.rowScalePercent}%", next = true) { open(PAGE_TEXT) }
-        // 색: 흑백 / 컬러. 바꾸면 이 화면부터 다시 만든다(색은 화면을 만들 때 정해진다).
-        val palettes = listOf(Palette.MONO to R.string.palette_mono, Palette.COLOR to R.string.palette_color)
-        val names = palettes.map { getString(it.second) }
-        val now = palettes.indexOfFirst { it.first == prefs.palette }
-        row(getString(R.string.color), names[now], next = true) {
-            choose(getString(R.string.color), names, now) {
-                if (palettes[it].first != prefs.palette) { prefs.palette = palettes[it].first; recreate() }
+        // 색: 흑백 / 컬러 테마. 줄마다 그 테마의 색 칸(색면 · 제목 색). 바꾸면 이 화면부터 다시 만든다(색은 화면을 만들 때 정해진다).
+        val themes = Palette.entries
+        row(getString(R.string.color), getString(prefs.palette.label), next = true) {
+            choose(getString(R.string.color), themes.map { getString(it.label) }, themes.indexOf(prefs.palette), themes.map { it.swatch }) {
+                if (themes[it] != prefs.palette) { prefs.palette = themes[it]; recreate() }
             }
         }
         toggle(getString(R.string.app_icons), prefs.showIcons, hint = getString(R.string.app_icons_hint), redraw = ::renderDisplay) { prefs.showIcons = it }
