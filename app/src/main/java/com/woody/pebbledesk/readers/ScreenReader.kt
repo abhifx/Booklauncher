@@ -1,5 +1,6 @@
 package com.woody.pebbledesk.readers
 
+import android.graphics.Rect
 import android.view.accessibility.AccessibilityNodeInfo
 import com.woody.pebbledesk.BookShelf
 import com.woody.pebbledesk.HomePrefs
@@ -25,6 +26,9 @@ open class ScreenReader(val app: ReaderApp) : ReaderAdapter {
     /** 이번 서재 방문에서 책(정리한 제목)마다 바로 자르기를 해 본 횟수. 창 바뀜으로 화면이 새로 열릴 때마다 비운다 */
     private val eagerTries = mutableMapOf<String, Int>()
     private var lastEagerRead = 0L
+    /** 바로 자르기에서 앞서 읽은 칸의 표지 자리(제목마다, [ReaderApp.eagerWhenStill] 인 앱)와 읽은 때. 창 바뀜으로 화면이 새로 열릴 때마다 비운다 */
+    private var lastEagerThumbs: Map<String, Rect> = emptyMap()
+    private var lastEagerThumbsAt = 0L
     /** 서재 화면(액티비티) 창의 id: 누른 것이 그 창 안이면 화면 자체, 아니면 위에 뜬 창(대화상자는 창 목록에서 아래 창을 가리기도 하고 누름 알림 전에 닫히기도 해 창 목록으로는 못 가른다) */
     private var shelfWindow: Int? = null
 
@@ -34,7 +38,7 @@ open class ScreenReader(val app: ReaderApp) : ReaderAdapter {
      */
     final override fun onScreen(ctx: AppContext, name: String, from: String?, again: Boolean, byWindow: Boolean) {
         // 화면이 새로 열릴 때마다(홈에서 돌아온 서재 포함) 바로 자르기 횟수를 다시 센다.
-        if (byWindow) eagerTries.clear()
+        if (byWindow) { eagerTries.clear(); lastEagerThumbs = emptyMap() }
         if (byWindow && name in app.shelves) shelfWindow = ctx.root?.windowId?.takeIf { it >= 0 }
         val now = ctx.now
         val viewer = app.isViewer(ctx.context, name)
@@ -126,6 +130,7 @@ open class ScreenReader(val app: ReaderApp) : ReaderAdapter {
     /**
      * 서재를 잠깐만 보고 책으로 넘어가는 앱(알라딘·부커스·YES24 전자도서관)은 멈추기를 기다리지 않고 표지가 보이는 대로 잘라 둔다.
      * 화면이 막 바뀐 때(읽는 화면에서 돌아오는 중이면 화면 캡처가 막힌 읽는 화면이 검게 찍힌다)와 아직 찍을 수 없을 때는 건너뛴다.
+     * 서재가 옆으로 넘어가는 앱([ReaderApp.eagerWhenStill], YES24 eBook)은 앞서(1초 넘게 전) 읽었을 때와 같은 자리의 표지만 자른다.
      */
     override fun onShelfLive(ctx: AppContext, force: Boolean) {
         if (!app.eagerCovers) return
@@ -135,8 +140,17 @@ open class ScreenReader(val app: ReaderApp) : ReaderAdapter {
         lastEagerRead = now
         val root = ctx.root ?: return
         val lookup = ctx.recorder.lookup
-        ctx.capture(readShelf(root).distinctBy { it.title }.mapNotNull { s ->
+        val cells = readShelf(root).distinctBy { it.title }
+        // 창 바뀜 알림(force)은 1초 간격을 건너뛰므로, 앞서 읽은 지 1초가 안 됐으면 같은 자리여도 멈춘 것으로 보지 않는다
+        val before = if (now - lastEagerThumbsAt >= THROTTLE_MS) lastEagerThumbs else emptyMap()
+        if (app.eagerWhenStill) {
+            lastEagerThumbs = cells.mapNotNull { c -> c.thumb?.let { c.title to it } }.toMap()
+            lastEagerThumbsAt = now
+        }
+        ctx.capture(cells.mapNotNull { s ->
             val thumb = s.thumb?.takeIf(::usableThumb) ?: return@mapNotNull null
+            // 그렇게 하는 앱은 앞서 읽었을 때와 같은 자리의 표지만(움직이는 중이면 다음에, 멈추면 멈춘 서재에서)
+            if (app.eagerWhenStill && before[s.title] != thumb) return@mapNotNull null
             val book = lookup.byTitle(s.title)
             // 목록에 없는 책은 들어올 때 붙일 표지를 미리 찍어 둔다. 책 파일에서 표지를 꺼내는 책은 자르지 않는다(멈춘 서재와 같게)
             val need = if (book == null) !ctx.recorder.hasPendingTitle(s.title)
@@ -238,12 +252,12 @@ open class ScreenReader(val app: ReaderApp) : ReaderAdapter {
     }
 
     /**
-     * 요소 이름 없이 자리로 칸을 찾는 서재(리디·휴대폰 밀리)는 화면이 움직이는 중이었을 수 있어, 찍은 뒤에도 같은 자리에 있는 칸만 자른다.
+     * 요소 이름 없이 자리로 칸을 찾는 서재(리디·휴대폰 밀리)와 그렇게 하는 앱([ReaderApp.recheckCovers])은 화면이 움직이는 중이었을 수 있어, 찍은 뒤에도 같은 자리에 있는 칸만 자른다.
      * 표지 위에 받기 단추 등을 겹치는 서재(e-ink 밀리·리디 작품 화면)도 읽은 뒤 찍기 전에 겹쳤을 수 있어 다시 본다(겹친 칸은 표지 자리가 없다).
      * 같은 책 칸이 둘이면(킨들 '이어 읽기' 표지와 표시에 가려 자르지 않는 칸) 표지 자리가 있는 칸으로 본다([ReaderApp.coverStill]).
      */
     override fun stillSpots(ctx: AppContext, spots: List<CoverSpot>): List<CoverSpot> {
-        if (!app.cellsByPosition && app.coverOverlays.isEmpty()) return spots
+        if (!app.recheckCovers && app.coverOverlays.isEmpty()) return spots
         val now = ctx.root?.let(::readShelf).orEmpty().filter { it.thumb != null }
         return spots.filter { app.coverStill(now, it.title, it.rect) }
     }
