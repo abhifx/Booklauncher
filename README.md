@@ -13,7 +13,7 @@
 - **Reading time for every book**: counts only the time the reading screen is up. Today's time and your streak on Home; a reading log with a four-week calendar or graph, a daily goal and weekly totals.
 - **Finish a book**: rate it in half stars and write a few words. Read it again and each round keeps its own record.
 - **Books this year**: every book you read or finished, as a list or a cover grid, for any year.
-- **Favorites and All apps**: your own order and names, list or grid. All apps by page with a letter index. Hide apps you don't use.
+- **Favorites and All apps**: your own order and names, list or grid, two heights (the shorter one gives book covers more room). All apps by page with a letter index. Hide apps you don't use.
 - **Made for E Ink**: black and white, no animation, pages instead of scrolling, and only what changed is redrawn. To turn pages with hardware buttons (volume keys, page buttons), press the buttons you want in Settings.
 - **Display**: text size 70–150% and line spacing 80–150%, six color themes for color E Ink, icon packs (such as Arcticons) with per-app icons, landscape and tall (bar-shaped) screens.
 - **Devices**: designed for the Crema Pebble; other Android E Ink devices (BOOX, Meebook and others) are scaled to the same width.

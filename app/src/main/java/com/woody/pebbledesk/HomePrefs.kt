@@ -155,6 +155,14 @@ class HomePrefs(context: Context) {
         get() = sp.getBoolean(KEY_FAV_GRID, false)
         set(v) = sp.edit().putBoolean(KEY_FAV_GRID, v).apply()
 
+    /**
+     * 세로 홈의 자주 쓰는 앱을 낮게(목록 2줄 · 격자 1줄). false 면 지금 높이(목록 3줄 · 격자 2줄).
+     * 낮게면 남는 높이를 책 자리에 주고 함께 읽는 책을 큰 표지로 그린다. 가로 홈에는 쓰지 않는다.
+     */
+    var favShort: Boolean
+        get() = sp.getBoolean("fav_short", false)
+        set(v) = sp.edit().putBoolean("fav_short", v).apply()
+
     /** 독서 기록의 4주를 날마다 막대그래프로. false 면 링 달력 */
     var readingGraph: Boolean
         get() = sp.getBoolean("reading_graph", false)
