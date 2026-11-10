@@ -23,8 +23,8 @@ class BookLookupTest {
     private val db get() = Db.get(app)
 
     @Before fun setUp() {
-        db.execSQL("INSERT INTO shelf VALUES (0, 'b-1', '데미안', '', 'x/y', 0, 10, -1, '데미안', '')")
-        db.execSQL("INSERT INTO shelf VALUES (1, 'b-2', '수레바퀴 아래서', '헤세', 'x/y', 0, 20, -1, '수레바퀴 아래서', '')")
+        db.execSQL("INSERT INTO shelf VALUES (0, 'b-1', '데미안', '', 'x/y', 0, 10, -1, '데미안', '', 0)")
+        db.execSQL("INSERT INTO shelf VALUES (1, 'b-2', '수레바퀴 아래서', '헤세', 'x/y', 0, 20, -1, '수레바퀴 아래서', '', 0)")
         db.execSQL("INSERT INTO past (pos, id, title, author, app, updated_at, progress, seen_title, left_at, hidden) VALUES (0, 'p-1', '데미안', '', 'x/y', 0, 50, '데미안', 1000, 0)")
         db.execSQL("INSERT INTO past (pos, id, title, author, app, updated_at, progress, seen_title, left_at, hidden) VALUES (1, 'p-2', '싯다르타', '', 'x/y', 0, 30, '싯다르타', 2000, 1)")
         db.execSQL("INSERT INTO past (pos, id, title, author, app, updated_at, progress, seen_title, left_at, hidden) VALUES (2, 'p-3', '만화', '', 'x/y', 0, 0, '만화', 3000, 0)")

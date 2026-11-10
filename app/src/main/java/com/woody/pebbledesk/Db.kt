@@ -36,12 +36,14 @@ import java.time.LocalDate
  *   `until_day` 까지 읽은 시간은 그 책의 기록·회차에 넣지 않는다(하루 합계·연속일에는 그대로). 버전 7에서 더했다.
  * - `past.time_dropped`: `기록에서 지우기` 할 때 읽은 시간까지 지운 책(1, 아니면 0. [BookShelf.forget]). 그 책 id 의 `reading_day` 줄은 남겨 두고
  *   셀 때 뺀다(하루 합계·연속일·목표 달성에서도, [ReadingLog.days]). 버전 8에서 더했다.
+ * - `shelf.home_hidden`·`past.home_hidden`: 홈에서 숨긴 책(1, 아니면 0. [ShelfBook.homeHidden]). 읽고 있는 책 목록에는 남고 홈에만 보이지 않는다.
+ *   나간 책에도 남겨 빼고 다시 펴 되살아나도 숨긴 그대로. 버전 9에서 더했다.
  * 처음 열 때 1.2.1 까지의 JSON 파일을 옮기고 `<이름>.migrated` 로 바꿔 둔다([importFiles]).
  * 낮은 버전으로 되돌리기(새 판 DB 위에 옛 판을 까는 것)는 지원하지 않는다. 안드로이드가 낮은 판 덮어 설치를 막고, 억지로 깔면 DB 를 열지 못한다.
  */
 object Db {
     private const val NAME = "pebble.db"
-    private const val VERSION = 8
+    private const val VERSION = 9
 
     @Volatile private var db: SQLiteDatabase? = null
 
@@ -97,6 +99,7 @@ object Db {
         createCategory(db)
         createRoundDrop(db)
         addTimeDropped(db)
+        addHomeHidden(db)
     }
 
     /** [oldVersion] 의 DB 를 지금 버전으로(SQLiteOpenHelper 가 한 트랜잭션으로 돌린다. 마이그레이션 테스트도 쓴다) */
@@ -143,6 +146,14 @@ object Db {
         if (oldVersion < 7) createRoundDrop(db)
         // 읽은 시간까지 지운 책
         if (oldVersion < 8) addTimeDropped(db)
+        // 홈에서 숨긴 책
+        if (oldVersion < 9) addHomeHidden(db)
+    }
+
+    /** 버전 9: 읽고 있는 책·나간 책에 홈에서 숨겼는지 */
+    private fun addHomeHidden(db: SQLiteDatabase) {
+        db.execSQL("ALTER TABLE shelf ADD COLUMN home_hidden INTEGER NOT NULL DEFAULT 0")
+        db.execSQL("ALTER TABLE past ADD COLUMN home_hidden INTEGER NOT NULL DEFAULT 0")
     }
 
     /** 버전 8: 나간 책에 읽은 시간까지 지웠는지 */

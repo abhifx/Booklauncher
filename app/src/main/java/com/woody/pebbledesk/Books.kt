@@ -246,6 +246,11 @@ data class ShelfBook(
     val seenTitle: String = "",
     /** 이북 앱이 보여 준 읽는 화(Mihon 의 화 이름 `Ch. 12` 등, 앱이 쓴 그대로). 모르면 "". 나간 책에는 남기지 않는다 */
     val chapter: String = "",
+    /**
+     * 홈에서 숨긴 책([BookShelf.setHomeHidden]): 읽고 있는 책 목록에 남아 자동 추가·읽은 시간·진행률은 그대로이고 홈에만 보이지 않는다.
+     * 나간 책에도 남아 빼고 다시 펴 되살아나도(다시 읽기도) 숨긴 그대로다.
+     */
+    val homeHidden: Boolean = false,
 )
 
 /**
@@ -379,11 +384,11 @@ object BookShelf {
     @Synchronized private fun loadHistory(context: Context): List<PastBook> {
         cachedHistory?.let { return it }
         return Db.get(context).rows(
-            "SELECT id, title, author, app, updated_at, progress, seen_title, left_at, hidden, time_dropped FROM past ORDER BY pos"
+            "SELECT id, title, author, app, updated_at, progress, seen_title, left_at, hidden, time_dropped, home_hidden FROM past ORDER BY pos"
         ) { c ->
             PastBook(
                 ShelfBook(c.getString(0), c.getString(1).orEmpty(), c.getString(2).orEmpty(), c.getString(3)?.ifEmpty { null },
-                    c.getLong(4), c.getInt(5), seenTitle = c.getString(6).orEmpty()),
+                    c.getLong(4), c.getInt(5), seenTitle = c.getString(6).orEmpty(), homeHidden = c.getInt(10) != 0),
                 c.getLong(7), c.getInt(8) != 0, c.getInt(9) != 0,
             )
         }.also { cachedHistory = it }
@@ -547,7 +552,7 @@ object BookShelf {
                 insertOrThrow("past", null, Db.values(
                     "pos" to i, "id" to b.id, "title" to b.title, "author" to b.author, "app" to b.app.orEmpty(),
                     "updated_at" to b.updatedAt, "progress" to b.progress, "seen_title" to b.seenTitle,
-                    "left_at" to p.leftAt, "hidden" to p.hidden, "time_dropped" to p.timeDropped,
+                    "left_at" to p.leftAt, "hidden" to p.hidden, "time_dropped" to p.timeDropped, "home_hidden" to b.homeHidden,
                 ))
             }
         }
@@ -742,9 +747,9 @@ object BookShelf {
     private fun newId() = ID_PREFIX + UUID.randomUUID()
 
     private fun readIndex(context: Context): List<ShelfBook> =
-        Db.get(context).rows("SELECT id, title, author, app, updated_at, progress, due, seen_title, chapter FROM shelf ORDER BY pos") { c ->
+        Db.get(context).rows("SELECT id, title, author, app, updated_at, progress, due, seen_title, chapter, home_hidden FROM shelf ORDER BY pos") { c ->
             ShelfBook(c.getString(0), c.getString(1).orEmpty(), c.getString(2).orEmpty(), c.getString(3)?.ifEmpty { null },
-                c.getLong(4), c.getInt(5), c.getLong(6), c.getString(7).orEmpty(), c.getString(8).orEmpty())
+                c.getLong(4), c.getInt(5), c.getLong(6), c.getString(7).orEmpty(), c.getString(8).orEmpty(), c.getInt(9) != 0)
         }
 
     /** 줄인 표지(흑백, 컬러 [Palette] 면 원래 색). 표지 그림이 없거나 읽지 못하면 제목·저자·앱 이름으로 그린 빈 표지([BlankCover]). */
@@ -1046,15 +1051,37 @@ object BookShelf {
         write(context, listOf(book) + books.filter { it.id != id })
     }
 
-    /** [id] 책을 [delta] 칸 옮긴다(-1 이면 위로). 맨 위 책이 홈에 크게 보인다. */
-    @Synchronized fun move(context: Context, id: String, delta: Int) {
+    /**
+     * [id] 책을 [delta] 칸 옮긴다(-1 이면 위로). 맨 위 책이 홈에 크게 보인다. 홈에 보이는 책끼리 순서를 바꾸므로 사이의 숨긴 책([ShelfBook.homeHidden])은
+     * 건너뛰어 그 너머 보이는 책 자리로 간다(숨긴 책과 바꾸면 홈이 그대로라). 숨긴 책은 옮기지 않는다. 옮긴 자리, 옮기지 않았으면 null.
+     */
+    @Synchronized fun move(context: Context, id: String, delta: Int): Int? {
         val books = list(context).toMutableList()
         val from = books.indexOfFirst { it.id == id }
-        val to = from + delta
-        if (from < 0 || to !in books.indices) return
+        if (from < 0 || books[from].homeHidden) return null
+        val to = movableTo(books, from, delta) ?: return null
         books.add(to, books.removeAt(from))
         write(context, books)
+        return to
     }
+
+    /** [books] 의 [from] 책을 [delta] 쪽으로 옮길 자리: 그쪽으로 [delta] 번째 홈에 보이는 책의 자리. 없으면 null */
+    fun movableTo(books: List<ShelfBook>, from: Int, delta: Int): Int? {
+        val step = if (delta < 0) -1 else 1
+        var i = from
+        repeat(kotlin.math.abs(delta)) {
+            do { i += step } while (i in books.indices && books[i].homeHidden)
+            if (i !in books.indices) return null
+        }
+        return i
+    }
+
+    /** 홈에서 숨기기·다시 보이기(읽고 있는 책만, 목록 자리는 그대로). 바뀐 게 없으면 쓰지 않는다. */
+    @Synchronized fun setHomeHidden(context: Context, id: String, hidden: Boolean) =
+        write(context, list(context).map { if (it.id == id) it.copy(homeHidden = hidden) else it })
+
+    /** 홈에 보이는 읽고 있는 책(홈에서 숨긴 책은 빼고), 목록 순서대로 */
+    fun onHome(context: Context): List<ShelfBook> = list(context).filter { !it.homeHidden }
 
     /** 책마다 저장한 앱 키를 정리한다(지워진 앱은 null, 실행 화면 이름이 바뀐 앱은 새 키로). */
     @Synchronized fun pruneApps(context: Context, fix: (String) -> String?) {
@@ -1157,6 +1184,7 @@ object BookShelf {
         fun ShelfBook.values(pos: Int) = Db.values(
             "pos" to pos, "id" to id, "title" to title, "author" to author, "app" to app.orEmpty(),
             "updated_at" to updatedAt, "progress" to progress, "due" to due, "seen_title" to seenTitle, "chapter" to chapter,
+            "home_hidden" to homeHidden,
         )
         Db.get(context).tx {
             if (books.map { it.id } == before.map { it.id }) {

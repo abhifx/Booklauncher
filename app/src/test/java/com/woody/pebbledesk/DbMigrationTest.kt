@@ -27,10 +27,9 @@ class DbMigrationTest {
         rows("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name != 'android_metadata' ORDER BY name") { it.getString(0) }
             .associateWith { columns(it) }
 
-    @Test fun `v1~v7 에서 올린 표가 새로 설치한 표와 같다(Libby 읽는 화면 viewer_mark, 네오리더 책 파일 book_file, 읽는 화 chapter, 고친 시작일 began, 카테고리·지운 회차 round_drop, 읽은 시간까지 지운 책 time_dropped 포함)`() {
+    @Test fun `v1~v8 에서 올린 표가 새로 설치한 표와 같다(Libby 읽는 화면 viewer_mark, 네오리더 책 파일 book_file, 읽는 화 chapter, 고친 시작일 began, 카테고리·지운 회차 round_drop, 읽은 시간까지 지운 책 time_dropped, 홈에서 숨긴 책 home_hidden 포함)`() {
         val fresh = SQLiteDatabase.create(null).apply { Db.create(this) }.schema()
         assertEquals(listOf("at", "pkg", "shown"), fresh["viewer_mark"])
-        assertEquals("chapter", fresh["shelf"]?.last())
         assertEquals(fresh, v1().apply { Db.upgrade(this, 1) }.schema())
         assertEquals(fresh, v2().apply { Db.upgrade(this, 2) }.schema())
         assertEquals(fresh, SQLiteDatabase.create(null).apply { OldSchemas.v3(this); Db.upgrade(this, 3) }.schema())
@@ -38,7 +37,9 @@ class DbMigrationTest {
         assertEquals(fresh, SQLiteDatabase.create(null).apply { OldSchemas.v5(this); Db.upgrade(this, 5) }.schema())
         assertEquals(fresh, SQLiteDatabase.create(null).apply { OldSchemas.v6(this); Db.upgrade(this, 6) }.schema())
         assertEquals(fresh, SQLiteDatabase.create(null).apply { OldSchemas.v7(this); Db.upgrade(this, 7) }.schema())
-        assertEquals("time_dropped", fresh["past"]?.last())
+        assertEquals(fresh, SQLiteDatabase.create(null).apply { OldSchemas.v8(this); Db.upgrade(this, 8) }.schema())
+        assertEquals(listOf("time_dropped", "home_hidden"), fresh["past"]?.takeLast(2))
+        assertEquals(listOf("chapter", "home_hidden"), fresh["shelf"]?.takeLast(2))
         assertEquals(listOf("id", "uid", "name", "pos", "excluded"), fresh["category"])
         assertEquals(listOf("book_id", "category_id"), fresh["book_category"])
         assertEquals(listOf("id", "book_id", "after_day", "until_day"), fresh["round_drop"])
@@ -54,6 +55,19 @@ class DbMigrationTest {
         }
         assertEquals(listOf("b-1|1|0", "b-2|0|0"), db.rows("SELECT id, hidden, time_dropped FROM past ORDER BY pos") {
             "${it.getString(0)}|${it.getInt(1)}|${it.getInt(2)}"
+        })
+    }
+
+    @Test fun `v8 에서 올리면 읽고 있는 책·나간 책은 그대로이고 모두 홈에 보인다`() {
+        val db = SQLiteDatabase.create(null).apply {
+            OldSchemas.v8(this)
+            execSQL("INSERT INTO shelf VALUES (0, 'b-1', '데미안', '', NULL, 0, 10, -1, '', 'Ch. 3')")
+            execSQL("INSERT INTO past VALUES (0, 'b-2', '수레바퀴 아래서', '', '', 0, -1, '', 200, 1, 1)")
+            Db.upgrade(this, 8)
+        }
+        assertEquals(listOf("b-1|Ch. 3|0"), db.rows("SELECT id, chapter, home_hidden FROM shelf") { "${it.getString(0)}|${it.getString(1)}|${it.getInt(2)}" })
+        assertEquals(listOf("b-2|1|1|0"), db.rows("SELECT id, hidden, time_dropped, home_hidden FROM past") {
+            "${it.getString(0)}|${it.getInt(1)}|${it.getInt(2)}|${it.getInt(3)}"
         })
     }
 
