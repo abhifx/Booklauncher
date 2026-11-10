@@ -161,7 +161,7 @@ class RoundForgetTest {
     @Test fun `읽고 있는 책의 진행 중 회차를 지우면 읽고 있는 책에서도 빠지고 완독 회차만 남는다`() {
         val today = LocalDate.now()
         val done = today.minusDays(3)
-        db.execSQL("INSERT INTO shelf VALUES (0, 'b-1', '데미안', '', NULL, 0, 10, -1, '', '')")
+        db.execSQL("INSERT INTO shelf VALUES (0, 'b-1', '데미안', '', NULL, 0, 10, -1, '', '', 0)")
         finish(1, done)
         db.execSQL("INSERT INTO round_start VALUES ('b-1', ${today.toEpochDay()})")
         BookShelf.clearCaches()
@@ -182,7 +182,7 @@ class RoundForgetTest {
     }
 
     @Test fun `읽고 있는 책의 완독 회차를 지우면 책은 읽고 있는 책 그대로`() {
-        db.execSQL("INSERT INTO shelf VALUES (0, 'b-1', '데미안', '', NULL, 0, 10, -1, '', '')")
+        db.execSQL("INSERT INTO shelf VALUES (0, 'b-1', '데미안', '', NULL, 0, 10, -1, '', '', 0)")
         finish(1, d("03-10"))
         BookShelf.clearCaches()
         val reads = arrayOf(d("03-01") to 60, d("05-01") to 10)

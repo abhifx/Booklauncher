@@ -211,6 +211,11 @@
     <string name="since_year">since %1$d</string>
     <string name="remove_confirm">Remove from home?</string>
     <string name="remove_book">Remove from home</string>
+    <string name="home_hide">Hide from home</string>
+    <string name="home_unhide">Show on home</string>
+    <string name="home_hide_confirm">Hide from home?</string>
+    <string name="home_hide_note">Reading time and progress are still recorded.\nTo undo: Settings › Reading › Books I\'m reading</string>
+    <string name="home_hidden_tag">Hidden from home</string>
     <string name="review_stars_hint">Tap or slide to rate · optional</string>
     <string name="review_stars_set">%1$s / 5 · tap again to clear</string>
     <string name="review_text_hint">Your thoughts, or a line that stayed with you</string>
