@@ -67,14 +67,18 @@ class RecapTest {
         assertEquals(30, m.goalMin)
     }
 
-    @Test fun `사이에 쉰 날이 3일까지면 한 막대, 넘으면 끊는다`() {
-        assertEquals(listOf(1..5), Recap.segments(listOf(1, 5)))
-        assertEquals(listOf(1..1, 6..6), Recap.segments(listOf(1, 6)))
-        assertEquals(listOf(2..4, 10..12), Recap.segments(listOf(4, 2, 3, 10, 12)))
+    @Test fun `이어 읽은 날만 한 막대, 하루라도 쉬면 끊는다`() {
+        assertEquals(listOf(1..2), Recap.segments(listOf(1, 2)))
+        assertEquals(listOf(1..1, 3..3), Recap.segments(listOf(1, 3)))
+        assertEquals(listOf(2..4, 10..10, 12..12), Recap.segments(listOf(4, 2, 3, 10, 12)))
+        assertEquals(emptyList<IntRange>(), Recap.segments(emptyList()))
     }
 
-    @Test fun `완독한 날은 읽은 시간이 없어도 막대에 든다`() {
-        assertEquals(listOf(3..8), Recap.segments(book(listOf(3, 5), finish = 8).days))
+    @Test fun `완독한 날·고친 읽기 시작한 날은 읽은 시간이 없어도 막대에 든다`() {
+        assertEquals(listOf(3..3, 5..6), Recap.segments(book(listOf(3, 5), finish = 6).days))
+        // 직접 넣은 책처럼 읽은 시간이 없으면 시작한 날과 완독한 날 두 점(사이를 칠하지 않는다)
+        val manual = Recap.Book(ShelfBook("m", "m", "", null, 0), LongArray(30), 23, 0, "", startDay = 2)
+        assertEquals(listOf(2..2, 23..23), Recap.segments(manual.days))
     }
 
     @Test fun `달력은 주마다 먼저 시작한 막대부터 위 줄로, 다음 주로 넘어가면 조각이 나뉜다`() {
@@ -241,5 +245,26 @@ class RecapTest {
         val none = month(setOf(Categories.NONE))
         assertEquals(listOf("plain"), none.books.map { it.book.id })
         assertEquals((40 + 30) * 60_000L, none.totalMs)
+    }
+
+    @Test fun `앞쪽 끝은 기록 시작한 달과 처음 완독한 달 중 이른 달이고 기록에서 지운 책은 세지 않는다`() {
+        val nov = YearMonth.of(2026, 11)
+        val early = rec("early", finishes = listOf("2026-08-20", "2026-10-03"))
+        val gone = BookRecord(ShelfBook("gone", "gone", "", null, 0), State.PAST, true,
+            listOf(BookShelf.Finish(0, d("2026-06-01"), null, null, null)), emptyMap())
+        assertEquals(YearMonth.of(2026, 8), Recap.earliest(d("2026-10-01"), listOf(early, gone), nov))
+        assertEquals(oct, Recap.earliest(d("2026-10-01"), listOf(gone), nov))
+        assertEquals(YearMonth.of(2026, 8), Recap.earliest(null, listOf(early), nov))
+        assertEquals(nov, Recap.earliest(null, emptyList(), nov))
+        // 기기 날짜가 뒤로 가도 이번 달을 넘지 않는다
+        assertEquals(YearMonth.of(2026, 7), Recap.earliest(d("2026-10-01"), listOf(early), YearMonth.of(2026, 7)))
+    }
+
+    @Test fun `기록 시작 전 달에 완독만 고쳐 넣은 책은 읽은 시간 없이 완독한 책으로 나온다`() {
+        val early = rec("early", finishes = listOf("2026-09-20"))
+        val m = Recap.build(YearMonth.of(2026, 9), days(listOf(early)), listOf(early), 30, DayOfWeek.MONDAY)
+        assertEquals(listOf("early"), m.books.map { it.book.id })
+        assertEquals(1, m.finished)
+        assertEquals(0L, m.totalMs)
     }
 }

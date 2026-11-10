@@ -11,9 +11,6 @@ import java.time.temporal.TemporalAdjusters
  * 그해 날마다 읽은 시간(아래 올해 잔디). 그림은 [RecapImage], 화면은 [RecapActivity].
  */
 object Recap {
-    /** 이만큼(일) 넘게 쉬면 달력 막대를 끊는다(사이에 안 읽은 날이 이보다 적으면 한 막대) */
-    private const val GAP_DAYS = 3
-
     /** 달력 한 칸에 보이는 막대 줄 수(주가 다섯이면. 여섯 주인 달은 칸이 낮아 그림이 줄인다). 넘는 책은 그 칸에 `+n권 더`. */
     const val LANES = 4
 
@@ -91,12 +88,20 @@ object Recap {
 
     private const val DEFAULT_GOAL_MIN = 30
 
-    /** 읽은 날들을 [GAP_DAYS] 일 넘게 쉬지 않는 구간으로 묶는다(1부터, 오름차순) */
+    /**
+     * 결산의 앞쪽 끝: 기록을 시작한 달과 남은 책(기록에서 지운 책 빼고)을 처음 완독한 달 중 이른 달, 둘 다 없으면 [now].
+     * 기록 시작 전에 읽은 책을 완독한 날을 고쳐 넣었으면 그달 결산도 보게(읽은 시간은 없고 완독한 책만 나온다).
+     */
+    internal fun earliest(since: LocalDate?, records: List<BookRecord>, now: YearMonth): YearMonth =
+        (listOfNotNull(since) + records.filter { !it.hidden }.flatMap { it.finishes }).minOrNull()
+            ?.let { YearMonth.from(it) }?.coerceAtMost(now) ?: now
+
+    /** 읽은 날들을 이어진 날끼리 묶는다(1부터, 오름차순). 하루라도 쉬면 끊어 막대가 실제로 읽은 날만 덮는다(1.7.9 까지는 3일까지 쉰 날을 이어 칠했다). */
     internal fun segments(days: List<Int>): List<IntRange> {
         val out = mutableListOf<IntRange>()
         for (d in days.sorted()) {
             val last = out.lastOrNull()
-            if (last != null && d - last.last <= GAP_DAYS + 1) out[out.size - 1] = last.first..d else out += d..d
+            if (last != null && d - last.last <= 1) out[out.size - 1] = last.first..d else out += d..d
         }
         return out
     }

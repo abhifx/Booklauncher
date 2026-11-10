@@ -114,8 +114,8 @@ class RecapActivity : EinkActivity() {
 
     override fun onSwipe(toLeft: Boolean): Boolean = move(if (toLeft) 1 else -1)
 
-    /** 앞쪽 끝: 기록을 시작한 달(모르면 이번 달) */
-    private fun earliest(): YearMonth = ReadingLog.since(this)?.let { YearMonth.from(it) }?.coerceAtMost(YearMonth.now()) ?: YearMonth.now()
+    /** 앞쪽 끝([Recap.earliest]) */
+    private fun earliest(): YearMonth = Recap.earliest(ReadingLog.since(this), BookRecord.all(this), YearMonth.now())
 
     private fun move(by: Long): Boolean {
         val to = month.plusMonths(by)
