@@ -2,7 +2,7 @@ package com.woody.pebbledesk
 
 import android.database.sqlite.SQLiteDatabase
 
-/** 릴리스된 판의 DB 표(그대로 만들어 올리기를 시험한다): 1.3.0~1.4.2 버전 1(review 표 없음), 1.5.0~1.5.3 버전 2, 1.5.4 버전 3, 1.5.5~1.6.0 버전 4, 1.6.1~1.7.2 버전 5, 1.7.3~1.7.6 버전 6 */
+/** 릴리스된 판의 DB 표(그대로 만들어 올리기를 시험한다): 1.3.0~1.4.2 버전 1(review 표 없음), 1.5.0~1.5.3 버전 2, 1.5.4 버전 3, 1.5.5~1.6.0 버전 4, 1.6.1~1.7.2 버전 5, 1.7.3~1.7.6 버전 6, 1.7.7~1.7.8 버전 7, 1.7.9 버전 8 */
 object OldSchemas {
     fun v1(db: SQLiteDatabase) = with(db) {
         execSQL("CREATE TABLE reading_day (day INTEGER NOT NULL, key TEXT NOT NULL, ms INTEGER NOT NULL, PRIMARY KEY (day, key))")
@@ -18,9 +18,24 @@ object OldSchemas {
         db.execSQL("CREATE TABLE review (book_id TEXT PRIMARY KEY, stars INTEGER NOT NULL, text TEXT NOT NULL, updated_at INTEGER NOT NULL)")
     }
 
-    /** 버전 7: 지금 표에서 버전 8 의 `past.time_dropped` 만 없다 */
-    fun v7(db: SQLiteDatabase) = with(db) {
+    /** 버전 8: 지금 표에서 버전 9 의 `shelf.home_hidden`·`past.home_hidden` 만 없다 */
+    fun v8(db: SQLiteDatabase) = with(db) {
         Db.create(this)
+        execSQL("DROP TABLE shelf")
+        execSQL(
+            "CREATE TABLE shelf (pos INTEGER NOT NULL, id TEXT PRIMARY KEY, title TEXT, author TEXT, app TEXT, " +
+                "updated_at INTEGER, progress INTEGER, due INTEGER, seen_title TEXT, chapter TEXT NOT NULL DEFAULT '')"
+        )
+        execSQL("DROP TABLE past")
+        execSQL(
+            "CREATE TABLE past (pos INTEGER NOT NULL, id TEXT PRIMARY KEY, title TEXT, author TEXT, app TEXT, " +
+                "updated_at INTEGER, progress INTEGER, seen_title TEXT, left_at INTEGER, hidden INTEGER, time_dropped INTEGER NOT NULL DEFAULT 0)"
+        )
+    }
+
+    /** 버전 7: 버전 8 에서 `past.time_dropped` 가 없다 */
+    fun v7(db: SQLiteDatabase) = with(db) {
+        v8(this)
         execSQL("DROP TABLE past")
         execSQL(
             "CREATE TABLE past (pos INTEGER NOT NULL, id TEXT PRIMARY KEY, title TEXT, author TEXT, app TEXT, " +

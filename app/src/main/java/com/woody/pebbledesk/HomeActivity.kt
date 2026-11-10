@@ -576,8 +576,8 @@ class HomeActivity : EinkActivity() {
     private fun refresh() {
         val changedPkgs = AppIcons.clearChangedPackages(this)
         apps = AppStore.loadAndPrune(this, prefs)
-        // 맨 앞 책은 크게, 나머지는 함께 읽는 책 줄에서 쪽으로 넘긴다.
-        val books = BookShelf.list(this)
+        // 맨 앞 책은 크게, 나머지는 함께 읽는 책 줄에서 쪽으로 넘긴다. 홈에서 숨긴 책은 건너뛴다.
+        val books = BookShelf.onHome(this)
         // 맨 앞 책의 앱이 곧 읽고 있는 앱이다.
         val reading = books.firstOrNull()?.app?.let(::findApp)
         // 자주 쓰는 앱은 직접 넣고 뺀 그대로 보인다(위의 책·앱과 상관없다).
