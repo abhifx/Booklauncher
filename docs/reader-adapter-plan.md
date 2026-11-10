@@ -291,7 +291,7 @@ interface ReaderAdapter {
     fun capturesCovers(ctx: AppContext): Boolean = true
     /**
      * 화면을 찍은 직후(메인 스레드), 찍기 전에 정한 자리 가운데 아직 그 자리에 있는 것만 돌려준다(기본: 그대로).
-     * ScreenReader 는 자리로 칸을 찾거나(cellsByPosition) 표지 위에 단추를 겹치는(coverOverlays) 앱이면 서재 칸을 다시 읽어 맞춘다(지금 captureCovers 의 still)
+     * ScreenReader 는 찍은 뒤 다시 보는 앱(recheckCovers, 기본은 자리로 칸을 찾는 cellsByPosition)이나 표지 위에 단추를 겹치는(coverOverlays) 앱이면 서재 칸을 다시 읽어 맞춘다(지금 captureCovers 의 still)
      */
     fun stillSpots(ctx: AppContext, spots: List<CoverSpot>): List<CoverSpot> = spots
 }
@@ -515,14 +515,14 @@ KOReader F-Droid·이지뷰어 두 판·채리뷰어)은 지금처럼 같은 클
 | 교보eBook(e-ink) `com.kyobo.ebook.eink` | — | — | 없음 | 실기기(크레마), 확인 대기 |
 | 부커스 `com.bookers.ebook` | `eagerCovers`·`viewerPages`·`pagesRoundUp` | — | Play 에 있음 | 칸 누르기, 하단 쪽 → 진행률(올림), 반납일 |
 | 리디·원스토어 `com.initialcoms.ridi` | `coverOverlays` | `shelfCells`·`cellsByPosition`·`viewerTitleIds` | Play 에 리디 | 자리로 칸 찾기·받기 단추 겹친 표지 안 자름, 메뉴 제목 |
-| YES24 전자도서관 e-ink·휴대폰 | `eagerCovers`·`openOnViewer`·`pagesRoundUp` | — | Play 에 둘 다 | 칸 안의 받기·반납 단추는 읽는 화면이 열려야 편 것 |
-| YES24 eBook `com.yes24.ebook.fourth` | `eagerCovers`·`pagesRoundUp` | — | Play 에 있음 | 칸 누르기·하단 진행률 |
+| YES24 전자도서관 e-ink·휴대폰 | `eagerCovers`·`openOnViewer`·`pagesRoundUp` | `titleRoots`(메뉴 위 막대, `Yes24Viewer`) | Play 에 둘 다 | 칸 안의 받기·반납 단추는 읽는 화면이 열려야 편 것 |
+| YES24 eBook `com.yes24.ebook.fourth` | `eagerCovers`·`pagesRoundUp` | `titleRoots`(메뉴 위 막대, `Yes24Viewer`)·`eagerWhenStill`·`recheckCovers`·`coverStill` | Play 에 있음 | 칸 누르기·하단 진행률, 탭을 넘기는 중에 표지 안 자름 |
 | my YES `com.yes24.ebook.einkstore` | `openOnViewer`·`secure`·`clickByPlace=false` | — | Play 에 있음(USB 디버깅 중엔 닫힘) | 디버그 빌드 + 디버깅 끈 채 사용자가 눌러 보고 DB 로 확인(CLAUDE.md 기기 작업 요령) |
 | 밀리(휴대폰) `kr.co.millie.millieshelf` | `eagerCovers`·`openOnViewer`·`viewerPages` | `shelfCells`·`clickedCell`·`cellsByPosition`·`titleRoots` | Play 에 있음 | 받지 않은 책은 받기만 하고 안 들어옴, 메뉴 쪽 → 진행률 |
 | 킨들 `com.amazon.kindle` | `eagerCovers`·`openOnViewer` | `shelfCells`(이어 읽기 표지 칸 `recentCell` 포함)·`clickedCell`·`cellsByPosition` | Play 에 있음 | 서재 칸·'이어 읽기' 표지 칸 누르기, 받지 않은 책은 메뉴 제목, 메뉴 진행률 |
 
 - 킨들은 `recent` 설정(서재의 '최근 읽은 책' 줄로 판단)을 **쓰지 않는다**. `Kindle.kt` 의 `recent`·`recentCell` 은 '이어 읽기' 표지를 서재 칸으로 읽는 함수 안의 이름이다(B5 반영).
-- `openOnViewer`(누른 칸을 읽는 화면이 열릴 때 씀, 기간 지난 책 무시)·`eagerCovers`·`secure`(서재 멈춤에서 찍지 않음)·`coverOverlays`·`cellsByPosition`·`clickByPlace`·`shelfEditing`·`tellsTitle` 은
+- `openOnViewer`(누른 칸을 읽는 화면이 열릴 때 씀, 기간 지난 책 무시)·`eagerCovers`·`eagerWhenStill`(바로 자르기는 앞서 읽은 때와 같은 자리만)·`secure`(서재 멈춤에서 찍지 않음)·`coverOverlays`·`cellsByPosition`·`recheckCovers`(찍은 뒤 다시 보기)·`clickByPlace`·`shelfEditing`·`tellsTitle` 은
   `ScreenReader` 의 설정으로 남는다(같은 흐름 안의 값). 이것들을 쓰는 서비스 코드(`clicked`·`unknownClick`·`lastShelf`·바로 자르기·찍은 뒤 다시 보기 `stillSpots`)는 3단계에서 `ScreenReader` 로 간다.
 
 ### B. 전용 어댑터가 필요한 앱(옮기는 순서)

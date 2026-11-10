@@ -149,7 +149,7 @@ internal object ReaderGuide {
         )),
         App(listOf(R.string.guide_yes24ebook), listOf(Yes24Ebook), Info(
             listOf(R.string.guide_t_yes24_bottom),
-            cover = YES, title = YES, author = YES, progress = YES, due = NO,
+            cover = YES, title = YES, author = YES, progress = YES, due = NO, note = R.string.guide_note_yes24ebook,
         )),
         App(listOf(R.string.guide_moon, R.string.guide_moon_pro), listOf(MoonReader, MoonReaderPro), Info(
             listOf(R.string.guide_t_moon_open),

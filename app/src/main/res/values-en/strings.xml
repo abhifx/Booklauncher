@@ -211,6 +211,11 @@
     <string name="since_year">since %1$d</string>
     <string name="remove_confirm">Remove from home?</string>
     <string name="remove_book">Remove from home</string>
+    <string name="home_hide">Hide from home</string>
+    <string name="home_unhide">Show on home</string>
+    <string name="home_hide_confirm">Hide from home?</string>
+    <string name="home_hide_note">Reading time and progress are still recorded.\nTo undo: Settings › Reading › Books I\'m reading</string>
+    <string name="home_hidden_tag">Hidden from home</string>
     <string name="review_stars_hint">Tap or slide to rate · optional</string>
     <string name="review_stars_set">%1$s / 5 · tap again to clear</string>
     <string name="review_text_hint">Your thoughts, or a line that stayed with you</string>
@@ -454,6 +459,7 @@
     <string name="guide_t_wattpad_open">Open stories from your Library or with Start reading or Continue reading on a story\'s page. If you pick up mid-part another way, it continues with the story you opened last.</string>
     <string name="guide_n_wattpad_author">Added when your Library is in list view or you view the story\'s page</string>
     <string name="guide_n_wattpad_chapter">Shows the part name at the top of the page instead of a percentage</string>
+    <string name="guide_note_yes24ebook">If you switch the My Library tabs (reading · bookshelf · purchased) to another tab and back within a second, a cover can rarely come in shifted to one side.</string>
     <string name="guide_note_eco">PDF books aren\'t added automatically.</string>
     <string name="guide_note_wattpad">Each story counts as one book (parts don\'t become separate books).</string>
     <string name="guide_note_librera">The free version from the Play Store adds only books opened from the Library or with the menu open.</string>

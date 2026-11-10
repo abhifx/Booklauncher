@@ -97,7 +97,20 @@ open class ReaderApp(
     open val cellsByPosition: Boolean get() = false
 
     /**
-     * 찍은 뒤 다시 읽은 서재 칸들 [now](표지 자리가 있는 것만)에 [title] 의 표지 자리가 아직 [rect] 그대로인가([cellsByPosition]·[coverOverlays] 인 앱).
+     * 찍은 뒤 다시 읽어 표지 자리가 그대로인 칸만 자르는가([coverStill]). 이름으로 칸을 찾아도 서재가 움직이는 중에 찍힐 수 있는 앱이 켠다
+     * (칸을 읽은 뒤 찍기 전에 서재가 움직여 표지 자리에 옆 글자가 찍혔다). 기본: 자리로 칸을 찾는 서재([cellsByPosition])만
+     */
+    open val recheckCovers: Boolean get() = cellsByPosition
+
+    /**
+     * 바로 자르기([eagerCovers])에서 앞서 읽었을 때(1초 넘게 전, [ScreenReader.THROTTLE_MS])와 표지 자리가 같은 칸만 자르는가.
+     * 서재가 옆으로 넘어가며 멈추는 동안에는 접근성 요소의 자리가 화면에 그려진 것보다 먼저 멈춘 자리에 가 있어, 찍은 뒤 다시 읽어도([recheckCovers])
+     * 같은데 표지 자리에 옆 글자가 찍혔다. 넘긴 직후의 표지는 멈춘 서재에서 자른다([ReaderAdapter.onShelf]). 기본: 보이는 대로 자른다
+     */
+    open val eagerWhenStill: Boolean get() = false
+
+    /**
+     * 찍은 뒤 다시 읽은 서재 칸들 [now](표지 자리가 있는 것만)에 [title] 의 표지 자리가 아직 [rect] 그대로인가([recheckCovers]·[coverOverlays] 인 앱).
      * 기본: 그 제목의 (마지막) 칸이 그 자리다
      */
     open fun coverStill(now: List<Cell>, title: String, rect: Rect): Boolean = now.associate { it.title to it.thumb }[title] == rect

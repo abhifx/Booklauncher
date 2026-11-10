@@ -325,7 +325,8 @@ class SettingsActivity : EinkActivity() {
         // 읽고 있는 앱은 책을 정할 때 함께 고른다(책 없이 바꾸려면 앱을 길게 눌러 '읽고 있는 앱으로 설정').
         // 맨 앞 책 제목이 길면 줄임표로 자르고 `외 3권` 은 늘 보인다.
         val books = BookShelf.list(this)
-        val booksText = books.firstOrNull()?.title ?: getString(R.string.none)
+        // 홈에서 숨긴 책은 제목을 앞에 보이지 않는다(홈 맨 앞 책과 같게, 모두 숨겼으면 맨 앞 책)
+        val booksText = (books.firstOrNull { !it.homeHidden } ?: books.firstOrNull())?.title ?: getString(R.string.none)
         val booksTail = if (books.size > 1) getString(R.string.books_more, books.size - 1) else null
         row(getString(R.string.now_reading), booksText, on = books.isNotEmpty(), next = true, tail = booksTail) {
             startActivity(BooksActivity.intent(this))
