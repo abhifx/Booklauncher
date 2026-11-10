@@ -244,8 +244,8 @@ class ReadingActivity : EinkActivity() {
         val room = resources.displayMetrics.widthPixels - 2 * dp(Ui.MARGIN) - number.measuredWidth - dp(10) - dp(RING)
         if (column.measuredWidth > room) return null
         return hbox().apply {
-            // 컬러면 독서 기록 색면(파랑)을 깔고 아래를 조금 넓힌다(달력과의 사이에서 뺀다).
-            val field = Palette.current.field(Palette.Area.READING)
+            // 컬러면 테마 색면을 깔고 아래를 조금 넓힌다(달력과의 사이에서 뺀다).
+            val field = Palette.current.field
             field?.let { setBackgroundColor(it) }
             setPadding(dp(Ui.MARGIN), dp(8), dp(Ui.MARGIN), if (field != null) dp(FIELD_BOTTOM_DP) else 0)
             addView(number)
@@ -260,7 +260,7 @@ class ReadingActivity : EinkActivity() {
      */
     private fun heroCompact(days: ReadingDays, today: LocalDate, goalMs: Long, todayFrac: Float, month: Pair<String, String>, frameH: Int? = null) = hbox().apply {
         gravity = Gravity.TOP
-        val field = Palette.current.field(Palette.Area.READING)
+        val field = Palette.current.field
         field?.let { setBackgroundColor(it) }
         setPadding(dp(Ui.MARGIN), dp(12), dp(Ui.MARGIN), if (field != null) dp(FIELD_BOTTOM_DP) else 0)
         val number = text(ReadingLog.streak(days, today).toString(), STREAK_WIDE_SP, Ui.heavy, Palette.current.goal)

@@ -136,7 +136,7 @@ class RecapActivity : EinkActivity() {
         this.data = data
         shown = state()
         // 화면에는 화면 색 설정대로. 컬러면 그 그림을 그대로 저장·보내기에 쓴다.
-        val bmp = RecapImage.draw(this, data, Palette.current)
+        val bmp = RecapImage.draw(this, data, Palette.current.color)
         shareImage = if (Palette.current.color) bmp else null
         // 화면에는 크레마 화면 대비만큼 밝힌 사본(그림 뷰는 크레마가 다시 밝히지 않는다). 저장·보내기는 컬러 원본([sharedImage]).
         val shownBmp = bmp.copy(Bitmap.Config.ARGB_8888, true).also { Crema.undoContrast(it, Crema.contrastTone(this)) }
@@ -171,7 +171,7 @@ class RecapActivity : EinkActivity() {
     private fun fileName() = "PebbleDesk-$month.png"
 
     /** 저장·보내기 그림: 늘 컬러(화면이 흑백이면 컬러로 한 번 더 그린다) */
-    private fun sharedImage(): Bitmap? = shareImage ?: data?.let { RecapImage.draw(this, it, Palette.COLOR) }?.also { shareImage = it }
+    private fun sharedImage(): Bitmap? = shareImage ?: data?.let { RecapImage.draw(this, it, color = true) }?.also { shareImage = it }
 
     private fun share() {
         val bmp = sharedImage() ?: return

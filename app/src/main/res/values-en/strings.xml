@@ -275,7 +275,12 @@
     <string name="this_year">This year</string>
     <string name="color">Color</string>
     <string name="palette_mono">Black &amp; white</string>
-    <string name="palette_color">Color</string>
+    <string name="palette_amber">Lamplight</string>
+    <string name="palette_ink">Ink &amp; Paper</string>
+    <string name="palette_moss">Mossy Wall</string>
+    <string name="palette_camellia">Winter Camellia</string>
+    <string name="palette_canola">Canola Field</string>
+    <string name="palette_indigo">Dawn Lake</string>
     <string name="books_this_week">Books this week</string>
     <string name="reading_empty">No reading this week yet</string>
     <string name="reading_no_access">Turn on Reading time in Settings and allow Pebble Desk in Usage access to see your log.</string>
