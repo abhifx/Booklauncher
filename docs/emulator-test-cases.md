@@ -28,17 +28,18 @@
 | A3 | V2: 다시 읽는 중인 책(읽고 있는 책인데 완독한 적 있음) | 앱을 띄움 | `round_start` 에 날짜 없이 한 줄, 상세 기록 칸에 진행 중 회차(시작일 모름은 줄 없음) | DB, 상세 |
 | A4 | V2: 고친 제목 C『헤세의 소설』(seen_title `싯다르타`), `pkg/싯다르타` 시간 | 앱을 띄움 | 그 시간이 C 의 id 로 | DB |
 | A5 | 1.2.1 JSON(`reading.json`·`books/books.json`) 만 있는 새 설치 | 앱을 띄움 | JSON 이 들어가고 `.migrated` 로 이름이 바뀜, 읽은 시간은 앱만 아는 줄 | 파일·DB |
-| A6 | 아무 데이터 없는 새 설치 | 앱을 띄움 | DB 버전 8 의 새 표(`reading_day` 다섯 칸, `book_open.book_id`, `finish`(`began` 포함)·`round_start`·`round_began`·`review`·`viewer_mark`·`book_file`, `shelf.chapter`, `category`·`book_category`·`round_drop`, `past.time_dropped`), 오류 없음 | `PRAGMA table_info` |
-| A7 | **옛 판 그대로**(루트 에뮬): 태그 v1.5.3 으로 빌드한 1.5.3 을 깔고, `tools/emu/oldseed.py v2` 의 자료(읽고 있는 책 6·나간 책 5(완독·뺌·지움·두 번 완독, 옛 판이 끊겨 읽고 있는 책에도 남은 책)·완독 4·감상 4·책별/앱별 읽은 시간 12(앱만 아는 칸과 겹치는 빈 제목 칸 `pkg/` 포함)·메타·편 책 기록·표지)를 덮음 | 1.5.3 으로 띄워 자료가 보이는지 → 이 판을 덮어 깔기(`tools/emu/oldmig.sh v2 …`) | `oldseed.py check v2` 가 모두 맞음: 버전 8·칸(빈 `shelf.chapter`, 빈 `finish.began`·`round_began`, 빈 `category`·`book_category`·`round_drop`, 모두 0 인 `past.time_dropped`), 책·나간 책 그대로, 완독에 uid(누른 때는 모름)·마지막 완독에 감상, 완독한 적 없는 책의 감상만 `review` 에, 다시 읽는 책에 시작일 모르는 `round_start`, 읽은 시간이 나간 날·지운 날·고친 제목·`/` 든 제목대로 책 id 로, 앱만 아는 시간·목록에 없던 책은 빈 id, 편 책 기록에 빈 책 id. 깔리지 않은 앱 키는 지워진 앱 정리로 비워짐(기대값은 『데미안』의 앱 문리더 Pro 가 깔린 에뮬 기준. 없는 에뮬에서는 그 앱 칸이 비어 `읽고 있는 책` 한 줄만 다르다, A8·A9 도 같다) | DB |
+| A6 | 아무 데이터 없는 새 설치 | 앱을 띄움 | DB 버전 9 의 새 표(`reading_day` 다섯 칸, `book_open.book_id`, `finish`(`began` 포함)·`round_start`·`round_began`·`review`·`viewer_mark`·`book_file`, `shelf.chapter`, `category`·`book_category`·`round_drop`, `past.time_dropped`, `shelf.home_hidden`·`past.home_hidden`), 오류 없음 | `PRAGMA table_info` |
+| A7 | **옛 판 그대로**(루트 에뮬): 태그 v1.5.3 으로 빌드한 1.5.3 을 깔고, `tools/emu/oldseed.py v2` 의 자료(읽고 있는 책 6·나간 책 5(완독·뺌·지움·두 번 완독, 옛 판이 끊겨 읽고 있는 책에도 남은 책)·완독 4·감상 4·책별/앱별 읽은 시간 12(앱만 아는 칸과 겹치는 빈 제목 칸 `pkg/` 포함)·메타·편 책 기록·표지)를 덮음 | 1.5.3 으로 띄워 자료가 보이는지 → 이 판을 덮어 깔기(`tools/emu/oldmig.sh v2 …`) | `oldseed.py check v2` 가 모두 맞음: 버전 9·칸(빈 `shelf.chapter`, 빈 `finish.began`·`round_began`, 빈 `category`·`book_category`·`round_drop`, 모두 0 인 `past.time_dropped`, 모두 0 인 `shelf.home_hidden`·`past.home_hidden`), 책·나간 책 그대로, 완독에 uid(누른 때는 모름)·마지막 완독에 감상, 완독한 적 없는 책의 감상만 `review` 에, 다시 읽는 책에 시작일 모르는 `round_start`, 읽은 시간이 나간 날·지운 날·고친 제목·`/` 든 제목대로 책 id 로, 앱만 아는 시간·목록에 없던 책은 빈 id, 편 책 기록에 빈 책 id. 깔리지 않은 앱 키는 지워진 앱 정리로 비워짐(기대값은 『데미안』의 앱 문리더 Pro 가 깔린 에뮬 기준. 없는 에뮬에서는 그 앱 칸이 비어 `읽고 있는 책` 한 줄만 다르다, A8·A9 도 같다) | DB |
 | A8 | A7 과 같되 1.4.2(DB 버전 1, 감상 없음) | `oldmig.sh v1 …` | `check v1` 이 모두 맞음(감상 빼고 A7 과 같음) | DB |
-| A8b | A7 과 같되 1.5.3 다음에 1.5.4(DB 버전 3)를 거쳐 이 판으로 | `oldmig.sh v2 <1.5.3> <새 판> <폴더> <1.5.4>`(1.5.4 로 띄운 화면은 `mid.png`) | `check v2` 가 모두 맞음(버전 8, 빈 `book_file`) | DB |
-| A8c | A7 과 같되 1.5.3 다음에 1.6.0(DB 버전 4)을 거쳐 이 판으로 | `oldmig.sh v2 <1.5.3> <새 판> <폴더> <1.6.0>` | `check v2` 가 모두 맞음(버전 8, 빈 `shelf.chapter`) | DB |
-| A8d | A7 과 같되 1.5.3 다음에 1.7.2(DB 버전 5)를 거쳐 이 판으로 | `oldmig.sh v2 <1.5.3> <새 판> <폴더> <1.7.2>` | `check v2` 가 모두 맞음(버전 8, 빈 `finish.began`·`round_began`) | DB |
-| A8e | A7 과 같되 1.5.3 다음에 1.7.6(DB 버전 6)을 거쳐 이 판으로 | `oldmig.sh v2 <1.5.3> <새 판> <폴더> <1.7.6>` | `check v2` 가 모두 맞음(버전 8, 빈 `category`·`book_category`·`round_drop`) | DB |
-| A8f | A7 과 같되 1.5.3 다음에 1.7.8(DB 버전 7)을 거쳐 이 판으로 | `oldmig.sh v2 <1.5.3> <새 판> <폴더> <1.7.8>` | `check v2` 가 모두 맞음(버전 8, 지운 책도 `past.time_dropped` 0: 읽은 시간은 합계에 그대로) | DB |
+| A8b | A7 과 같되 1.5.3 다음에 1.5.4(DB 버전 3)를 거쳐 이 판으로 | `oldmig.sh v2 <1.5.3> <새 판> <폴더> <1.5.4>`(1.5.4 로 띄운 화면은 `mid.png`) | `check v2` 가 모두 맞음(버전 9, 빈 `book_file`) | DB |
+| A8c | A7 과 같되 1.5.3 다음에 1.6.0(DB 버전 4)을 거쳐 이 판으로 | `oldmig.sh v2 <1.5.3> <새 판> <폴더> <1.6.0>` | `check v2` 가 모두 맞음(버전 9, 빈 `shelf.chapter`) | DB |
+| A8d | A7 과 같되 1.5.3 다음에 1.7.2(DB 버전 5)를 거쳐 이 판으로 | `oldmig.sh v2 <1.5.3> <새 판> <폴더> <1.7.2>` | `check v2` 가 모두 맞음(버전 9, 빈 `finish.began`·`round_began`) | DB |
+| A8e | A7 과 같되 1.5.3 다음에 1.7.6(DB 버전 6)을 거쳐 이 판으로 | `oldmig.sh v2 <1.5.3> <새 판> <폴더> <1.7.6>` | `check v2` 가 모두 맞음(버전 9, 빈 `category`·`book_category`·`round_drop`) | DB |
+| A8f | A7 과 같되 1.5.3 다음에 1.7.8(DB 버전 7)을 거쳐 이 판으로 | `oldmig.sh v2 <1.5.3> <새 판> <폴더> <1.7.8>` | `check v2` 가 모두 맞음(버전 9, 지운 책도 `past.time_dropped` 0: 읽은 시간은 합계에 그대로) | DB |
+| A8g | A7 과 같되 1.5.3 다음에 1.7.9(DB 버전 8)를 거쳐 이 판으로 | `oldmig.sh v2 <1.5.3> <새 판> <폴더> <1.7.9>` | `check v2` 가 모두 맞음(버전 9, 읽고 있는 책·나간 책 모두 `home_hidden` 0: 모두 홈에 보인다) | DB |
 | A9 | 1.2.1(JSON): `reading.json`(앱별 하루 합계·through·since)·`books.json`(YES24 번호·`auto-`·`legacy` id, 진행률·반납일·앱)·표지·편 책 prefs | `oldmig.sh json …` | `check json` 이 모두 맞음: 읽고 있는 책이 `b-` id 로(표지 파일도 새 이름), `auto-` 책은 앱이 보여 준 제목을 기억, 읽은 시간은 앱별(제목·책 id 빈칸), 메타 그대로, JSON 은 `.migrated` | DB·파일 |
 
-A7~A9 는 2026-11-07 DB 버전 8(읽은 시간까지 지운 책 `past.time_dropped`)로 여덟 경로 모두 통과(1.2.1·1.4.2·1.5.3, 1.5.3 → 1.5.4·1.6.0·1.7.2·1.7.6·1.7.8, 릴리스 빌드, `CremaPebble_A11_Millie` 읽기 전용, 문리더 Pro 가 없어 『데미안』의 앱 칸 한 줄만 다름). 2026-11-04 DB 버전 7(카테고리·지운 회차)로 일곱 경로 모두 통과(1.2.1·1.4.2·1.5.3, 1.5.3 → 1.5.4·1.6.0·1.7.2·1.7.6). A6~A9 는 2026-11-01 DB 버전 6 으로도 모두 통과(`CremaPebble_A11_Millie`, 문리더 Pro 가 없어 `읽고 있는 책` 한 줄만 다름).
+A7~A9 는 2026-11-10 DB 버전 9(홈에서 숨긴 책 `shelf.home_hidden`·`past.home_hidden`)로 아홉 경로 모두 통과(1.2.1·1.4.2·1.5.3, 1.5.3 → 1.5.4·1.6.0·1.7.2·1.7.6·1.7.8·1.7.9, 릴리스 빌드, `CremaPebble_A11_Millie` 읽기 전용, 『데미안』의 앱 칸 한 줄만 다름. 시험 중 다른 세션이 모든 에뮬에 앱을 깔면 앱이 닫혀 `new.png` 가 기본 런처로 찍힌다: 그 경로만 다시 돌려 확인). 2026-11-07 DB 버전 8(읽은 시간까지 지운 책 `past.time_dropped`)로 여덟 경로 모두 통과(1.2.1·1.4.2·1.5.3, 1.5.3 → 1.5.4·1.6.0·1.7.2·1.7.6·1.7.8, 릴리스 빌드, `CremaPebble_A11_Millie` 읽기 전용, 문리더 Pro 가 없어 『데미안』의 앱 칸 한 줄만 다름). 2026-11-04 DB 버전 7(카테고리·지운 회차)로 일곱 경로 모두 통과(1.2.1·1.4.2·1.5.3, 1.5.3 → 1.5.4·1.6.0·1.7.2·1.7.6). A6~A9 는 2026-11-01 DB 버전 6 으로도 모두 통과(`CremaPebble_A11_Millie`, 문리더 Pro 가 없어 `읽고 있는 책` 한 줄만 다름).
 
 ## B. 홈 하단 · 독서 기록 화면 (⑫)
 
@@ -149,7 +150,8 @@ A7~A9 는 2026-11-07 DB 버전 8(읽은 시간까지 지운 책 `past.time_dropp
 | ID | 준비 | 기대 |
 |---|---|---|
 | H1 | (L) 읽고 있는 책 『데미안』, 이북 앱에서 『데미안 2』 폄 | 새 책 『데미안 2』 로 들어감(앞부분만 같으면 다른 책) |
-| H2 | (L) 읽고 있는 책 『달러구트 꿈 백화점 : 잠들어야만 입장 가능합니다』, 서재 제목 `달러구트 꿈 백화점` | 같은 책(부제 무시) |
+| H2 | (L) 읽고 있는 책 『달러구트 꿈 백화점 : 잠들어야만 입장 가능합니다』, 서재 제목 `달러구트 꿈 백화점` | 같은 책(부제가 한쪽에만 있으면 무시) |
+| H4 | (L) 읽고 있는 책 『해리포터: 1권』, 이북 앱에서 『해리포터: 2권』 폄 | 새 책 『해리포터: 2권』 으로 들어감(부제가 둘 다 있고 다르면 다른 책). U `부제는 한쪽에만 있으면 무시하고 둘 다 있는데 다르면 다른 책` |
 | H3 | U `그날 뒤에야 처음 읽은 책(아직 없던 책)에는 붙이지 않는다`: 나간 A(1/20 나감, 1/5 첫 읽음), 나간 B(4/2 첫 읽음, 5/1 나감), 3/1 빈 id 시간 | 3/1 은 A 로(아직 없던 B 에 붙지 않음) |
 
 ## I. 자동 추가 (켜짐)
@@ -384,6 +386,7 @@ ANDROID_SERIAL=emulator-5554 tools/emu/watch-cycle.sh <결과 폴더> [<비교�
 - 한 바퀴 밖의 순서(`tools/emu/watch-e2e.sh <순서> <결과 폴더>`, 바꾸기 전 빌드와 같은 상태에서 한 번씩 돌려 비교):
   - `libby`(대출한 책 열고 닫기: 열림·닫힘 표시), `bookfusion2`(지금 읽는 책 `Continue`), `koreader`(책 둘 번갈아), `kohome`(`KO_FILE` 새 책 → 홈에서 파일로 열기),
     `moonreader`(책 둘 번갈아), `easyview2`(`EV_FILE` 을 다른 앱처럼 열기 → 책 모름, ▶ 마지막 파일), `mihon`(서재 첫 칸 → 작품 상세 → 화 → 메뉴. `MH_PKG=com.amanoteam.kahon` 이면 Kahon, 그 앱 서재에 같은 만화를 넣어 둔 것), `wattpad`(로그인한 계정 서재 목록 보기 첫 칸 → 쪽 넘김 → 뒤로 → 홈: 저자·표지·화 이름), `kobo`(게스트 미리보기 두 권: My Books 둘째 칸 → 메뉴 → 돌아와 맨 위 칸으로 앎), `kobo2`(홈 `Latest Purchases` 둘째 칸 → 책 상세 → `Read Preview`. 둘 다 Kobo 만 강제 종료해 홈 탭에서 시작), `librera`(라이브러리 칸 → 쪽 넘김 → 메뉴 → 뒤로 책 닫기. `LB_PKG=com.foobnix.pdf.reader` 면 무료판, 무료판 라이브러리에는 데모 책 둘만 있어 좌표가 맞지 않는다): `CremaPebble_A11_Play`.
+  - `eco`(이씨오 범용뷰어 3.0, `CremaPebble_A11_Play` 에 Play 로 깔고 도서관 로그인·대출한 책: 서재 첫 칸 → 읽는 화면 → 메뉴 → 뒤로 두 번. 읽는 화면이 화면 캡처를 막아 2-viewer 사진은 없다).
   - `readest`: `CremaPebble_A11_Play_Readest`. `kindle`(서재 칸 두 권 번갈아·메뉴 진행률)·문리더 유료판(`MN_PKG=com.flyersoft.moonreaderp`): `CremaPebble_A11`(킨들 로그인, 홈은 `cmd package set-home-activity` 로 이 앱).
   - 새 책 순서(`kohome`)는 한 번만 되므로 빌드마다 다른 파일(`ko-a`/`ko-b`…, 제목만 다른 EPUB)로 돌리고 제목을 바꿔 비교한다. 이지뷰어 서재는 위 도구 줄이 보였다 안 보였다 해 `easyview2` 의 ▶ 자리가 칸에 걸리기도 한다.
 - 로그인이 필요한 한국 이북 앱(교보도서관·교보eBook·밀리·알라딘·부커스·리디·YES24)은 어느 에뮬에도 로그인돼 있지 않아 단위 테스트와 실기기로 본다.

@@ -63,7 +63,7 @@ data class Seen(val title: String, val author: String = "", val progress: Int = 
 
 /** 편 책이 어떤 책인가 */
 sealed interface Target {
-    /** 제목으로 찾기(부제·공백 무시, 앱이 보이던 제목도). 나간 책은 같은 제목이면 되살린다 */
+    /** 제목으로 찾기([sameTitle]: 공백 무시, 부제는 한쪽에만 있으면 무시. 앱이 보이던 제목도). 나간 책은 같은 제목이면 되살린다 */
     object ByTitle : Target
     /**
      * 앱이 정한 책: [id] 의 책(읽고 있는 책이면 맨 앞으로, 나간 책이면 그 책만 되살림), null 이면 같은 제목이 있어도 새 책.
@@ -82,7 +82,7 @@ interface OpenSteps {
 
 /** 책 목록에서 읽기만 하는 찾기 */
 interface BookLookup {
-    /** 읽고 있는 책 가운데 그 제목(부제·공백 무시) */
+    /** 읽고 있는 책 가운데 그 제목([sameTitle]) */
     fun byTitle(title: String): ShelfBook?
     /** 읽고 있는 책 [id] */
     fun get(id: String): ShelfBook?

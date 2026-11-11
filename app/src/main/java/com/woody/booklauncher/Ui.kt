@@ -230,12 +230,12 @@ fun Context.coverGrid(columns: Int, gapDp: Int): CoverGrid {
 
 /**
  * 하위 화면 제목 줄 `‹ 제목`. 누르면 [onBack]. 제목 뒤에 덧붙일 것(개수 등)은 돌려받은 줄에 더한다.
- * 컬러면 화면 묶음 [area] 의 제목 색으로 쓰고, 제목 줄을 칠하는 묶음([Palette.Area.titleBand], 책장·설정)은 그 색면으로 칠한다.
+ * 컬러면 화면 묶음 [area] 의 제목 색으로 쓰고, 제목 줄을 칠하는 묶음([Palette.Area.titleBand], 책장·설정)은 테마 색면으로 칠한다.
  */
 fun Context.titleRow(title: String, area: Palette.Area = Palette.Area.SETTINGS, onBack: () -> Unit): LinearLayout = hbox().apply {
     layoutParams = lp(MATCH, dp(80))
     setPadding(dp(Ui.MARGIN - 8), 0, dp(Ui.MARGIN), 0)
-    if (area.titleBand) Palette.current.field(area)?.let { setBackgroundColor(it) }
+    if (area.titleBand) Palette.current.field?.let { setBackgroundColor(it) }
     val color = Palette.current.title(area)
     addView(text("‹", 34f, color = color), lp(WRAP, WRAP).apply { marginEnd = dp(10) })
     addView(text(title, 33f, Ui.heavy, color))

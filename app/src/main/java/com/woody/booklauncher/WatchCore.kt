@@ -97,8 +97,8 @@ class WatchCore(private val host: WatchHost, private val clock: WatchClock, priv
     private var holderEntry: Entry? = null
     private val holderLater = Runnable { holderEntry?.let { e -> holderEntry = null; guard(e) { checkHolder(e); readScreen(e, force = false) } } }
 
-    /** 이북 앱의 접근성 알림. 다른 앱은 무시한다. [click] 은 누름 알림일 때만 */
-    fun onEvent(pkg: String, type: Int, cls: String?, click: Click?) {
+    /** 이북 앱의 접근성 알림. 다른 앱은 무시한다. [click] 은 누름 알림일 때만, [source] 는 부르면 알림의 요소(쓰는 앱만 부른다) */
+    fun onEvent(pkg: String, type: Int, cls: String?, click: Click?, source: () -> AccessibilityNodeInfo? = { null }) {
         val e = entry(pkg) ?: return
         WatchLog.event(context, pkg)
         guard(e) {
@@ -117,6 +117,7 @@ class WatchCore(private val host: WatchHost, private val clock: WatchClock, priv
                 AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED -> {
                     // 앞에 올 때만 데이터로 맞추는 앱(KOReader)은 내용이 바뀔 때마다 읽지 않는다
                     if (!e.app.readsContent) return@guard
+                    e.adapter.onContent(e, source)
                     checkHolder(e)
                     readScreen(e, force = false)
                 }

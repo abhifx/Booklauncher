@@ -10,6 +10,7 @@ import com.woody.booklauncher.readers.Bookers2
 import com.woody.booklauncher.readers.CherieViewer
 import com.woody.booklauncher.readers.EasyView
 import com.woody.booklauncher.readers.EasyViewFree
+import com.woody.booklauncher.readers.EcoViewer
 import com.woody.booklauncher.readers.Futon
 import com.woody.booklauncher.readers.IReader
 import com.woody.booklauncher.readers.Kahon
@@ -55,7 +56,7 @@ internal object ReaderGuide {
     class Field(val main: Int, val note: Int? = null, val added: Boolean = true)
 
     /**
-     * 앱 하나의 안내. [bookFiles] 는 책 파일 읽기 줄의 보조 글(꼭 필요·표지 등, null 이면 그 줄을 두지 않는다), [todo] 는 앱에서 할 것(비면 `따로 바꿀 것은 없습니다`),
+     * 앱 하나의 안내. [bookFiles] 는 책 파일 읽기 줄의 보조 글(꼭 필요·표지 등, null 이면 그 줄을 두지 않는다), [todo] 는 앱에서 할 것(비면 그 묶음을 두지 않는다),
      * [note] 는 알아 둘 것(없으면 그 묶음을 두지 않는다).
      * 표지는 안드로이드 9·10 이면 [coverBefore11]: 서재 화면에서 자르는 표지는 화면 캡처가 안드로이드 11 부터라 들어오지 않는다
      * (기본. 책 파일 읽기 줄이 있는 앱과 [appCover](앱이 표지를 내주는 앱, iReader)는 표지를 화면에서 자르지 않아 그대로이고, 그 길만 남는 앱만 따로 준다).
@@ -149,7 +150,7 @@ internal object ReaderGuide {
         )),
         App(listOf(R.string.guide_yes24ebook), listOf(Yes24Ebook), Info(
             listOf(R.string.guide_t_yes24_bottom),
-            cover = YES, title = YES, author = YES, progress = YES, due = NO,
+            cover = YES, title = YES, author = YES, progress = YES, due = NO, note = R.string.guide_note_yes24ebook,
         )),
         App(listOf(R.string.guide_moon, R.string.guide_moon_pro), listOf(MoonReader, MoonReaderPro), Info(
             listOf(R.string.guide_t_moon_open),
@@ -175,7 +176,7 @@ internal object ReaderGuide {
             bookFiles = R.string.guide_files_cover, note = R.string.guide_note_neo,
         )),
         App(listOf(R.string.guide_ko), listOf(KOReader, KOReaderFdroid), Info(
-            listOf(R.string.guide_t_ko_files),
+            emptyList(),
             cover = Field(R.string.guide_added_epub_comics, R.string.guide_n_comic_archives), title = YES, author = YES, progress = YES, due = OWN_FILE,
             bookFiles = R.string.guide_files_required, note = R.string.guide_note_ko,
         )),
@@ -229,6 +230,10 @@ internal object ReaderGuide {
             listOf(R.string.guide_t_wattpad_open),
             cover = YES, title = YES, author = yes(R.string.guide_n_wattpad_author),
             progress = yes(R.string.guide_n_wattpad_chapter), due = NO, note = R.string.guide_note_wattpad,
+        )),
+        App(listOf(R.string.guide_eco), listOf(EcoViewer), Info(
+            emptyList(),
+            cover = YES, title = YES, author = YES, progress = YES, due = YES, note = R.string.guide_note_eco,
         )),
     )
 }

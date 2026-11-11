@@ -12,6 +12,8 @@ import android.widget.TextView
 /**
  * 읽고 있는 책 목록(설정 > 읽고 있는 책). 줄마다 표지·제목·읽고 있는 앱, 오른쪽에 `↑ ↓`(순서)와 `빼기`.
  * 맨 앞 책과 나머지 책 일부가 홈의 `내 책장` 첫 쪽에 보인다. 줄을 누르면 그 책의 앱을 바꾸고, 하단 `책 추가 ›` 로 책을 찾는다.
+ * 홈에서 숨긴 책([ShelfBook.homeHidden])도 제자리에 흐리게(표지·제목, 앱 줄 앞에 `홈에서 숨김`) 보이고 `↑ ↓` 대신 `보이기`(홈에 다시 보이게).
+ * 순서는 홈에 보이는 책끼리 바꾼다(숨긴 책은 건너뛴다, [BookShelf.move]).
  * 한 화면에 다 들어가지 않으면 페이지로 넘긴다(하단 오른쪽 `‹ 1 / 2 ›`).
  */
 class BooksActivity : EinkActivity() {
@@ -79,29 +81,29 @@ class BooksActivity : EinkActivity() {
         titleCount.text = getString(R.string.books_count, books.size)
         empty.visibility = if (books.isEmpty()) View.VISIBLE else View.GONE
 
-        rows.setRows(books.mapIndexed { i, book -> { bookRow(book, i, books.size, apps) } })
+        rows.setRows(books.mapIndexed { i, book -> { bookRow(book, i, books, apps) } })
     }
 
-    private fun bookRow(book: ShelfBook, i: Int, count: Int, apps: List<AppEntry>): View {
+    private fun bookRow(book: ShelfBook, i: Int, books: List<ShelfBook>, apps: List<AppEntry>): View {
         val app = book.app?.let { key -> AppStore.find(this, key, apps) }
+        val hidden = book.homeHidden
         return hbox().apply {
             gravity = Gravity.CENTER_VERTICAL
             setPadding(dp(Ui.MARGIN), 0, dp(Ui.MARGIN), 0)
             val w = dp(COVER_DP)
-            addView(coverImage(BookShelf.cover(context, book, w)), lp(w + dp(2), w * 3 / 2 + dp(2)))
+            addView(coverImage(BookShelf.cover(context, book, w)).apply { if (hidden) alpha = HIDDEN_ALPHA }, lp(w + dp(2), w * 3 / 2 + dp(2)))
             addView(vbox().apply {
-                addView(text(book.title, 22f, Ui.bold, lines = 2))
+                addView(text(book.title, 22f, Ui.bold, if (hidden) Ui.LIGHT_GRAY else Ui.BLACK, lines = 2))
                 val appText = app?.label ?: getString(R.string.pick_reader_link)
-                val line = (listOf(appText) + bookStatus(book)).joinToString("  ·  ")
-                addView(text(line, 16f, color = if (app != null) Ui.GRAY else Ui.LIGHT_GRAY), lp(WRAP, WRAP).apply { topMargin = dp(6) })
+                val line = (listOfNotNull(getString(R.string.home_hidden_tag).takeIf { hidden }, appText) + bookStatus(book)).joinToString("  ·  ")
+                addView(text(line, 16f, color = if (app != null && !hidden) Ui.GRAY else Ui.LIGHT_GRAY), lp(WRAP, WRAP).apply { topMargin = dp(6) })
             }, lp(0, WRAP, 1f).apply { marginStart = dp(16) })
-            addView(orderArrow("↑", i > 0) { move(book, i, -1) })
-            addView(orderArrow("↓", i < count - 1) { move(book, i, 1) })
-            addView(text(getString(R.string.remove), 19f).apply {
-                paintFlags = paintFlags or Paint.UNDERLINE_TEXT_FLAG
-                setPadding(dp(16), dp(14), 0, dp(14))
-                setOnClickListener { removeBook(BookRecord.of(this@BooksActivity, book), bookSubtitle(book, reading = true)) { render() } }
-            })
+            if (hidden) addView(link(getString(R.string.unhide)) { BookShelf.setHomeHidden(this@BooksActivity, book.id, false); render() })
+            else {
+                addView(orderArrow("↑", BookShelf.movableTo(books, i, -1) != null) { move(book, -1) })
+                addView(orderArrow("↓", BookShelf.movableTo(books, i, 1) != null) { move(book, 1) })
+            }
+            addView(link(getString(R.string.remove)) { removeBook(BookRecord.of(this@BooksActivity, book), bookSubtitle(book, reading = true)) { render() } })
             setOnClickListener {
                 startActivity(AppListActivity.intent(this@BooksActivity, AppListActivity.Mode.PICK_READER, book.id))
             }
@@ -110,17 +112,26 @@ class BooksActivity : EinkActivity() {
         }
     }
 
-    /** 옮긴 책이 다른 페이지로 넘어가면 그 페이지를 보여 준다. */
-    private fun move(book: ShelfBook, i: Int, delta: Int) {
-        BookShelf.move(this, book.id, delta)
+    /** 줄 오른쪽 밑줄 글자(`보이기`·`빼기`) */
+    private fun link(label: String, onClick: () -> Unit) = text(label, 19f).apply {
+        paintFlags = paintFlags or Paint.UNDERLINE_TEXT_FLAG
+        setPadding(dp(16), dp(14), 0, dp(14))
+        setOnClickListener { onClick() }
+    }
+
+    /** 옮긴 책이 다른 페이지로 넘어가면 그 페이지를 보여 준다(숨긴 책을 건너뛰어 간 자리). */
+    private fun move(book: ShelfBook, delta: Int) {
+        val to = BookShelf.move(this, book.id, delta)
         render()
-        rows.reveal(i + delta)
+        to?.let { rows.reveal(it) }
     }
 
     companion object {
         private const val COVER_DP = 48
         /** 줄 높이: 표지(48 × 72dp + 테두리) + 위아래 12dp */
         private const val ROW_DP = 98
+        /** 홈에서 숨긴 책의 표지 진하기 */
+        private const val HIDDEN_ALPHA = 0.4f
 
         fun intent(context: Context) = Intent(context, BooksActivity::class.java)
     }

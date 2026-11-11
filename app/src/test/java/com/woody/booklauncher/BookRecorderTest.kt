@@ -29,7 +29,7 @@ class BookRecorderTest {
     private lateinit var rec: ShelfRecorder
 
     @Before fun setUp() {
-        db.execSQL("INSERT INTO shelf VALUES (0, 'b-1', '데미안', '', 'x/y', 0, 10, -1, '데미안', '')")
+        db.execSQL("INSERT INTO shelf VALUES (0, 'b-1', '데미안', '', 'x/y', 0, 10, -1, '데미안', '', 0)")
         db.execSQL("INSERT INTO past (pos, id, title, author, app, updated_at, progress, seen_title, left_at, hidden) VALUES (0, 'p-1', '싯다르타', '', 'x/y', 0, 50, '싯다르타', 1000, 0)")
         db.execSQL("INSERT INTO past (pos, id, title, author, app, updated_at, progress, seen_title, left_at, hidden) VALUES (1, 'p-2', '데미안', '', 'x/y', 0, 30, '데미안', 2000, 0)")
         db.execSQL("INSERT INTO book_file VALUES ('p-2', '/sd/d.epub')")
@@ -52,7 +52,7 @@ class BookRecorderTest {
     private fun ids() = BookShelf.list(app).map { it.id }
 
     @Test fun `제목으로 읽고 있는 책을 맨 앞으로, 진행률을 적고 편 책 기록`() {
-        db.execSQL("INSERT INTO shelf VALUES (1, 'b-2', '수레바퀴', '', 'x/y', 0, 0, -1, '수레바퀴', '')")
+        db.execSQL("INSERT INTO shelf VALUES (1, 'b-2', '수레바퀴', '', 'x/y', 0, 0, -1, '수레바퀴', '', 0)")
         BookShelf.clearCaches()
         val book = rec.opened(pkg, Seen("수레바퀴", "헤세", 20, -1), 5000L, Target.ByTitle)
         assertEquals("b-2", book.id)
@@ -127,7 +127,7 @@ class BookRecorderTest {
 
     @Test fun `알게 된 파일의 제목`() {
         assertEquals("데미안", rec.lookup.knownTitle("/sd/D.epub", "책 정보 제목"))
-        db.execSQL("INSERT INTO shelf VALUES (1, 'b-3', 'story', '', 'x/y', 0, 0, -1, 'story', '')")
+        db.execSQL("INSERT INTO shelf VALUES (1, 'b-3', 'story', '', 'x/y', 0, 0, -1, 'story', '', 0)")
         BookShelf.clearCaches()
         assertEquals("story", rec.lookup.knownTitle("/sd/books/story.epub", "Story Title"))
         assertEquals("새 제목", rec.lookup.knownTitle("/sd/books/none.epub", "새 제목"))

@@ -155,6 +155,14 @@ class HomePrefs(context: Context) {
         get() = sp.getBoolean(KEY_FAV_GRID, false)
         set(v) = sp.edit().putBoolean(KEY_FAV_GRID, v).apply()
 
+    /**
+     * 세로 홈의 자주 쓰는 앱을 낮게(목록 2줄 · 격자 1줄). false 면 지금 높이(목록 3줄 · 격자 2줄).
+     * 낮게면 남는 높이를 책 자리에 주고 함께 읽는 책을 큰 표지로 그린다. 가로 홈에는 쓰지 않는다.
+     */
+    var favShort: Boolean
+        get() = sp.getBoolean("fav_short", false)
+        set(v) = sp.edit().putBoolean("fav_short", v).apply()
+
     /** 독서 기록의 4주를 날마다 막대그래프로. false 면 링 달력 */
     var readingGraph: Boolean
         get() = sp.getBoolean("reading_graph", false)
@@ -221,10 +229,10 @@ class HomePrefs(context: Context) {
         get() = if (sp.getBoolean("week_starts_sunday", false)) DayOfWeek.SUNDAY else DayOfWeek.MONDAY
         set(v) = sp.edit().putBoolean("week_starts_sunday", v == DayOfWeek.SUNDAY).apply()
 
-    /** 색(설정 › 화면 › 색, [Palette]). 처음은 흑백. */
+    /** 색 테마(설정 › 화면 › 색, [Palette]). 처음은 흑백. */
     var palette: Palette
-        get() = Palette.of(sp.getString(KEY_PALETTE, null))
-        set(v) = sp.edit().putString(KEY_PALETTE, v.key).apply()
+        get() = palette(sp)
+        set(v) = sp.edit().putString(KEY_THEME, v.key).remove(KEY_LEGACY_PALETTE).apply()
 
     var showIcons: Boolean
         get() = sp.getBoolean("show_icons", true)
@@ -300,7 +308,9 @@ class HomePrefs(context: Context) {
         private const val KEY_FAV_GRID = "fav_grid"
         private const val KEY_TEXT_SCALE = "text_scale"
         private const val KEY_ROW_SCALE = "row_scale"
-        private const val KEY_PALETTE = "palette"
+        private const val KEY_THEME = "theme"
+        /** 1.7.9 까지의 색(`mono` / `color`). 처음 [palette] 를 읽을 때 [KEY_THEME] 으로 옮기고 지운다 */
+        private const val KEY_LEGACY_PALETTE = "palette"
         private const val KEY_ICON_PACK = "icon_pack"
         private const val KEY_ICON_OVERRIDES = "icon_overrides"
 
@@ -318,7 +328,19 @@ class HomePrefs(context: Context) {
         fun rowScalePercent(context: Context) = percent(prefs(context), KEY_ROW_SCALE, ROW_SCALES)
 
         /** 화면을 만들기 전에(attachBaseContext) 색을 정하려고 쓴다. */
-        fun palette(context: Context) = Palette.of(prefs(context).getString(KEY_PALETTE, null))
+        fun palette(context: Context) = palette(prefs(context))
+
+        /**
+         * 색 테마. 1.7.9 까지는 `palette` 에 흑백·컬러 둘 중 하나만 있었다: 처음 읽을 때 컬러(`color`)는 그때 홈 색인 [Palette.AMBER](등불 아래)로,
+         * 그 밖은 흑백으로 [KEY_THEME] 에 적고 옛 값을 지운다. 모르는 값(판을 낮춘 뒤 더 새 판의 테마)은 흑백으로 보고 그대로 둔다.
+         */
+        internal fun palette(sp: android.content.SharedPreferences): Palette {
+            sp.getString(KEY_THEME, null)?.let { return Palette.of(it) ?: Palette.MONO }
+            val legacy = sp.getString(KEY_LEGACY_PALETTE, null) ?: return Palette.MONO
+            val moved = if (legacy == "color") Palette.AMBER else Palette.MONO
+            sp.edit().putString(KEY_THEME, moved.key).remove(KEY_LEGACY_PALETTE).apply()
+            return moved
+        }
 
         /** 아이콘을 그릴 때마다 설정 객체를 만들지 않으려고 쓴다. */
         fun iconPack(context: Context): String? = prefs(context).getString(KEY_ICON_PACK, null)

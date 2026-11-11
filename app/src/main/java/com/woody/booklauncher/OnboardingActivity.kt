@@ -287,7 +287,9 @@ class OnboardingActivity : EinkActivity() {
     private fun footerPreview(scale: Float): View = vbox().apply {
         addView(hline(1, inset = false), lp(MATCH, dp(1)).apply { topMargin = dp(12) })
         addView(hbox().apply {
-            addView(text(getString(R.string.all_apps_link), 13f * scale, Ui.bold))
+            // 홈 하단 왼쪽 모든 앱 아이콘(사각형 넷). 홈 글자 24sp 를 13sp 로 줄인 만큼 홈 아이콘 28dp 도 줄인다
+            val icon = dp(28 * 13 / 24f * scale)
+            addView(PictureView(context).apply { drawable = context.getDrawable(R.drawable.ic_all_apps) }, lp(icon, icon))
             addView(View(context), lp(0, 1, 1f))
             // 바형 화면은 홈처럼 `오늘` 없이
             val time = duration(42 * 60_000L)

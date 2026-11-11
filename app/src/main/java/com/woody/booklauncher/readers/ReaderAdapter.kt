@@ -37,6 +37,11 @@ interface ReaderAdapter {
     fun onShelf(ctx: AppContext) {}
     /** 무엇인가를 눌렀다(서재가 아니어도) */
     fun onClick(ctx: AppContext, click: Click) {}
+    /**
+     * 그 앱의 내용이 바뀌었다(화면을 읽기 전에, [ReaderApp.readsContent] 앱만). [source] 를 부르면 바뀐 요소(없으면 null).
+     * 창 뿌리에서 훑어 닿지 않는 요소(Compose 화면 안의 웹 화면)를 알림으로 붙잡아 두는 앱만 쓴다. 바탕: 아무것도 안 함(요소를 얻지 않는다)
+     */
+    fun onContent(ctx: AppContext, source: () -> AccessibilityNodeInfo?) {}
     /** 읽는 화면이 잠잠해졌다(그때 그 앱 화면이 읽는 화면일 때만) */
     fun onViewer(ctx: AppContext) {}
     /** 홈으로 돌아왔다 */

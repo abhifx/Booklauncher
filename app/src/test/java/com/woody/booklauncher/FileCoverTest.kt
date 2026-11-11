@@ -33,8 +33,8 @@ class FileCoverTest {
     @Before fun setUp() {
         BookShelf.clearCaches()
         // KOReader 가 넣은 만화(만화 묶음의 첫 그림을 고른 앱), 킨들이 넣은 책(기본 길의 앱)
-        Db.get(app).execSQL("INSERT INTO shelf VALUES (0, 'b-1', '만화', '', 'org.koreader.launcher/org.koreader.launcher.MainActivity', 0, -1, -1, '', '')")
-        Db.get(app).execSQL("INSERT INTO shelf VALUES (1, 'b-2', '다른 앱', '', 'com.amazon.kindle/com.amazon.kindle.UpgradePage', 0, -1, -1, '', '')")
+        Db.get(app).execSQL("INSERT INTO shelf VALUES (0, 'b-1', '만화', '', 'org.koreader.launcher/org.koreader.launcher.MainActivity', 0, -1, -1, '', '', 0)")
+        Db.get(app).execSQL("INSERT INTO shelf VALUES (1, 'b-2', '다른 앱', '', 'com.amazon.kindle/com.amazon.kindle.UpgradePage', 0, -1, -1, '', '', 0)")
     }
 
     @After fun tearDown() {

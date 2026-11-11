@@ -100,6 +100,7 @@ class HomeActivity : EinkActivity() {
         fillAlso?.invoke(page)
     }
 
+
     private var apps: List<AppEntry> = emptyList()
     /**
      * 지난번에 그린 책 자리와 자주 쓰는 앱의 내용. 같으면 다시 만들지 않는다(빠른 설정을 닫거나 앱에서 돌아올 때 불필요한 전자잉크 갱신을 막는다).
@@ -571,7 +572,8 @@ class HomeActivity : EinkActivity() {
         val changedPkgs = AppIcons.clearChangedPackages(this)
         apps = AppStore.loadAndPrune(this, prefs)
         // 맨 앞 책은 위에 고정 크기로, 나머지는 같은 크기 표지의 내 책장 격자에서 쪽으로 넘긴다.
-        val books = BookShelf.list(this)
+        // 홈에서 숨긴 책은 건너뛴다.
+        val books = BookShelf.onHome(this)
         // 맨 앞 책의 앱이 곧 읽고 있는 앱이다.
         val reading = books.firstOrNull()?.app?.let(::findApp)
         // 자주 쓰는 앱은 직접 넣고 뺀 그대로 보인다(위의 책·앱과 상관없다).
@@ -607,7 +609,7 @@ class HomeActivity : EinkActivity() {
         val favState = listOf(favs, icons, packs, favs.map { ownIcons[it.key] }, grid)
         if (favs.none { it.pkg in changedPkgs } && favState == shownFavs) return
         shownFavs = favState
-        favRows.setGrid(if (!grid) 0 else GRID_ROWS)
+        favRows.setShape(if (!grid) 0 else GRID_ROWS, FAV_ROWS)
         favRows.setRows(
             if (favs.isEmpty()) listOf {
                 text(getString(R.string.favorites_empty), 18f, color = Ui.LIGHT_GRAY, lines = 2).apply {
@@ -646,6 +648,7 @@ class HomeActivity : EinkActivity() {
         val first = pos == 0
         val last = pos == per - 1
         gravity = when {
+            first && last -> Gravity.CENTER_VERTICAL
             first && !lastAlone -> Gravity.BOTTOM
             first || last -> Gravity.TOP
             else -> Gravity.CENTER_VERTICAL
@@ -654,7 +657,9 @@ class HomeActivity : EinkActivity() {
         setPadding(homeMargin, dp(if (first) GRID_OUTER_DP else inner), homeMargin, dp(if (last) GRID_OUTER_DP else inner))
         // 이름은 한 줄(길면 `…`)이라 글자를 키워도 이름 칸은 한 줄만큼만 커진다. 남는 높이를 아이콘에 준다.
         val labelH = text("가", 13f).run { measure(0, 0); measuredHeight }
-        val icon = (favRows.rowHeightPx - dp(GRID_OUTER_DP + inner + GRID_LABEL_GAP_DP) - labelH).coerceIn(dp(32), dp(GRID_ICON_MAX_DP))
+        // 한 쪽이 한 줄이면(격자 1줄) 위아래 모두 바깥 여백
+        val pads = if (first && last) 2 * GRID_OUTER_DP else GRID_OUTER_DP + inner
+        val icon = (favRows.rowHeightPx - dp(pads + GRID_LABEL_GAP_DP) - labelH).coerceIn(dp(32), dp(GRID_ICON_MAX_DP))
         line.forEachIndexed { i, app ->
             addView(vbox().apply {
                 gravity = Gravity.CENTER_HORIZONTAL
@@ -937,10 +942,10 @@ class HomeActivity : EinkActivity() {
     /** 컬러면 맨 앞 책 자리를 칠하는 색면의 아래 여백(dp). 흑백이면 0. */
     private val fieldBottom get() = if (Palette.current.color) heroPad else 0
 
-    /** 맨 앞 책 자리(표지·제목): 컬러면 홈 색면([Palette.Area.HOME])을 칠하고 아래로 [fieldBottom] 만큼 넓힌다. */
+    /** 맨 앞 책 자리(표지·제목): 컬러면 테마 색면([Palette.field])을 칠하고 아래로 [fieldBottom] 만큼 넓힌다. */
     private fun View.heroField() {
         setPadding(homeMargin, dp(heroPad), homeMargin, dp(fieldBottom))
-        Palette.current.field(Palette.Area.HOME)?.let { setBackgroundColor(it) }
+        Palette.current.field?.let { setBackgroundColor(it) }
     }
 
     /**
@@ -1097,7 +1102,7 @@ class HomeActivity : EinkActivity() {
      */
     private fun compactMainBook(book: ShelfBook, reading: AppEntry?, coverPx: Int, dense: Boolean = false): View = hbox().apply {
         setPadding(if (dense) dp(10) else homeMargin, if (dense) dp(10) else 0, if (dense) dp(10) else homeMargin, 0)
-        Palette.current.field(Palette.Area.HOME)?.let { setBackgroundColor(it) }
+        Palette.current.field?.let { setBackgroundColor(it) }
         val coverW = coverPx
         addView(coverView(book, coverW), lp(coverW + dp(2), coverW * 3 / 2 + dp(2)))
         val info = vbox()

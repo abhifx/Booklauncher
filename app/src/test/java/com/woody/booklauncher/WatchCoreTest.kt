@@ -117,6 +117,9 @@ class WatchCoreTest {
             if (fail) error("앱 처리 실패")
         }
         override fun onClick(ctx: AppContext, click: Click) { log += "click:${ctx.pkg}" }
+        /** 내용 바뀜 알림의 요소를 받아 적는다(켠 시험만) */
+        var seesContent = false
+        override fun onContent(ctx: AppContext, source: () -> AccessibilityNodeInfo?) { if (seesContent) log += "content:${ctx.pkg}:${source()?.className}" }
         override fun onWindow(ctx: AppContext, cls: String?) { log += "window:${ctx.pkg}" }
         override fun beforeOpened(ctx: AppContext) { log += "before:${ctx.pkg}"; super.beforeOpened(ctx) }
         override fun afterOpened(ctx: AppContext, book: ShelfBook) { log += "after:${ctx.pkg}" }
@@ -279,5 +282,30 @@ class WatchCoreTest {
         core.window("a", "a.ViewerActivity")
         core.window("a", "a.ViewerActivity")
         assertEquals(listOf("enter:a:false", "enter:a:true"), log.filter { it.startsWith("enter") })
+    }
+
+    @Test fun `⑨ 내용 바뀜 알림은 화면을 읽기 전에 요소를 그 앱에 건네고, 바탕 어댑터는 요소를 얻지 않는다`() {
+        var asked = 0
+        val plain = object : ReaderApp("p", "", setOf("p.Shelf"), setOf("p.ViewerActivity"), emptyList(), emptyList(),
+            authors = emptyList(), progress = null, due = null, viewerProgress = emptyList()) {}
+        val core = core(Recorder(), app("a"), app("k", content = false), plain)
+        adapters.getValue("a").seesContent = true
+        adapters.getValue("k").seesContent = true
+        val node = AccessibilityNodeInfo.obtain().apply { className = "android.webkit.WebView" }
+        core.window("a", "a.ViewerActivity")
+        log.clear()
+        core.onEvent("a", AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED, null, null) { node }
+        assertEquals(listOf("content:a:android.webkit.WebView"), log)
+        clock.advance(1000)
+        assertEquals("viewer:a", log.last())
+        // 창 바뀜 알림·내용으로 읽지 않는 앱에는 건네지 않는다
+        log.clear()
+        core.onEvent("a", AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED, "a.ViewerActivity", null) { node }
+        core.onEvent("k", AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED, null, null) { node }
+        assertTrue(log.none { it.startsWith("content") })
+        // 바탕 어댑터는 요소를 얻지 않는다(얻을 때마다 그 앱에 묻는다)
+        core.window("p", "p.ViewerActivity")
+        core.onEvent("p", AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED, null, null) { asked++; node }
+        assertEquals(0, asked)
     }
 }

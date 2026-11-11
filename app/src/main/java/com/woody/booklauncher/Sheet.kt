@@ -48,7 +48,7 @@ class Sheet(private val context: Context) {
         }
     }
 
-    private class Item(val label: String, val bold: Boolean, val right: String?, val action: () -> Unit)
+    private class Item(val label: String, val bold: Boolean, val right: String?, val swatch: List<Int>?, val action: () -> Unit)
 
     /** 체크 줄([check]): 누르면 [onClick] 하고 메뉴는 그대로(모든 체크 칸을 [on] 으로 다시 본다) */
     private class Check(val label: String, val sub: String?, val tag: String?, val right: String?, val on: () -> Boolean, val onClick: () -> Unit)
@@ -124,17 +124,18 @@ class Sheet(private val context: Context) {
 
     fun stamp() = apply { stamped = true }
 
-    /** 머리와 칸들(책 상세의 정보)을 책 상세 색면([Palette.Area.DETAIL]) 바탕에 둬 아래 메뉴(흰색)와 나눈다. 컬러에서만. */
+    /** 머리와 칸들(책 상세의 정보)을 테마 색면([Palette.field]) 바탕에 둬 아래 메뉴(흰색)와 나눈다. 컬러에서만. */
     private var paper: Int? = null
 
-    fun paper() = apply { paper = Palette.current.field(Palette.Area.DETAIL) }
+    fun paper() = apply { paper = Palette.current.field }
 
     fun header(title: String, subtitle: CharSequence? = null, app: AppEntry? = null, image: Bitmap? = null, lines: Int = 16) = apply {
         this.title = title; this.subtitle = subtitle; this.app = app; this.image = image; subtitleLines = lines
     }
 
-    /** 항목 한 줄. [right] 가 있으면 오른쪽에 회색으로(지금 값 `소설 ›`). */
-    fun item(label: String, bold: Boolean = false, right: String? = null, action: () -> Unit) = apply { items += Item(label, bold, right, action) }
+    /** 항목 한 줄. [right] 가 있으면 오른쪽에 회색으로(지금 값 `소설 ›`), [swatch] 가 있으면 글자 앞에 그 색 칸들(색 테마). */
+    fun item(label: String, bold: Boolean = false, right: String? = null, swatch: List<Int>? = null, action: () -> Unit) =
+        apply { items += Item(label, bold, right, swatch, action) }
 
     /**
      * 체크 줄(왼쪽 체크 칸 · 이름([sub] 는 그 아래 작게, [tag] 는 뒤에 작게) · 오른쪽 회색 [right]). 누르면 [onClick] 하고 닫지 않는다.
@@ -453,6 +454,10 @@ class Sheet(private val context: Context) {
         items.forEach { item ->
             row(rows.size, c.hbox().apply {
                 setPadding(c.dp(Ui.MARGIN), 0, c.dp(Ui.MARGIN), 0)
+                gravity = Gravity.CENTER_VERTICAL
+                item.swatch?.let { colors ->
+                    addView(Swatch(c, colors), lp(c.dp(SWATCH_DP) * colors.size, c.dp(SWATCH_DP)).apply { marginEnd = c.dp(18) })
+                }
                 addView(c.text(item.label, 24f, if (item.bold) Ui.bold else Ui.regular), if (item.right == null) lp(MATCH, WRAP) else lp(WRAP, WRAP))
                 item.right?.let { addView(c.text(it, 21f, color = Ui.GRAY).apply { gravity = Gravity.END }, lp(0, WRAP, 1f).apply { marginStart = c.dp(16) }) }
                 setOnClickListener { dismissThen(item.action) }
@@ -573,6 +578,24 @@ private class CheckMark(context: Context) : View(context) {
     }
 }
 
+/** 색 칸([Swatch]) 하나의 한 변 */
+private const val SWATCH_DP = 34
+
+/** 색 칸들([Sheet.item] 의 swatch): 정사각형을 나란히, 둘레에 옅은 회색 선(흰색·옅은 색면도 칸이 보이게). 배경 대신 직접 그린다(크레마 명암 필터). */
+private class Swatch(context: Context, private val colors: List<Int>) : View(context) {
+    private val paint = android.graphics.Paint()
+
+    override fun onDraw(canvas: android.graphics.Canvas) {
+        val s = height.toFloat()
+        paint.style = android.graphics.Paint.Style.FILL
+        colors.forEachIndexed { i, color -> paint.color = color; canvas.drawRect(i * s, 0f, (i + 1) * s, s, paint) }
+        paint.style = android.graphics.Paint.Style.STROKE
+        paint.strokeWidth = 2f
+        paint.color = Ui.LIGHT_GRAY
+        canvas.drawRect(1f, 1f, colors.size * s - 1f, s - 1f, paint)
+    }
+}
+
 /** 체크 칸 크기 */
 private const val CHECK_DP = 24
 
@@ -608,11 +631,11 @@ fun Context.confirm(title: String, subtitle: String?, action: String, onConfirm:
     Sheet(this).header(title, subtitle).item(action, bold = true) { onConfirm() }.item(getString(R.string.cancel)) {}.noClose().show()
 }
 
-/** 고르기 메뉴: 지금 값은 굵게 + ✓ */
-fun Context.choose(title: String, options: List<String>, selected: Int, onPick: (Int) -> Unit) {
+/** 고르기 메뉴: 지금 값은 굵게 + ✓. [swatches] 가 있으면 줄마다 글자 앞에 그 색 칸들(색 테마). */
+fun Context.choose(title: String, options: List<String>, selected: Int, swatches: List<List<Int>>? = null, onPick: (Int) -> Unit) {
     val sheet = Sheet(this).header(title)
     options.forEachIndexed { i, label ->
-        sheet.item(if (i == selected) "$label  ✓" else label, bold = i == selected) { onPick(i) }
+        sheet.item(if (i == selected) "$label  ✓" else label, bold = i == selected, swatch = swatches?.get(i)) { onPick(i) }
     }
     sheet.show()
 }

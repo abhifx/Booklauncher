@@ -199,7 +199,7 @@ interface BookRecorder {
 /** 화면·데이터에서 본 것: 앱이 보여 준 제목, 저자, 진행률, 반납일 */
 data class Seen(val title: String, val author: String, val progress: Int, val due: Long)
 sealed interface Target {
-    /** 제목으로 찾기(부제·공백 무시, seenTitle). 나간 책은 같은 제목이면 되살린다 — 지금 byFile = false */
+    /** 제목으로 찾기(sameTitle: 공백 무시, 부제는 한쪽에만 있으면 무시. seenTitle). 나간 책은 같은 제목이면 되살린다 — 지금 byFile = false */
     object ByTitle : Target
     /**
      * 앱이 정한 책: [id] 의 책(읽고 있는 책이면 맨 앞으로, 나간 책이면 그 책만 되살림), null 이면 같은 제목이 있어도 새 책 — 지금 byFile = true.
@@ -274,6 +274,11 @@ interface ReaderAdapter {
     fun onShelf(ctx: AppContext) {}
     /** 무엇인가를 눌렀다. 서재에서 누른 것인지는 ctx.screen 으로(지금 확인 창 누름 + shelfClicked) */
     fun onClick(ctx: AppContext, click: Click) {}
+    /**
+     * 그 앱의 내용이 바뀌었다(내용 바뀜 알림, readsContent 앱만, 화면을 읽기 전에). [source] 를 부르면 바뀐 요소. 창 뿌리에서 훑어 닿지 않는 요소
+     * (Compose 안의 웹 화면, 이씨오 범용뷰어 3.0)를 알림으로 붙잡아 두는 앱만 쓴다. 바탕: 아무것도 안 함(요소를 얻지 않는다). 2026-11-07 더함
+     */
+    fun onContent(ctx: AppContext, source: () -> AccessibilityNodeInfo?) {}
     /** 읽는 화면이 잠잠해졌다(지금 readViewer. 그때 그 앱 화면이 읽는 화면일 때만 부른다) */
     fun onViewer(ctx: AppContext) {}
     /** 홈으로 돌아왔다(지금 syncFileApps: KOReader·Readest) */
@@ -286,7 +291,7 @@ interface ReaderAdapter {
     fun capturesCovers(ctx: AppContext): Boolean = true
     /**
      * 화면을 찍은 직후(메인 스레드), 찍기 전에 정한 자리 가운데 아직 그 자리에 있는 것만 돌려준다(기본: 그대로).
-     * ScreenReader 는 자리로 칸을 찾거나(cellsByPosition) 표지 위에 단추를 겹치는(coverOverlays) 앱이면 서재 칸을 다시 읽어 맞춘다(지금 captureCovers 의 still)
+     * ScreenReader 는 찍은 뒤 다시 보는 앱(recheckCovers, 기본은 자리로 칸을 찾는 cellsByPosition)이나 표지 위에 단추를 겹치는(coverOverlays) 앱이면 서재 칸을 다시 읽어 맞춘다(지금 captureCovers 의 still)
      */
     fun stillSpots(ctx: AppContext, spots: List<CoverSpot>): List<CoverSpot> = spots
 }
@@ -314,7 +319,7 @@ class CoverSpot(val title: String, val rect: Rect, val id: String? = null, val k
 | 모든 알림(그 앱의 것) | 알림 수 기록(`WatchLog.event`) → 그 앱의 서재 멈춤 예약이 걸려 있으면 다시 건다(지금 `if (settleSpec?.pkg == spec.pkg) scheduleSettle`) → 아래 |
 | 창 바뀜, 액티비티(서비스가 이름 앞부분·`isActivity` 로 판단) | (`screenInsideActivity` 앱이면 `screenName(ctx, 액티비티)`, null 이면 기억한 화면이 같은 액티비티면 그것, 아니면 액티비티) → 기록(WatchLog) → `onScreen(byWindow = true)` → 서재면 `onShelfLive(force = true)`·멈춤 예약, 읽는 화면이면 진행률 재시도 3번으로 두고 잠잠 예약(700ms) |
 | 창 바뀜, 액티비티 아님 | 기록 → `onWindow` → 지금 화면대로 `onShelfLive(force = true)`·멈춤 예약 / 잠잠 예약 |
-| 내용 바뀜 | `readsContent == false`(KOReader)면 여기서 끝 → (`screenInsideActivity` 앱만, 0.5초에 한 번 + **마지막 재확인**, 아래) `screenName(ctx, 기억한 액티비티)` 가 지금 화면과 다르면 기록 → `onScreen(byWindow = false)` → 서재면 `onShelfLive(force = false)`·멈춤 다시 예약, 읽는 화면이면 재시도 3번·잠잠 다시 예약 |
+| 내용 바뀜 | `readsContent == false`(KOReader)면 여기서 끝 → `onContent(ctx, 알림의 요소)` → (`screenInsideActivity` 앱만, 0.5초에 한 번 + **마지막 재확인**, 아래) `screenName(ctx, 기억한 액티비티)` 가 지금 화면과 다르면 기록 → `onScreen(byWindow = false)` → 서재면 `onShelfLive(force = false)`·멈춤 다시 예약, 읽는 화면이면 재시도 3번·잠잠 다시 예약 |
 | 마지막 재확인 예약이 돎 | 위 `screenName` 확인 → 지금 화면대로 `onShelfLive(force = false)`·예약(지금 `holderLater` 가 `checkHolder` 뒤 `readScreen(force = false)` 하는 것과 같다) |
 | 누름 | `onClick`(서재가 아니어도 부른다. 지금도 확인 창 누름은 화면과 상관없이 본다) |
 | 서재 멈춤 예약이 돎 | 그 앱 화면이 서재면 `onShelf`(지금 `settleShelf` 첫 줄) |
@@ -353,11 +358,13 @@ class CoverSpot(val title: String, val rect: Rect, val id: String? = null, val k
 | 알라딘 | `onViewer` 대신(서재를 떠난 뒤 메뉴로 처음 안 책이면 앞서 편 책과 같아도 다시 편 것으로 — `recordShown(force = 첫 메뉴)`, 그리고 "메뉴로 이미 앎" 기억), `onShelf` 는 최근 줄 판단 **먼저** 그 뒤 `super` | `readViewer` 의 `first = readSince && readKnown.add(pkg)`, `settleShelf` 의 `recent` 갈래(칸 진행률·표지 앞) |
 | 문리더 | `onViewer` 대신(`readShown` → `recordShown` → 메뉴 제목이 보였으면 저장소에서 파일 찾기) | `readViewer` 의 `searchesBookFile` |
 | BookFusion·밀리 e-ink | `onEnterViewer` 대신(아래), `onShelf` 대신(상세를 다시 기억하고 상세 표지 자리를 서재 칸 자리와 **한 번에** 찍음 — `readShelfCells`·`shelfStatuses`·`shelfCoverSpots` 사용) | `enterScreen` 의 `webBook`·`clickOnly`, `settleShelf` 의 상세(칸 표지와 같은 `captureCovers` 한 번) |
+| 이씨오 범용뷰어 3.0 | `onViewer` 대신(`onContent` 로 붙잡아 둔 웹 화면에서 읽고 — 창 뿌리로는 닿지 않는다 — 표지 단추로 제목을 알았을 때만 `recordShown`. PDF 뷰어면 그 읽는 화면이 열린 때로 `unknown` 한 번(지원하지 않음). 웹 화면을 못 붙잡았으면 다시 예약), `onEnterViewer`(아래) | (2026-11-07 새 앱) |
 
 - 서재 멈춤에서 찍기는 한 번이다(지금 `settleShelf` 끝의 `captureCovers` 하나). 앱 것을 `super` 뒤에 따로 찍으면 1.1초 간격에 걸려 멈춤이 다시 예약되므로, 찍을 자리를 더하는 앱은 `onShelf` 를 대신하고 조각으로 자리를 모아 한 번 찍는다.
 - `ScreenReader.onClick` 은 서재에서 누른 것이 책 칸이 아니면(제목 못 읽은 누름 기록 뒤) `onClickNoCell(ctx)` 를 부른다(바탕: 아무것도 안 함, `ScreenReader` 안의 덮는 자리). 지금 `shelfClicked` 의 `cell == null` 갈래.
 - `super` 뒤에 더하기만 하는 훅(표에 없음): 이지뷰어 `onWindow`·`onClick`(열기 확인 창 기억), 알라딘 `onShelfLive`(최근 줄)·`onEnterViewer`(읽으러 간 때), BookFusion·밀리 `onShelfLive`(상세 기억)·`onClickNoCell`(상세를 기억하고 상세 표지 찍기, 지금 `rememberWebBook`),
-  우주·네오리더 `onEnterViewer`(묻는 횟수 다시 세기, 네오리더는 탭), Readest·KOReader `onHome`, Readest `afterOpened`, Libby·Readest `screenName`(바탕은 판단 없음).
+  우주·네오리더 `onEnterViewer`(묻는 횟수 다시 세기, 네오리더는 탭), Readest·KOReader `onHome`, Readest `afterOpened`, Libby·Readest `screenName`(바탕은 판단 없음),
+  이씨오 범용뷰어 3.0 `onShelf`(서재에서 본 제목 기억)·`onContent`(읽는 화면이면 웹 화면 붙잡기, 바탕은 아무것도 안 함).
 - 이지뷰어 파일 칸 누름은 덮지 않는다: 이지뷰어는 `openOnViewer` 라 파일 칸도 바탕의 누른 칸으로 남고, 파일 칸인지는 읽는 화면에 들어올 때 가른다(지금 그대로).
 - 이지뷰어 `onShelf` 는 대신한다(3차 B2): `readShelfCells` 로 칸을 읽은 뒤, 파일 칸은 파일로 책을 정해(`fileBookId`, 어댑터 안) 그 책에 진행률·반납일을 적고
   표지 자리를 **파일 열쇠**로 넘긴다. 파일 칸이 아닌 칸은 `shelfStatuses`·`shelfCoverSpots`(제목). 바탕 `onShelf`(제목으로 맞춤)를 먼저 돌리지 않는다 —
@@ -373,6 +380,7 @@ class CoverSpot(val title: String, val rect: Rect, val id: String? = null, val k
 | 이지뷰어 | 다시 들어온 것이면(`!again`) 이 읽는 화면의 파일 기억(본 파일·파일마다 정한 책·누른 파일)을 비움 → 누른 칸이 파일 칸이면 기록하지 않고 "누른 파일"로, 아니면 바탕 → 홈에서 연 파일(`HomeSignals`, 120초 안)도 누른 파일이 없을 때 "누른 파일"로 |
 | 우주 | 데이터 묻기 횟수·메뉴 제목 기억을 다시 세고(`DataAsk`) 바탕 |
 | 네오리더 | 데이터 묻기·파일 재시도 횟수를 다시 세고 바탕 → 지금 화면이 읽는 화면 탭(`role == VIEWER`)이면 그 탭의 책(`opened(Exact)`, 편 책 기록의 책과 다를 때만) 또는 `unknown`(다른 모르는 탭이거나 책 모름 시각이 없을 때만) |
+| 이씨오 범용뷰어 3.0 | 새로 들어온 것이면(`!again`) 붙잡아 둔 웹 화면을 비움(**`super` 앞**) → 바탕(누른 칸은 누름 알림이 없어 늘 없다) |
 | 알라딘 | 바탕 → 서재를 떠나 처음 연 읽는 화면(또는 줄이 바뀌기를 기다리던 중)이면 읽으러 간 때를 적음 |
 | KOReader | 바탕 그대로(누른 칸이 없다. 데이터 맞추기는 `onViewer`) |
 
@@ -507,14 +515,14 @@ KOReader F-Droid·이지뷰어 두 판·채리뷰어)은 지금처럼 같은 클
 | 교보eBook(e-ink) `com.kyobo.ebook.eink` | — | — | 없음 | 실기기(크레마), 확인 대기 |
 | 부커스 `com.bookers.ebook` | `eagerCovers`·`viewerPages`·`pagesRoundUp` | — | Play 에 있음 | 칸 누르기, 하단 쪽 → 진행률(올림), 반납일 |
 | 리디·원스토어 `com.initialcoms.ridi` | `coverOverlays` | `shelfCells`·`cellsByPosition`·`viewerTitleIds` | Play 에 리디 | 자리로 칸 찾기·받기 단추 겹친 표지 안 자름, 메뉴 제목 |
-| YES24 전자도서관 e-ink·휴대폰 | `eagerCovers`·`openOnViewer`·`pagesRoundUp` | — | Play 에 둘 다 | 칸 안의 받기·반납 단추는 읽는 화면이 열려야 편 것 |
-| YES24 eBook `com.yes24.ebook.fourth` | `eagerCovers`·`pagesRoundUp` | — | Play 에 있음 | 칸 누르기·하단 진행률 |
+| YES24 전자도서관 e-ink·휴대폰 | `eagerCovers`·`openOnViewer`·`pagesRoundUp` | `titleRoots`(메뉴 위 막대, `Yes24Viewer`) | Play 에 둘 다 | 칸 안의 받기·반납 단추는 읽는 화면이 열려야 편 것 |
+| YES24 eBook `com.yes24.ebook.fourth` | `eagerCovers`·`pagesRoundUp` | `titleRoots`(메뉴 위 막대, `Yes24Viewer`)·`eagerWhenStill`·`recheckCovers`·`coverStill` | Play 에 있음 | 칸 누르기·하단 진행률, 탭을 넘기는 중에 표지 안 자름 |
 | my YES `com.yes24.ebook.einkstore` | `openOnViewer`·`secure`·`clickByPlace=false` | — | Play 에 있음(USB 디버깅 중엔 닫힘) | 디버그 빌드 + 디버깅 끈 채 사용자가 눌러 보고 DB 로 확인(CLAUDE.md 기기 작업 요령) |
 | 밀리(휴대폰) `kr.co.millie.millieshelf` | `eagerCovers`·`openOnViewer`·`viewerPages` | `shelfCells`·`clickedCell`·`cellsByPosition`·`titleRoots` | Play 에 있음 | 받지 않은 책은 받기만 하고 안 들어옴, 메뉴 쪽 → 진행률 |
 | 킨들 `com.amazon.kindle` | `eagerCovers`·`openOnViewer` | `shelfCells`(이어 읽기 표지 칸 `recentCell` 포함)·`clickedCell`·`cellsByPosition` | Play 에 있음 | 서재 칸·'이어 읽기' 표지 칸 누르기, 받지 않은 책은 메뉴 제목, 메뉴 진행률 |
 
 - 킨들은 `recent` 설정(서재의 '최근 읽은 책' 줄로 판단)을 **쓰지 않는다**. `Kindle.kt` 의 `recent`·`recentCell` 은 '이어 읽기' 표지를 서재 칸으로 읽는 함수 안의 이름이다(B5 반영).
-- `openOnViewer`(누른 칸을 읽는 화면이 열릴 때 씀, 기간 지난 책 무시)·`eagerCovers`·`secure`(서재 멈춤에서 찍지 않음)·`coverOverlays`·`cellsByPosition`·`clickByPlace`·`shelfEditing`·`tellsTitle` 은
+- `openOnViewer`(누른 칸을 읽는 화면이 열릴 때 씀, 기간 지난 책 무시)·`eagerCovers`·`eagerWhenStill`(바로 자르기는 앞서 읽은 때와 같은 자리만)·`secure`(서재 멈춤에서 찍지 않음)·`coverOverlays`·`cellsByPosition`·`recheckCovers`(찍은 뒤 다시 보기)·`clickByPlace`·`shelfEditing`·`tellsTitle` 은
   `ScreenReader` 의 설정으로 남는다(같은 흐름 안의 값). 이것들을 쓰는 서비스 코드(`clicked`·`unknownClick`·`lastShelf`·바로 자르기·찍은 뒤 다시 보기 `stillSpots`)는 3단계에서 `ScreenReader` 로 간다.
 
 ### B. 전용 어댑터가 필요한 앱(옮기는 순서)

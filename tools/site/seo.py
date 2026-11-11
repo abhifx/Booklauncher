@@ -59,7 +59,7 @@ PAGES = {
              "앱을 지우면 기록도 함께 지워집니다."),
         ],
         "features": ["이북 앱에서 편 책을 홈 화면에 자동으로 추가(표지·제목·진행률·반납일)", "책마다 읽은 시간, 하루 목표, 연속일",
-                     "올해 읽은 책과 완독 기록(별점·감상, 다시 읽기 회차)", "스크롤 대신 쪽 넘김, 애니메이션 없음", "흑백·컬러 화면, 글자 크기·줄 간격"],
+                     "올해 읽은 책과 완독 기록(별점·감상, 다시 읽기 회차)", "스크롤 대신 쪽 넘김, 애니메이션 없음", "흑백·컬러 테마 여섯 가지, 글자 크기·줄 간격"],
     },
     "en": {
         "file": "site/en/index.html", "url": BASE + "en/", "locale": "en_US", "img": "en-",
@@ -85,7 +85,7 @@ PAGES = {
         ],
         "features": ["Books you open in reading apps are added to the home screen automatically (cover, title, progress, due date)",
                      "Reading time per book, daily goal and streak", "Books this year with finish history (ratings, notes, re-reads)",
-                     "Pages instead of scrolling, no animations", "Black-and-white or color, adjustable text size and spacing"],
+                     "Pages instead of scrolling, no animations", "Black-and-white or six color themes, adjustable text size and spacing"],
     },
 }
 
@@ -207,6 +207,7 @@ def head(lang, p):
 <link rel="alternate" hreflang="x-default" href="{BASE}">
 <meta name="theme-color" content="#fbfbf9">
 <link rel="icon" href="{icon}icon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="{icon}icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="{icon}icon-180.png">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="BookLauncher">
@@ -279,7 +280,7 @@ Latest version: {VERSION} ({RELEASED}), first released {FIRST}.
 ## Features
 
 {chr(10).join("- " + f for f in en["features"])}
-- Supported reading apps (auto-add): Kindle, Kobo Books, Libby, KOReader, Readest, BookFusion, Moon+ Reader, EzViewer (이지뷰어), CherieViewer (채리뷰어), Woojoo (우주뷰어), Google Play Books, Mihon, Kahon, Futon, Kotatsu, Librera, Wattpad, Kyobo Library, Kyobo eBook, millie (밀리의서재), Aladin, Bookers, RIDI, YES24 Library, my YES, YES24 eBook, the built-in readers of BOOX (NeoReader) and iReader devices
+- Supported reading apps (auto-add): Kindle, Kobo Books, Libby, KOReader, Readest, BookFusion, Moon+ Reader, EzViewer (이지뷰어), CherieViewer (채리뷰어), Woojoo (우주뷰어), Google Play Books, Mihon, Kahon, Futon, Kotatsu, Librera, Wattpad, Kyobo Library, Kyobo eBook, millie (밀리의서재), Aladin, Bookers, RIDI, YES24 Library, my YES, YES24 eBook, ECO Viewer 3.0 (이씨오 범용뷰어 3.0), the built-in readers of BOOX (NeoReader) and iReader devices
 
 ## Compared with other launchers
 

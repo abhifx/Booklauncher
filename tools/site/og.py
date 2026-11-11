@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """홈페이지 공유 미리보기 그림(site/img/og-ko.png·og-en.png, 1200×630), README 그림(첫 그림 docs/screenshots/hero-ko.png·hero-en.png(흑백),
-지원 앱 아이콘 docs/screenshots/app-icons/(site/img/apps/ 를 96px 로))과 아이콘(site/img/icon-*.png)을 만든다.
+지원 앱 아이콘 docs/screenshots/app-icons/(site/img/apps/ 를 96px 로))과 아이콘(site/img/icon-*.png, site/favicon.ico)을 만든다.
 
     python3 tools/site/og.py <BookLauncher 아이콘 512px PNG>
 
@@ -91,8 +91,10 @@ def app_icons():
 
 
 icon = Image.open(sys.argv[1]).convert("RGBA")
-for px in (32, 180, 512):
+# 192 는 Google 검색 결과의 사이트 아이콘(48 의 배수여야 한다), favicon.ico 는 /favicon.ico 를 바로 찾는 브라우저·로봇용
+for px in (32, 180, 192, 512):
     icon.resize((px, px), Image.LANCZOS).save(f"{IMG}/icon-{px}.png", optimize=True)
+icon.save("site/favicon.ico", sizes=[(16, 16), (32, 32), (48, 48)])
 for lang in TEXT:
     og(lang)
     hero(lang)

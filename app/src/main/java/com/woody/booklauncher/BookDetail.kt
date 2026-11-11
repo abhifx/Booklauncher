@@ -18,8 +18,8 @@ import java.time.format.DateTimeFormatter
 /**
  * 책 상세: 홈에서 책을 길게 누를 때와 올해 읽은 책에서 책을 누를 때 같은 화면. 머리·기록 칸·별점·감상 칸([bookSheet]) 아래
  * 메뉴는 책 상태에 따라
- * - 읽고 있는 책(다시 읽는 책 포함): `카테고리  소설 ›` / `완독` / `책 정보 고치기 ›` / 홈에서 열면([onHome]) `홈에서 빼기`, 올해 읽은 책에서 열면
- *   `기록에서 지우기`(홈에 있는 책은 지우지 않고 `홈에서 먼저 빼 주세요` 안내, [askRemoveFirst])
+ * - 읽고 있는 책(다시 읽는 책 포함): `카테고리  소설 ›` / `완독` / `책 정보 고치기 ›` / `홈에서 숨기기`(숨긴 책이면 `홈에 다시 보이기`, [askHide]) /
+ *   홈에서 열면([onHome]) `홈에서 빼기`, 올해 읽은 책에서 열면 `기록에서 지우기`(홈에 있는 책은 지우지 않고 `홈에서 먼저 빼 주세요` 안내, [askRemoveFirst])
  * - 나간 책·목록에 없던 책: `카테고리  소설 ›` / `완독`(마지막 회차가 진행 중이면) / `다시 읽기` / `책 정보 고치기 ›` / `기록에서 지우기`
  * `완독`·`홈에서 빼기`는 확인 대신 별점·감상 메뉴([reviewSheet], 지금 회차의 것을 채워 띄우고 비워 두고 눌러도 된다), `기록에서 지우기`는 한 번 더 묻는다.
  * `완독`은 늘 오늘로 남긴다(완독한 날은 전체 기록의 회차 메뉴에서 고친다, [editRound]). 무엇이든 바뀌면 [onChange].
@@ -43,7 +43,7 @@ private fun Context.detailSheet(r: BookRecord, sub: String?, lines: Int, onHome:
     // — 완독 뒤 다시 읽기 등 — `완독` 메뉴에 옛 감상이 채워지지 않게)
     fun current(act: () -> Unit): () -> Unit = {
         val now = r.reload(this)
-        val changed = now.state != r.state || now.hidden != r.hidden || now.rounds.size != r.rounds.size ||
+        val changed = now.state != r.state || now.hidden != r.hidden || now.book.homeHidden != r.book.homeHidden || now.rounds.size != r.rounds.size ||
             now.lastRound.finished != r.lastRound.finished || now.lastRound.review != r.lastRound.review
         if (changed) { onChange(); if (alive()) showBookDetail(now, onHome, onChange) }
         else act()
@@ -67,6 +67,8 @@ private fun Context.detailSheet(r: BookRecord, sub: String?, lines: Int, onHome:
     if (r.state == State.READING) {
         sheet.item(getString(R.string.finish_book), action = current { finish() })
         sheet.item(getString(R.string.edit_book), action = current { showEditMenu(r, onChange) })
+        if (book.homeHidden) sheet.item(getString(R.string.home_unhide), action = current { BookShelf.setHomeHidden(this, book.id, false); onChange() })
+        else sheet.item(getString(R.string.home_hide), action = current { askHide(book, onChange) })
         if (onHome) sheet.item(getString(R.string.remove_book), action = current { removeBook(r, sub, onChange) })
         else sheet.item(getString(R.string.forget_book), action = current { askRemoveFirst(book) })
         return sheet
@@ -149,6 +151,17 @@ fun Context.removeBook(shown: BookRecord, sub: CharSequence?, onChange: () -> Un
     }
     // 읽고 있는 책의 마지막 회차는 늘 완독하지 않은 회차다.
     reviewSheet(book, sub, getString(R.string.remove_book), r.lastRound.review) { review -> BookShelf.remove(this, book.id, review); onChange() }
+}
+
+/**
+ * `홈에서 숨기기` 확인: `홈에서 숨길까요?` / 책, 읽은 시간·진행률은 계속 기록된다는 것과 되돌리는 곳(설정 › 독서 › 읽고 있는 책),
+ * `홈에서 숨기기`(굵게) / `취소`. 숨긴 책은 홈에서 다시 찾을 수 없어 되돌리는 곳을 이때 알린다.
+ */
+private fun Context.askHide(book: ShelfBook, onChange: () -> Unit) {
+    confirm(getString(R.string.home_hide_confirm), "${book.title}\n${getString(R.string.home_hide_note)}", getString(R.string.home_hide)) {
+        BookShelf.setHomeHidden(this, book.id, true)
+        onChange()
+    }
 }
 
 /** 올해 읽은 책에서 홈에 있는 책의 `기록에서 지우기`: 지우지 않고 홈에서 먼저 빼 달라고 한다(홈에 있는 책은 기록이 있어야 한다) */

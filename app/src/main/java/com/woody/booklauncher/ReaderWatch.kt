@@ -40,7 +40,8 @@ class ReaderWatchService : AccessibilityService(), WatchHost {
     override fun onAccessibilityEvent(e: AccessibilityEvent) {
         val pkg = e.packageName?.toString() ?: return
         val click = if (e.eventType == AccessibilityEvent.TYPE_VIEW_CLICKED) Click(e.source, e.text) else null
-        core.onEvent(pkg, e.eventType, e.className?.toString(), click)
+        // 알림의 요소는 그것을 쓰는 앱만 얻는다(얻을 때마다 그 앱에 묻는다)
+        core.onEvent(pkg, e.eventType, e.className?.toString(), click) { e.source }
     }
 
     override fun onInterrupt() {}

@@ -235,6 +235,11 @@
     <string name="since_year">since %1$d</string>
     <string name="remove_confirm">Remove from home?</string>
     <string name="remove_book">Remove from home</string>
+    <string name="home_hide">Hide from home</string>
+    <string name="home_unhide">Show on home</string>
+    <string name="home_hide_confirm">Hide from home?</string>
+    <string name="home_hide_note">Reading time and progress are still recorded.\nTo undo: Settings › Reading › Books I\'m reading</string>
+    <string name="home_hidden_tag">Hidden from home</string>
     <string name="review_stars_hint">Tap or slide to rate · optional</string>
     <string name="review_stars_set">%1$s / 5 · tap again to clear</string>
     <string name="review_text_hint">Your thoughts, or a line that stayed with you</string>
@@ -259,6 +264,11 @@
     <string name="fav_view">View</string>
     <string name="fav_view_list">List</string>
     <string name="fav_view_grid">Grid</string>
+    <string name="fav_rows">Rows</string>
+    <plurals name="fav_rows_n">
+        <item quantity="one">%1$d row</item>
+        <item quantity="other">%1$d rows</item>
+    </plurals>
     <string name="app_icons_hint">in list view</string>
     <string name="status_bar">System status bar</string>
     <string name="status_bar_hint">on home too</string>
@@ -299,7 +309,12 @@
     <string name="this_year">This year</string>
     <string name="color">Color</string>
     <string name="palette_mono">Black &amp; white</string>
-    <string name="palette_color">Color</string>
+    <string name="palette_amber">Lamplight</string>
+    <string name="palette_ink">Ink &amp; Paper</string>
+    <string name="palette_moss">Mossy Wall</string>
+    <string name="palette_camellia">Winter Camellia</string>
+    <string name="palette_canola">Canola Field</string>
+    <string name="palette_indigo">Dawn Lake</string>
     <string name="books_this_week">Books this week</string>
     <string name="reading_empty">No reading this week yet</string>
     <string name="reading_no_access">Turn on Reading time in Settings and allow BookLauncher in Usage access to see your log.</string>
@@ -369,11 +384,11 @@
     <string name="guide_kotatsu">Kotatsu</string>
     <string name="guide_librera">Librera</string>
     <string name="guide_wattpad">Wattpad</string>
+    <string name="guide_eco">ECO Viewer 3.0</string>
     <string name="guide_librera_pro">Librera Pro</string>
     <string name="guide_acoustext">AcousText</string>
     <string name="guide_permissions">Permissions</string>
     <string name="guide_todo">In the app</string>
-    <string name="guide_todo_none">Nothing to change.</string>
     <string name="guide_fields">Book info added automatically</string>
     <string name="guide_notes">Good to know</string>
     <string name="guide_cover">Cover</string>
@@ -432,7 +447,6 @@
     <string name="guide_t_kindle_menu">Books not yet downloaded, and progress while reading, come in only when you tap the middle to open the menu.</string>
     <string name="guide_t_libby_time">Reading time is counted only while auto-add is on.</string>
     <string name="guide_t_neo_open">Open books from the BOOX library or files.</string>
-    <string name="guide_t_ko_files">Nothing to change. KOReader shows no book title on screen, so the history files KOReader keeps are read instead.</string>
     <string name="guide_note_ez">Tapping the book on the home screen opens its file. A folder of pictures counts as one book.</string>
     <string name="guide_note_neo">Tapping the book on the home screen opens its file in NeoReader.</string>
     <string name="guide_note_ko">Books opened in KOReader come in when you return home. Tapping the book on the home screen opens its file.</string>
@@ -470,6 +484,8 @@
     <string name="guide_t_wattpad_open">Open stories from your Library or with Start reading or Continue reading on a story\'s page. If you pick up mid-part another way, it continues with the story you opened last.</string>
     <string name="guide_n_wattpad_author">Added when your Library is in list view or you view the story\'s page</string>
     <string name="guide_n_wattpad_chapter">Shows the part name at the top of the page instead of a percentage</string>
+    <string name="guide_note_yes24ebook">If you switch the My Library tabs (reading · bookshelf · purchased) to another tab and back within a second, a cover can rarely come in shifted to one side.</string>
+    <string name="guide_note_eco">PDF books aren\'t added automatically.</string>
     <string name="guide_note_wattpad">Each story counts as one book (parts don\'t become separate books).</string>
     <string name="guide_note_librera">The free version from the Play Store adds only books opened from the Library or with the menu open.</string>
     <string name="book_files">Read book files</string>

@@ -239,6 +239,11 @@
     <string name="since_year">%1$d년부터</string>
     <string name="remove_confirm">홈에서 뺄까요?</string>
     <string name="remove_book">홈에서 빼기</string>
+    <string name="home_hide">홈에서 숨기기</string>
+    <string name="home_unhide">홈에 다시 보이기</string>
+    <string name="home_hide_confirm">홈에서 숨길까요?</string>
+    <string name="home_hide_note">읽은 시간과 진행률은 계속 기록됩니다.\n되돌리기: 설정 › 독서 › 읽고 있는 책</string>
+    <string name="home_hidden_tag">홈에서 숨김</string>
     <string name="review_stars_hint">누르거나 밀어서 고릅니다 · 비워 둬도 됩니다</string>
     <string name="review_stars_set">%1$s점 · 다시 누르면 지웁니다</string>
     <string name="review_text_hint">감상이나 나에게 남은 한 문장을 적어 두세요</string>
@@ -263,6 +268,10 @@
     <string name="fav_view">보기</string>
     <string name="fav_view_list">목록</string>
     <string name="fav_view_grid">격자</string>
+    <string name="fav_rows">줄</string>
+    <plurals name="fav_rows_n">
+        <item quantity="other">%1$d줄</item>
+    </plurals>
     <string name="app_icons_hint">목록 보기에서</string>
     <string name="status_bar">기기 상단 바</string>
     <string name="status_bar_hint">홈에서도 보이기</string>
@@ -303,7 +312,12 @@
     <string name="this_year">올해</string>
     <string name="color">색</string>
     <string name="palette_mono">흑백</string>
-    <string name="palette_color">컬러</string>
+    <string name="palette_amber">등불 아래</string>
+    <string name="palette_ink">먹과 한지</string>
+    <string name="palette_moss">이끼 돌담</string>
+    <string name="palette_camellia">겨울 동백</string>
+    <string name="palette_canola">유채꽃 들판</string>
+    <string name="palette_indigo">새벽 호수</string>
     <string name="books_this_week">이번 주 읽은 책</string>
     <string name="reading_empty">이번 주에 읽은 기록이 아직 없습니다</string>
     <string name="reading_no_access">설정에서 오늘 읽은 시간을 켜고 사용 기록 액세스에서 BookLauncher를 허용하면 기록이 보입니다.</string>
@@ -373,11 +387,11 @@
     <string name="guide_kotatsu">Kotatsu</string>
     <string name="guide_librera">Librera</string>
     <string name="guide_wattpad">Wattpad</string>
+    <string name="guide_eco">이씨오 범용뷰어 3.0</string>
     <string name="guide_librera_pro">Librera Pro</string>
     <string name="guide_acoustext">AcousText</string>
     <string name="guide_permissions">필요한 권한</string>
     <string name="guide_todo">앱에서 할 것</string>
-    <string name="guide_todo_none">따로 바꿀 것은 없습니다.</string>
     <string name="guide_fields">자동으로 들어오는 책 정보</string>
     <string name="guide_notes">알아 둘 것</string>
     <string name="guide_cover">표지</string>
@@ -436,7 +450,6 @@
     <string name="guide_t_kindle_menu">받지 않았던 책과 읽는 중 진행률은 가운데를 눌러 메뉴를 띄워야 들어옵니다.</string>
     <string name="guide_t_libby_time">오늘 읽은 시간도 자동 추가를 켜 둬야 셉니다.</string>
     <string name="guide_t_neo_open">BOOX 서재나 파일에서 책을 여세요.</string>
-    <string name="guide_t_ko_files">따로 바꿀 것은 없습니다. KOReader 는 화면에 책 제목을 내놓지 않아 KOReader 가 남기는 기록 파일을 읽습니다.</string>
     <string name="guide_note_ez">홈에서 책을 누르면 그 파일을 바로 엽니다. 그림 폴더는 한 권으로 봅니다.</string>
     <string name="guide_note_neo">홈에서 책을 누르면 그 파일을 네오리더로 바로 엽니다.</string>
     <string name="guide_note_ko">KOReader 에서 연 책은 홈으로 돌아오면 들어옵니다. 홈에서 책을 누르면 그 파일을 바로 엽니다.</string>
@@ -475,6 +488,8 @@
     <string name="guide_t_wattpad_open">이야기는 서재에서 누르거나 이야기 화면의 Start reading·Continue reading 으로 여세요. 다른 길로 화 중간부터 이어 열면 마지막으로 연 이야기로 이어 갑니다.</string>
     <string name="guide_n_wattpad_author">서재가 목록 보기이거나 이야기 화면을 보면 들어옵니다</string>
     <string name="guide_n_wattpad_chapter">% 대신 화면 맨 위에 보이는 화 이름 그대로 들어옵니다</string>
+    <string name="guide_note_yes24ebook">내서재 위 탭(읽고 있는 책 · 책장 · 구매한 책)을 1초 안에 다른 탭으로 넘겼다가 다시 돌아오면, 드물게 표지가 옆으로 밀린 채 들어올 수 있습니다.</string>
+    <string name="guide_note_eco">PDF 책은 자동으로 들어오지 않습니다.</string>
     <string name="guide_note_wattpad">이야기 하나를 책 한 권으로 봅니다(화마다 따로 책을 만들지 않습니다).</string>
     <string name="guide_note_librera">Play 스토어 무료판은 라이브러리에서 연 책과 메뉴를 띄운 책만 들어옵니다.</string>
     <string name="book_files">책 파일 읽기</string>

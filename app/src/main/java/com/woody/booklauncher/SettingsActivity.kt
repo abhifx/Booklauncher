@@ -220,13 +220,11 @@ class SettingsActivity : EinkActivity() {
         list.removeAllViews()
         // 글자 크기·줄 간격은 한 화면에서 슬라이더로 보며 고른다.
         row(getString(R.string.text_spacing), "${prefs.textScalePercent}% · ${prefs.rowScalePercent}%", next = true) { open(PAGE_TEXT) }
-        // 색: 흑백 / 컬러. 바꾸면 이 화면부터 다시 만든다(색은 화면을 만들 때 정해진다).
-        val palettes = listOf(Palette.MONO to R.string.palette_mono, Palette.COLOR to R.string.palette_color)
-        val names = palettes.map { getString(it.second) }
-        val now = palettes.indexOfFirst { it.first == prefs.palette }
-        row(getString(R.string.color), names[now], next = true) {
-            choose(getString(R.string.color), names, now) {
-                if (palettes[it].first != prefs.palette) { prefs.palette = palettes[it].first; recreate() }
+        // 색: 흑백 / 컬러 테마. 줄마다 그 테마의 색 칸(색면 · 제목 색). 바꾸면 이 화면부터 다시 만든다(색은 화면을 만들 때 정해진다).
+        val themes = Palette.entries
+        row(getString(R.string.color), getString(prefs.palette.label), next = true) {
+            choose(getString(R.string.color), themes.map { getString(it.label) }, themes.indexOf(prefs.palette), themes.map { it.swatch }) {
+                if (themes[it] != prefs.palette) { prefs.palette = themes[it]; recreate() }
             }
         }
         toggle(getString(R.string.app_icons), prefs.showIcons, hint = getString(R.string.app_icons_hint), redraw = ::renderDisplay) { prefs.showIcons = it }
@@ -331,7 +329,8 @@ class SettingsActivity : EinkActivity() {
         // 읽고 있는 앱은 책을 정할 때 함께 고른다(책 없이 바꾸려면 앱을 길게 눌러 '읽고 있는 앱으로 설정').
         // 맨 앞 책 제목이 길면 줄임표로 자르고 `외 3권` 은 늘 보인다.
         val books = BookShelf.list(this)
-        val booksText = books.firstOrNull()?.title ?: getString(R.string.none)
+        // 홈에서 숨긴 책은 제목을 앞에 보이지 않는다(홈 맨 앞 책과 같게, 모두 숨겼으면 맨 앞 책)
+        val booksText = (books.firstOrNull { !it.homeHidden } ?: books.firstOrNull())?.title ?: getString(R.string.none)
         val booksTail = if (books.size > 1) getString(R.string.books_more, books.size - 1) else null
         row(getString(R.string.now_reading), booksText, on = books.isNotEmpty(), next = true, tail = booksTail) {
             startActivity(BooksActivity.intent(this))
@@ -495,12 +494,11 @@ class SettingsActivity : EinkActivity() {
         }
         blocks += PagedBlocks.Block(listOf(perms))
 
-        // 할 것: 점 하나에 한 묶음, 소제목은 첫 점과 함께
-        val todo = info.todo.ifEmpty { null }
-        (todo ?: listOf(R.string.guide_todo_none)).forEachIndexed { i, res ->
+        // 할 것: 점 하나에 한 묶음, 소제목은 첫 점과 함께. 없으면 묶음을 두지 않는다
+        info.todo.forEachIndexed { i, res ->
             val box = vbox()
             if (i == 0) box.addView(sectionView(getString(R.string.guide_todo)))
-            box.addView(if (todo == null) guidePara(getString(res), Ui.BLACK) else bullet(getString(res)))
+            box.addView(bullet(getString(res)))
             blocks += PagedBlocks.Block(listOf(box))
         }
 

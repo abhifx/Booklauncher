@@ -10,7 +10,7 @@ import android.widget.FrameLayout
 import android.widget.TextView
 
 /**
- * 자주 쓰는 앱 관리(설정 > 앱 관리 > 자주 쓰는 앱). 맨 위 홈 `보기 목록 ›`(목록 / 격자), 줄마다 앱 이름(누르면 이름 바꾸기)과 `↑ ↓`·`빼기`, 하단 `앱 추가 ›`.
+ * 자주 쓰는 앱 관리(설정 > 앱 관리 > 자주 쓰는 앱). 맨 위 홈 `보기 격자 ›`(목록 / 격자), 줄마다 앱 이름(누르면 이름 바꾸기)과 `↑ ↓`·`빼기`, 하단 `앱 추가 ›`.
  * 홈에 이 순서대로 보인다.
  */
 class FavoritesActivity : EinkActivity() {
@@ -31,16 +31,19 @@ class FavoritesActivity : EinkActivity() {
         root.addView(hline(2))
         // 홈에서 보는 꼴(목록 / 격자). 설정 줄과 같은 모양.
         viewValue = text("", 20f, Ui.medium)
-        root.addView(hbox().apply {
-            setPadding(dp(Ui.MARGIN), 0, dp(Ui.MARGIN), 0)
-            addView(text(getString(R.string.fav_view), 22f), lp(0, WRAP, 1f))
-            addView(viewValue)
-            setOnClickListener {
-                val views = listOf(getString(R.string.fav_view_list), getString(R.string.fav_view_grid))
-                choose(getString(R.string.fav_view), views, if (prefs.favGrid) 1 else 0) { prefs.favGrid = it == 1; showView() }
-            }
-        }, lp(MATCH, rowDp(Ui.SETTING_ROW_DP)))
-        root.addView(hline(1, Ui.DIVIDER))
+        fun settingRow(label: Int, value: TextView, onClick: () -> Unit) {
+            root.addView(hbox().apply {
+                setPadding(dp(Ui.MARGIN), 0, dp(Ui.MARGIN), 0)
+                addView(text(getString(label), 22f), lp(0, WRAP, 1f))
+                addView(value)
+                setOnClickListener { onClick() }
+            }, lp(MATCH, rowDp(Ui.SETTING_ROW_DP)))
+            root.addView(hline(1, Ui.DIVIDER))
+        }
+        settingRow(R.string.fav_view, viewValue) {
+            val views = listOf(getString(R.string.fav_view_list), getString(R.string.fav_view_grid))
+            choose(getString(R.string.fav_view), views, if (prefs.favGrid) 1 else 0) { prefs.favGrid = it == 1; showView() }
+        }
         showView()
         hint = text(getString(R.string.favorites_order_hint), 15f, color = Ui.GRAY, lines = 2).apply {
             setPadding(dp(Ui.MARGIN), dp(12), dp(Ui.MARGIN), dp(4))
