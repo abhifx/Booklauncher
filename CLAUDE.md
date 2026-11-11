@@ -12,8 +12,8 @@ README 는 영어(`README.md`)와 한국어(`README.ko.md`) 두 벌이다. 하�
 
 ```bash
 export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
-./gradlew -q assembleRelease          # app/build/outputs/apk/release/BookLauncher-2.1.0-release.apk
-adb install -r app/build/outputs/apk/release/BookLauncher-2.1.0-release.apk </dev/null
+./gradlew -q assembleRelease          # app/build/outputs/apk/release/BookLauncher-2.5.0-release.apk
+adb install -r app/build/outputs/apk/release/BookLauncher-2.5.0-release.apk </dev/null
 ```
 
 - 릴리스는 R8 축소(약 740KB, 1.6.5 는 720KB·1.6.4 는 705KB·1.6.1 은 734KB·1.5.3 은 480KB. HTML 라이브러리 없이 YES24 검색 결과를 직접 읽는다. 릴리스만 Kotlin 널 검사 호출을 빼고(`-Xno-*-assertions`) `-repackageclasses`, 도장 그림은 16단계 투명도 4비트 PNG). dex 는 minSdk 28 이라 압축하지 않고 넣는다(설치 뒤 풀어 두지 않아 저장 공간·실행이 낫다). 덮어 설치하면 앱 데이터가 남는다.
@@ -39,6 +39,7 @@ adb install -r app/build/outputs/apk/release/BookLauncher-2.1.0-release.apk </de
 - **사용자가 기기를 쓰는 중일 수 있다.** 자동 조작은 필요한 만큼만, 와이파이·블루투스 등 기기 설정은 건드리지 않는다. 다른 앱 화면에서 길게 누르기·탭이 엉뚱한 곳(다른 이북 앱, Play 스토어)을 누른 적이 있다.
 - **`am force-stop com.woody.booklauncher` 를 하지 않는다**: 접근성 서비스(읽는 책 자동 추가)가 시스템 설정에서 꺼진다. 다시 켜는 것은 사용자가 한다(adb 로 켜지 않는다). 덮어 설치는 괜찮다.
 - 홈페이지 `site/`(한 쪽, 홈·독서 기록·올해 읽은 책을 페블·바형 두 대로, 영어는 `site/en/`: 모든 스크립트에 `SITE_LANG=en` 이면 영어 앱·원서·Kindle 등, 그림은 `site/img/en-*`): 그림은 에뮬 실제 화면. `tools/site/covers.py`(YES24 표지 받기, 원본은 저장소 밖) → `mock.py`(mock DB·표지) → `shoot.sh`(넣고 세 화면 찍기, 이북 앱이 깔린 에뮬에서) → `images.py`(상단 바 지우고 `site/img/*.webp`). 기기 틀은 실제 기기 사진(크레마 페블 화이트 YES24 상품 사진·BOOX 팔마 공식 사진)을 `frames.py` 로 화면 자리를 비워 만들고 그 위에 캡처를 얹는다. 지원 앱 아이콘 `site/img/apps/` 는 에뮬에서 안드로이드가 그린 아이콘(`tools/site/IconDump.java` 를 `app_process` 로, 640dpi 그림을 192px PNG 로. 이지뷰어(`.free`)·채리뷰어는 Play 스토어 아이콘을 192px 로 받았다: 채리뷰어는 유료라 에뮬에 없고, 이지뷰어는 판마다 색이 달라 Play 다운로드가 많은 `.free`(빨강)로). 네오리더는 BOOX 런처에 아이콘이 없어 목록에서 뺐다. 검색·공유 정보(제목·설명·대표 주소·hreflang·공유 카드·JSON-LD·자주 묻는 질문·robots.txt·sitemap.xml·llms.txt)는 `tools/site/seo.py` 가 두 페이지에 다시 쓴다(글은 그 파일에서 고친다, 주소는 `https://pebbledesk.github.io/`(저장소 pebbledesk/pebbledesk.github.io) 기준). 공유 그림·아이콘은 `og.py`(README 첫 그림 `docs/screenshots/hero-ko.png`·`hero-en.png` 과 앱 아이콘도 같이 만든다). `site/` 는 이 저장소에 넣지 않는다(git 제외: 기기 사진·책 표지·다른 앱 아이콘이 들어 있다). 예외는 README 그림 `docs/screenshots/`(화면 캡처, 첫 그림 `hero-*.png`, 지원 앱 아이콘 `app-icons/`: `site/img/apps/` 를 96px 로 줄인 것, 첫 그림과 함께 `og.py` 가 만든다. README 는 홈페이지 지표에 잡히지 않게 홈페이지 그림을 부르지 않는다): 책 표지·앱 아이콘·기기 틀 사진이 들어가므로 README 라이선스 절에 PolyForm 라이선스가 아님을 적어 두었다. 그림을 더하면 그 줄도 맞춘다. 원본은 홈페이지 저장소 pebbledesk/pebbledesk.github.io 이고 main 에 push 하면 GitHub Pages 가 배포한다. 고칠 때는 그 저장소를 받아 `site/` 에 두고 고친 뒤 다시 복사해 커밋·push 한다.
+- 태블릿(10인치)은 화면 폭이 700dp 이상이라 세로에서도 넓은 화면 배치다(DESIGN.md `태블릿`). BOOX 앱 최적화의 앱별 DPI 가 350 이면 앱이 정한 299 가 먹지 않아 글자가 조금 크고 `화면이 크게 보입니다` 창이 뜬다: BOOX 앱 목록 › 길게 누르기 › 최적화 › DPI 299(또는 최적화 끄기). 확인은 `dumpsys display` 의 `density`(선언)·`226.4 x 227.1 dpi`(실제)와 홈의 창으로 한다.
 - 캡처: `adb exec-out screencap -p > x.png`. 시안·비교 이미지는 `design-review/`(git 제외)에 둔다.
 
 ## 기기 특성(크레마 페블)
@@ -57,11 +58,13 @@ adb install -r app/build/outputs/apk/release/BookLauncher-2.1.0-release.apk </de
 
 | 파일 | 역할 |
 |---|---|
-| HomeActivity | 홈: 상단 · 책 자리(스켈레톤/지금 읽는 책 + `이어 읽기`·진행률 + 같은 크기 표지의 `함께 읽는 책` 격자, 책이 늘어도 표지 크기는 그대로·쪽만 늘어남) · 자주 쓰는 앱(고정 1줄) · 하단 줄(모든 앱 · 통계 · 위젯 · 미니 앱 · 설정 아이콘. 가로는 왼쪽 세로 줄) |
+| HomeActivity | 홈: 상단 · (서가/달력 두 가지, `HomeStyle`) 서가는 책 자리(스켈레톤/지금 읽는 책 + `이어 읽기`·진행률 + 같은 크기 표지의 `함께 읽는 책` 격자, 책이 늘어도 표지 크기는 그대로·쪽만 늘어남) · 자주 쓰는 앱(고정 1줄) · 하단 줄(모든 앱 · 통계 · 위젯 · 미니 앱 · 설정 아이콘. 가로는 왼쪽 세로 줄). 달력은 `HomeCalendarView` |
 | WidgetsActivity / WidgetPickerActivity | ⑯ 위젯: Licorice-style built-in cards (Clock · Reading stats · Continue reading · Music · Calendar · Quote · Device · Weather · Recent books · This year) in a paged two-column grid, then `AppWidgetHost` Android widgets one per page. Long-press a card for move/remove/settings. Picker lists built-in cards first, then Android widgets. Order in `shared_prefs/widgets.xml` (`native`, `ids`). |
 | NativeWidgets / Weather / Headlines / Stocks / Quotes | Card rendering and data (`WidgetData`), Open-Meteo weather by city (30-minute cache), Hacker News top three, one Yahoo Finance symbol, daily quote. |
 | Media / MediaWatchService | Reads the active `MediaSession` through a notification listener (`MediaWatchService`), falls back to `AudioManager` media keys. Used by the music card and its large control sheet. |
-| MiniAppsActivity / MiniStore | Built-in calculator, notes pad and countdown timer (notes JSON in `shared_prefs/mini.xml`). |
+| MiniAppsActivity / MiniStore | Built-in calculator, notes pad, countdown timer and a `게임` entry (notes JSON in `shared_prefs/mini.xml`). |
+| HomeCalendarView | 달력 홈(설정 › 화면 › 홈 화면 › 달력): 지금 읽는 책 카드(표지 112dp·바형 132dp·태블릿 144dp, 제목 28sp·저자·진행률·이어 읽기, `HomeActivity.calendarHero`) + 이번 달 달력(6주 고정, 읽은 날 검은 원·목표 링·오늘 테두리, `MonthDots` 와 같은 규칙, 날짜를 누르면 독서 기록) + 자주 쓰는 앱 4열 타일 격자(줄 78dp) + 하단 줄(모든 앱 · 미니 앱 · 게임 · 설정). 세로는 위에서 아래로, 가로는 달력 왼쪽·책과 앱 오른쪽 두 칸. 달을 넘기고 앱은 쪽으로 넘긴다. |
+| GamesActivity / GameStore | 전자잉크 게임(2048 · 지뢰찾기 · 스도쿠): 애니메이션 없이 바뀐 판만 다시 그리고, 최고 점수·최단 시간은 `shared_prefs/games.xml`. 스도쿠는 답이 하나뿐인 문제를 만든다. |
 | ReadingActivity | ⑫ 독서 기록: 연속일·오늘 링, 4주 링 달력·막대그래프(각각 뷰 하나로 그림, 같은 높이), 합계, 이번 주 읽은 책 |
 | YearBooksActivity | ⑬ 올해 읽은 책(목록·격자, 해 고르기): 읽는 중·완독한 책(표지에 띠)·뺀 책, 완독·다시 읽기·기록에서 지우기 |
 | Recap / RecapImage / RecapActivity | ⑮ 월간 결산: 한 달 데이터와 배치(막대 끊기·주마다 줄 채우기·오른쪽 칸 모양 `Recap`), 1080×1350 그림(`RecapImage`, 표지는 `BookShelf.shareCover`), 화면(올해 읽은 책 아래 줄 오른쪽 `10월 결산 ›`, `‹ 9월 · 공유 · 11월 ›`, 그림을 누르면 크게, 공유 = 파일로 저장·다른 앱으로 보내기, 보내는 그림은 `RecapFiles` 가 내준다) |
@@ -105,9 +108,12 @@ adb install -r app/build/outputs/apk/release/BookLauncher-2.1.0-release.apk </de
 - 바형 화면(긴 변 ÷ 짧은 변 1.5 이상, `Ui.tallScreen`. Tango·Palma 등 2.0): 홈 맨 위 표지 126dp, 책장은 세 줄까지, 독서 기록은 남는 높이가 있으면 달력과 그래프를 함께, 합계와 이번 주 읽은 책은 위아래로(폭이 좁은 화면도), 홈 하단 오늘 읽은 시간은 `오늘` 없이. 시험은 `Tango_A14` 에뮬레이터(824×1648, 400dpi, API 34).
 - 가로 화면(1.5.4 까지는 세로 고정): 세로의 칸 모양은 그대로 두고 남는 폭에 칸을 나란히(독서 기록 요약 | 달력(넓으면 그래프도), 아래 메뉴 정보 | 항목, 설정 묶음 두 칸, 격자는 표지 크기 그대로 열을 늘림). 홈은 왼쪽 세로 단추 줄 + 오른쪽 위 카드 두 장(지금 읽는 책 | 자주 쓰는 앱) + 그 아래 화면 폭 전체의 `함께 읽는 책` 격자. 바형도 같은 규칙. 판단은 `landscape()`(폭 > 높이), 자세한 건 DESIGN.md `가로 화면`. 높이가 낮은 가로 화면(HiBreak 835×383dp)은 독서 기록 왼쪽 칸의 링·줄 높이를 줄이고(`DENSE_*`), 홈 카드·표지도 줄인다. 에뮬은 `settings put system user_rotation 1`(자동 회전 끄고)로 돌린다.
 - 하단 줄 56dp(모든 화면). 홈은 아이콘 다섯 칸(모든 앱 · 통계 · 위젯 · 미니 앱 · 설정), 가로 홈은 왼쪽 세로 줄. 오늘 읽은 시간은 통계 화면에서 본다.
+- 홈 화면은 설정 › 화면 › `홈 화면` 에서 `서가`(책 중심, 지금까지의 홈)와 `달력`(이번 달 달력 + 자주 쓰는 앱 4열 타일 + 모든 앱 · 미니 앱 · 게임 · 설정) 중에 고른다(`HomeStyle`). 처음은 서가라 업데이트로 홈이 갑자기 바뀌지 않는다. 달력의 날짜를 누르면 독서 기록을 연다.
+- 게임은 미니 앱 안의 `게임`(2048 · 지뢰찾기 · 스도쿠, `GamesActivity`). 애니메이션 없이 바뀐 판만 다시 그리고, 기록은 `shared_prefs/games.xml`. 가볍게 더할 게임은 `games` 의 판·규칙을 따로 두고 이 화면에 페이지를 더한다.
 - 읽는 책 자동 추가·오늘 읽은 시간은 앱에 켜짐 값을 두지 않고 시스템 값(접근성 켜짐 / **사용 기록 액세스**(`PACKAGE_USAGE_STATS`) 허용)이 곧 켜짐이다(어긋나지 않게). 어떤 책인지는 접근성 서비스가 그 앱에서 마지막으로 편 책으로 나누고(그 앱에서 편 책을 한 번도 몰랐으면 앱별. 서비스가 꺼진 동안 읽은 시간은 책 없이 하루 합계·연속일에만 들어간다). 읽는 화면은 클래스 이름 규칙(`READER` 정규식)으로 가린다. 연속일 = 5분 이상 읽은 날. 하루 목표 기본 30분(설정, 없음 / 15분~1시간 / 직접 입력 1~300분). 바꿔도 지난날은 그날의 목표로 센다.
 - 기록은 처음 켤 때 7일 전까지 채우고 그날을 기록 시작일로 둔다(그 전은 '기록 없음').
 - KOReader 는 화면(접근성)으로 아무것도 알 수 없어 '모든 파일 액세스'(설정 › 독서 › 책 파일 읽기)로 KOReader 가 남기는 파일을 읽는다: 어떤 책은 `koreader/history.lua` 맨 앞 줄, 열림·닫힘은 그 줄의 때와 책 파일의 접근 시각(KOReader 가 열 때만 맞춘다, 저장소는 noatime), 제목·진행률은 책 옆 `.sdr`. 권한 없는 길(koreader 폴더만 허락·플러그인·KOSync)은 조사 뒤 쓰지 않기로 했다(docs/READER_APPS.md).
+- 태블릿(실제 짧은 변 800dp 이상)은 1dp 를 표준의 1.32배로만 그린다(10.3인치 1404px 는 299dpi·751×999dp). 넓은 화면(700dp 이상)은 세로에서도 두 칸(설정·독서 기록·아래 메뉴), 홈 책장은 5~6칸 × 2~4줄, 가로는 단추 줄 200dp·카드 250dp·책장 2~4줄.
 - **저장소 전체를 훑어 책 파일을 찾지 않는다**: 책 파일은 이북 앱이 알려 주는 경로(앱 기록·데이터 창구·화면에 보이는 위치·홈에서 연 파일)로만 쓰고, 모르면 쓰지 않는다(표지는 화면에서 잘라 오고, 홈에서는 앱을 연다). 이름·제목으로 저장소를 훑으면 같은 이름의 다른 파일(만화 `01.cbz`)·같은 책의 사본을 가를 수 없고 SD 카드는 찾지 못한다. 그래서 문리더(메뉴 제목으로 EPUB 찾기)·네오리더(파일 이름으로 다시 찾기)의 저장소 찾기를 뺐다(2026-11-01). 이북 앱의 데이터 폴더를 알려진 자리나 얕은 몇 단계에서 찾는 것(Readest·Mihon)은 책 파일 찾기가 아니라 괜찮다.
 
 ## 일하는 방식(사용자 선호)

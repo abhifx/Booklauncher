@@ -173,7 +173,7 @@ class Sheet(private val context: Context) {
     }
 
     /** 가로 화면에서 두 칸으로 나누는가: 아래에 붙는 메뉴이고 항목이 있으며 별점·감상·입력 칸이 없을 때(키보드와 함께 쓰는 메뉴는 한 칸) */
-    private val split get() = !centered && review == null && !hasInput && (items.isNotEmpty() || checks.isNotEmpty()) && context.landscape()
+    private val split get() = !centered && review == null && !hasInput && (items.isNotEmpty() || checks.isNotEmpty()) && context.wideLayout()
 
     /** 두 칸 메뉴의 오른쪽(항목) 칸 폭 */
     private fun menuWidth() = maxOf(context.dp(SPLIT_MENU_DP), (context.resources.displayMetrics.widthPixels * SPLIT_MENU_RATIO).toInt())

@@ -28,18 +28,57 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import kotlin.math.roundToInt
 
+/**
+ * 태블릿(큰 화면)에서 1dp 를 표준 안드로이드(160dpi 기준)보다 몇 배 크게 그리는가.
+ * 1 이면 일반 안드로이드 태블릿과 같은 글자 크기, 1.32 면 10인치 태블릿에서 페블(6인치)보다 조금 작은 글자에
+ * 한 화면에 더 많이 들어간다. 6인치 이북 리더는 이 값을 쓰지 않고 지금처럼 [Ui.DESIGN_WIDTH_DP] 로 그린다.
+ */
+private const val TABLET_SCALE = 1.32f
+
+/** 화면의 실제 짧은 변이 이 폭(dp)보다 넓으면 태블릿으로 본다(10인치 4:3 이 약 990dp, 7.8인치가 약 750dp). */
+private const val TABLET_MIN_DP = 800f
+
+/** 태블릿에서도 UI 폭이 이보다 넓어지지 않게 한다(13인치가 넘어도 글자가 너무 작아지지 않게). */
+private const val TABLET_MAX_WIDTH_DP = 1000f
+
+/**
+ * 화면 짧은 변(px)·선언 밀도·물리 밀도로 UI 폭(dp)을 정한다([Ui.designDensityDpi] 의 셈, 단위 시험용).
+ * 실제 짧은 변(dp)은 패널이 알려 주는 물리 밀도(xdpi)로 센다. 기기가 앱마다 밀도를 덮어써도(BOOX 앱별 DPI)
+ * 실제 크기는 그대로라 6인치 리더와 10인치 태블릿을 가를 수 있다. 물리 밀도를 못 믿는 기기(xdpi 가 160 으로
+ * 오는 등. 선언 밀도로 세운 표준 dp 의 0.6~1.7배 밖)는 선언 밀도로 세운 표준 dp 를 쓴다.
+ */
+internal fun designWidthDp(shortPx: Int, densityDpi: Int, xdpi: Float, ydpi: Float): Float {
+    val standardDp = if (densityDpi > 0) shortPx * 160f / densityDpi else 0f
+    val ppi = if (xdpi in 100f..1000f) minOf(xdpi, ydpi.takeIf { it in 100f..1000f } ?: xdpi) else 0f
+    val ppiDp = if (ppi > 0f) shortPx * 160f / ppi else 0f
+    val physicalDp = when {
+        standardDp <= 0f -> ppiDp
+        ppiDp <= 0f -> standardDp
+        ppiDp in standardDp * 0.6f..standardDp * 1.7f -> ppiDp
+        else -> standardDp
+    }
+    return if (physicalDp >= TABLET_MIN_DP) {
+        (physicalDp / TABLET_SCALE).coerceAtMost(TABLET_MAX_WIDTH_DP)
+    } else {
+        Ui.DESIGN_WIDTH_DP.toFloat()
+    }
+}
+
 /** 화면 크기·색·글꼴. 시안(폭 402) 기준 값을 페블 화면(폭 572dp)에 맞춰 1.42배 한 값이다. 다른 기기도 이 폭이 되도록 밀도를 맞춘다([designDensityDpi]). */
 object Ui {
     /** 모든 dp 값의 기준 화면 폭(크레마 페블 1072px / 1.875). 세로 모양 화면의 짧은 변이 이 폭이 되게 밀도를 정한다. */
     const val DESIGN_WIDTH_DP = 572
 
-    /** 화면 짧은 변이 [DESIGN_WIDTH_DP] 가 되는 밀도(dpi). 페블 300, 메이북 E6·M6C(1072px) 300, 1404px 7.8인치면 393. */
+    /** 화면 짧은 변이 [DESIGN_WIDTH_DP] 가 되는 밀도(dpi). 페블 300, 메이북 E6·M6C(1072px) 300.
+     *  큰 화면(태블릿)은 표준 dp 보다 [TABLET_SCALE] 배까지만 키우고, 남는 폭은 글자를 키우는 대신 더 많이 보이는 데 쓴다. */
     fun designDensityDpi(context: Context): Int {
         val dm = context.resources.displayMetrics
         densityBasis = "${dm.widthPixels}×${dm.heightPixels}"
         val shortPx = minOf(dm.widthPixels, dm.heightPixels)
         tallScreen = maxOf(dm.widthPixels, dm.heightPixels) >= shortPx * TALL_RATIO
-        return (shortPx * 160f / DESIGN_WIDTH_DP).roundToInt().also { designDpi = it }
+        val designWidth = designWidthDp(shortPx, dm.densityDpi, dm.xdpi, dm.ydpi)
+        tablet = designWidth > DESIGN_WIDTH_DP
+        return (shortPx * 160f / designWidth).roundToInt().also { designDpi = it }
     }
 
     /**
@@ -93,9 +132,19 @@ object Ui {
         private set
     private const val TALL_RATIO = 1.5f
 
+    /**
+     * 태블릿(큰 화면)인가: 기기 밀도대로 그리면 짧은 변이 [TABLET_MIN_DP] 이상인 화면. 이때는 글자를 화면 크기만큼
+     * 키우지 않고([TABLET_SCALE] 배까지만) 남는 폭·높이에 책·앱을 더 많이 보인다. [designDensityDpi] 가 정한다.
+     */
+    @Volatile var tablet = false
+        private set
+
     /** 마지막으로 [designDensityDpi] 가 본 화면 크기(px). 기기 정보에서 밀도가 왜 그렇게 정해졌는지 본다(Moaan MIX7S 는 1264px 인데 300dpi 로 잡혔다). */
     @Volatile var densityBasis: String? = null
         private set
+
+    /** 이 폭(dp)부터는 세로로 들어도 칸을 나란히 놓는다([wideLayout]): 10인치 태블릿 세로가 약 750dp 다. */
+    const val WIDE_LAYOUT_DP = 700
 
     const val BLACK = Color.BLACK
     const val GRAY = 0xFF555555.toInt()
@@ -132,6 +181,16 @@ object Ui {
  * 가로면 세로 화면의 칸 모양은 그대로 두고 남는 폭에 칸을 나란히 놓는다(홈·독서 기록·설정·아래 메뉴. DESIGN.md `가로 화면`).
  */
 fun Context.landscape(): Boolean = resources.displayMetrics.let { it.widthPixels > it.heightPixels }
+
+/** 지금 화면 폭(dp). 밀도를 [Ui.designDensityDpi] 로 맞춘 뒤라 6인치 리더는 572, 10인치 태블릿은 700~1000 이다. */
+fun Context.screenWidthDp(): Int =
+    (resources.displayMetrics.widthPixels * 160f / resources.displayMetrics.densityDpi).roundToInt()
+
+/**
+ * 폭이 넓어 칸을 나란히 놓는 화면인가: 가로로 놓였거나(휴대폰 가로) 태블릿처럼 세로로 들어도 폭이 넓을 때.
+ * 세로 화면의 칸 모양은 그대로 두고 남는 폭에 칸을 나란히 놓는다(DESIGN.md `가로 화면`·`태블릿`).
+ */
+fun Context.wideLayout(): Boolean = landscape() || screenWidthDp() >= Ui.WIDE_LAYOUT_DP
 
 /** 앱 버전 이름(설정 바닥글·기기 정보). 못 읽으면 빈 글자. */
 fun Context.appVersion(): String =

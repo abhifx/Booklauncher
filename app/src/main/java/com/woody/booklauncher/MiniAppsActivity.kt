@@ -137,11 +137,19 @@ class MiniAppsActivity : EinkActivity() {
     // ---- hub ----------------------------------------------------------------
 
     private fun hub() {
-        listOf(
-            Triple(R.string.mini_calc, R.string.mini_calc_desc, Page.CALC),
-            Triple(R.string.mini_notes, R.string.mini_notes_desc, Page.NOTES),
-            Triple(R.string.mini_timer, R.string.mini_timer_desc, Page.TIMER),
-        ).forEachIndexed { i, (label, desc, to) ->
+        val items: List<Triple<Int, Int, () -> Unit>> = listOf(
+            Triple(R.string.mini_calc, R.string.mini_calc_desc) { page = Page.CALC; render() },
+            Triple(R.string.mini_notes, R.string.mini_notes_desc) {
+                notes = MiniStore.notes(this)
+                page = Page.NOTES
+                render()
+            },
+            Triple(R.string.mini_timer, R.string.mini_timer_desc) { page = Page.TIMER; render() },
+            Triple(R.string.games, R.string.games_desc) {
+                startActivity(GamesActivity.intent(this@MiniAppsActivity))
+            },
+        )
+        items.forEach { (label, desc, action) ->
             body.addView(hline(1, Ui.DIVIDER), lp(MATCH, dp(1)))
             body.addView(hbox().apply {
                 setPadding(dp(Ui.MARGIN), 0, dp(Ui.MARGIN), 0)
@@ -151,11 +159,7 @@ class MiniAppsActivity : EinkActivity() {
                     addView(text(getString(desc), 13f, color = Ui.GRAY), lp(MATCH, WRAP).apply { topMargin = dp(2) })
                 }, lp(0, WRAP, 1f))
                 addView(text("›", 24f, color = Ui.LIGHT_GRAY).apply { gravity = Gravity.CENTER_VERTICAL })
-                setOnClickListener {
-                    page = to
-                    if (to == Page.NOTES) notes = MiniStore.notes(this@MiniAppsActivity)
-                    render()
-                }
+                setOnClickListener { action() }
             }, lp(MATCH, rowDp(72)))
         }
     }

@@ -44,7 +44,7 @@ class ReadingActivity : EinkActivity() {
      * 가로 화면: 왼쪽 요약 칸(연속일·오늘 링, 읽은 시간, 이번 주 읽은 책)과 오른쪽 달력·그래프(남는 높이를 채운다).
      * 오른쪽이 넓어 달력 둘이 들어가면(바형) 달력과 그래프를 나란히, 아니면(페블) 지금처럼 하나씩 바꿔 본다.
      */
-    private val wide by lazy { landscape() }
+    private val wide by lazy { wideLayout() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

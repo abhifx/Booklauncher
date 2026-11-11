@@ -220,6 +220,28 @@ class SettingsActivity : EinkActivity() {
         list.removeAllViews()
         // 글자 크기·줄 간격은 한 화면에서 슬라이더로 보며 고른다.
         row(getString(R.string.text_spacing), "${prefs.textScalePercent}% · ${prefs.rowScalePercent}%", next = true) { open(PAGE_TEXT) }
+        // 홈 화면: 서가(책 중심) / 달력(달력 + 자주 쓰는 앱 격자). 바꾸면 홈이 돌아올 때 다시 만들어진다(HomeActivity.onResume).
+        val styles = HomeStyle.entries
+        val styleNames = styles.map { getString(it.labelRes) }
+        row(getString(R.string.home_style), styleNames[styles.indexOf(prefs.homeStyle)], next = true) {
+            choose(getString(R.string.home_style), styleNames, styles.indexOf(prefs.homeStyle)) {
+                if (styles[it] != prefs.homeStyle) {
+                    prefs.homeStyle = styles[it]
+                    renderDisplay()
+                }
+            }
+        }
+        // 홈 모양: 목록 / 두 칸 / 책장. 바꾸면 홈이 돌아올 때 새 모양으로 다시 만들어진다(HomeActivity.onResume).
+        val layouts = HomeLayout.entries
+        val layoutNames = layouts.map { getString(it.labelRes) }
+        row(getString(R.string.home_layout), layoutNames[layouts.indexOf(prefs.homeLayout)], next = true) {
+            choose(getString(R.string.home_layout), layoutNames, layouts.indexOf(prefs.homeLayout)) {
+                if (layouts[it] != prefs.homeLayout) {
+                    prefs.homeLayout = layouts[it]
+                    renderDisplay()
+                }
+            }
+        }
         // 색: 흑백 / 컬러 테마. 줄마다 그 테마의 색 칸(색면 · 제목 색). 바꾸면 이 화면부터 다시 만든다(색은 화면을 만들 때 정해진다).
         val themes = Palette.entries
         row(getString(R.string.color), getString(prefs.palette.label), next = true) {
@@ -613,7 +635,7 @@ class SettingsActivity : EinkActivity() {
      */
     private fun splitColumns(): LinearLayout {
         col = list
-        if (!landscape()) return list
+        if (!wideLayout()) return list
         list.orientation = LinearLayout.HORIZONTAL
         val left = vbox()
         val right = vbox()

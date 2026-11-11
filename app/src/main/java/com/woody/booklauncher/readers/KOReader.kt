@@ -95,11 +95,10 @@ class KOReaderReader(private val ko: KOReaderApp) : ScreenReader(ko) {
         }
         markFileViewer(ctx, current)
         val title = recorder.lookup.knownTitle(current.path, current.title)
-        val newFile = newFile(ctx, current.path)
-        if (recorder.recordedBook(ctx.pkg)?.hasTitle(title) != true) when {
-            since > 0 && current.openedAt > since -> return fileOpened(ctx, current, current.openedAt)
-            current.closedAt == 0L && (newFile || recorder.lookup.byTitle(title) != null) ->
-                return fileOpened(ctx, current, ctx.viewerOpenedAt ?: now)
+        // 그 사이에 연 책만 맨 앞으로 올린다. KOReader 는 책을 닫지 않고 홈으로 나가면 closedAt 이 0으로 남아,
+        // 홈에 돌아올 때마다 그 책이 지금 읽는 책 자리를 차지했다(다른 앱을 읽고 와도).
+        if (recorder.recordedBook(ctx.pkg)?.hasTitle(title) != true && since > 0 && current.openedAt > since) {
+            return fileOpened(ctx, current, current.openedAt)
         }
         val book = recorder.recordedBook(ctx.pkg)?.takeIf { it.hasTitle(title) } ?: return
         saveFile(ctx, book, current.path)
@@ -123,14 +122,6 @@ class KOReaderReader(private val ko: KOReaderApp) : ScreenReader(ko) {
             if (file.openedAt > 0) recorder.viewerShown(ctx.pkg, shown = true, at = file.openedAt, current = false)
             recorder.viewerShown(ctx.pkg, shown = false, at = file.closedAt)
         } else recorder.viewerShown(ctx.pkg, shown = true, at = file.openedAt.takeIf { it > 0 } ?: System.currentTimeMillis())
-    }
-
-    /** 그 앱 데이터의 지금 책 파일이 지난번에 본 것과 다른가(처음 보면 참). 지금 것을 적어 둔다(서비스가 다시 시작돼도 남긴다) */
-    private fun newFile(ctx: AppContext, path: String): Boolean {
-        val key = "file_${ctx.pkg}"
-        if (ctx.prefs.getString(key, null) == path) return false
-        ctx.prefs.edit().putString(key, path).apply()
-        return true
     }
 
     /**

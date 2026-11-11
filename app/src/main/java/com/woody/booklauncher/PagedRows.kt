@@ -40,6 +40,9 @@ class PagedRows(
     private var fixedRows: Int = 0,
     private val insetDividers: Boolean = true,
     private val dividers: Boolean = true,
+    private val dividerMarginDp: Int = Ui.MARGIN,
+    /** 남는 높이를 줄 수로 나눠 줄을 늘린다(홈 함께 읽는 책: 표지가 커져 줄 수가 줄어도 아래를 비우지 않게). */
+    private val stretch: Boolean = false,
 ) : LinearLayout(context), Paged {
     private var rows: List<() -> View> = emptyList()
     private val dividerPx = context.dp(1)
@@ -137,7 +140,10 @@ class PagedRows(
             rowPx = if (gridRowPx > 0) gridRowPx else listHeightPx(listFit) / fit
         } else {
             fit = listFit
-            rowPx = listRowPx
+            rowPx = if (stretch && fixedRows == 0) {
+                val rowsH = (h - headerHeight()).coerceAtLeast(0)
+                ((rowsH - (fit - 1) * dividerPx).coerceAtLeast(0) / fit).coerceAtLeast(listRowPx)
+            } else listRowPx
         }
         if (fit == perPage && rowPx == rowHeightPx) return false
         perPage = fit
@@ -172,7 +178,7 @@ class PagedRows(
         for (i in from until to) {
             if (i > from && gridRows == 0) {
                 // 선을 긋지 않아도 같은 높이를 비워 둔다(들어가는 줄 수 계산이 같도록).
-                if (dividers) addView(context.hline(1, Ui.DIVIDER, insetDividers)) else addView(View(context), lp(MATCH, dividerPx))
+                if (dividers) addView(context.hline(1, Ui.DIVIDER, insetDividers, dividerMarginDp)) else addView(View(context), lp(MATCH, dividerPx))
             }
             addView(rows[i](), lp(MATCH, rowHeightPx))
         }

@@ -4,12 +4,15 @@
 
 **An E Ink launcher for Android e-readers.** The book you're reading stays on Home, your shelf is a cover grid, and reading time, stats, widgets and apps are one tap away.
 
-BookLauncher is a fork of [Pebble Desk](https://github.com/hissinger/pebble-desk), rebuilt around a lower, more visual home screen: the current book with a `Continue reading` button and progress, a bookshelf-style `Also reading` grid with each book's app and progress, one row of favorites, and **All apps · Stats · Widgets · Mini apps · Settings** at the bottom (or as a left sidebar in landscape).
+BookLauncher is a fork of [Pebble Desk](https://github.com/hissinger/pebble-desk), rebuilt around a lower, more visual home screen: the current book with a `Continue reading` button and progress, a bookshelf-style `Also reading` grid with each book's app and progress, one row of favorites, and **All apps · Stats · Widgets · Mini apps · Settings** at the bottom (or as a left sidebar in landscape). A second home style, **Calendar**, keeps the current book at the top, then this month's calendar with reading days marked, then a four-column app grid; switch under Settings › Display › Home screen.
 
 <p align="center"><img src="docs/screenshots/v2-home.png" width="340" alt="BookLauncher 2.1 home on HiBreak: the current book with Continue reading and progress, a bookshelf cover grid with app and progress under each book, one row of favorite apps, and the bottom bar with All apps, Stats, Widgets, Mini apps and Settings"></p>
 
-## What's in 2.1.0
+## What's in 2.5.0
 
+- **A second home, the Calendar** — switch under Settings › Display › Home screen. The current book sits in a hero card, this month's calendar marks the days you read (filled circle) and the days you hit your goal (ring), and your favorite apps sit in a compact grid. Landscape splits into calendar left, book and apps right.
+- **Games** — 2048, minesweeper and Sudoku, built for e-ink: no animation, tap or hold, best score and best time saved. Open them from Mini apps or from the Calendar home.
+- **Better on big screens** — 10-inch tablets keep text smaller and use two columns in portrait, so more fits on screen.
 - **The current book, on Home** — cover, title, author, reading app, a `Continue reading` button and a progress bar. Tap anywhere to open the book.
 - **Also reading as a cover grid** — the other books in a bookshelf-style grid (4 columns on narrow screens, 6 on the Pebble, 5 in landscape), with title, reading app and progress under each cover. Covers keep their size as you add books; the shelf pages instead. `See all` opens the full book list.
 - **One row of favorites** — 5 apps per page, in your own order. List or grid view. Long-press to rename, change the icon or remove.
@@ -28,7 +31,13 @@ BookLauncher is a fork of [Pebble Desk](https://github.com/hissinger/pebble-desk
 | **All apps** | **Mini apps** | **Settings** |
 | <img src="docs/screenshots/v1-apps.png" width="220"> | <img src="docs/screenshots/v2-mini-apps.png" width="220"> | <img src="docs/screenshots/v2-settings.png" width="220"> |
 
+| Calendar home | Games | Sudoku |
+|---|---|---|
+| <img src="docs/screenshots/v2.5-calendar.png" width="220"> | <img src="docs/screenshots/v2.5-games.png" width="220"> | <img src="docs/screenshots/v2.5-sudoku.png" width="220"> |
+
 <p align="center"><img src="docs/screenshots/v2-home-landscape.png" width="720" alt="BookLauncher 2.1 landscape home: left sidebar with Mini apps, current book and Favorites cards, and a full-width Also reading shelf"></p>
+
+<p align="center"><img src="docs/screenshots/v2.5-calendar-landscape.png" width="720" alt="BookLauncher 2.5 calendar home in landscape: the month calendar on the left, the current book and favorite apps on the right"></p>
 
 All screenshots were taken on a HiBreak.
 
@@ -38,10 +47,12 @@ All screenshots were taken on a HiBreak.
 - **Reading time for every book** — only the time the reading screen is actually up is counted. Usage access is needed once.
 - **Finish a book** — half-star rating and a short note. Read it again and every round keeps its own record.
 - **Books this year** — every book you read or finished, as a list or cover grid, for any year.
+- **Two home screens** — the book shelf, or a calendar home with the current book, reading days and a compact app grid.
 - **All apps** — paged, with a letter index. Hide the apps you never use.
 - **Icon packs** — Arcticons and other Android icon packs, with per-app overrides.
 - **Display** — text size 70–150%, line spacing 80–150%, optional color theme, landscape and tall screens.
 - **Mini apps** — calculator, notes and a timer, without leaving the launcher.
+- **Games** — 2048, minesweeper and Sudoku, made for e-ink (no animation, tap or hold, best-score and best-time records). Open them from Mini apps or from the Calendar home.
 - **Your data stays on the device** — the reading log is never sent anywhere. Weather, headlines and markets use the network (Open-Meteo, Hacker News, Yahoo Finance; no account).
 
 ## Supported apps
@@ -59,7 +70,7 @@ NeoReader (BOOX), iReader (built-in) and AcousText are supported too. AcousText 
 
 ## Install
 
-1. Download `BookLauncher-2.1.0-release.apk` from [Releases](https://github.com/abhifx/Booklauncher/releases) and open it in a file manager on the device.
+1. Download `BookLauncher-2.5.0-release.apk` from [Releases](https://github.com/abhifx/Booklauncher/releases) and open it in a file manager on the device.
 2. Choose BookLauncher in Settings › Apps › `Default home app`.
 3. On first run, `Getting started` turns on the two core features: **Auto-add books** (Android Accessibility) and **Reading time** (Usage access). On Android 13+, an app installed from a file may need **Allow restricted settings** in its app info first.
 
@@ -95,7 +106,7 @@ Design and behavior are specified in [DESIGN.md](DESIGN.md); device notes are in
 
 ## License
 
-BookLauncher is a fork of Pebble Desk and keeps its license and `Required Notice`. Changes in this fork: the BookLauncher name and package, the current book with `Continue reading` and progress, the `Also reading` shelf with per-book app and progress, the one-row Favorites section, the bottom icon bar / landscape sidebar, the compact top bar, and the Widgets screen.
+BookLauncher is a fork of Pebble Desk and keeps its license and `Required Notice`. Changes in this fork: the BookLauncher name and package, the current book with `Continue reading` and progress, the `Also reading` shelf with per-book app and progress, the one-row Favorites section, the bottom icon bar / landscape sidebar, the compact top bar, the Widgets screen, the optional Calendar home, and the built-in e-ink games.
 
 [PolyForm Noncommercial 1.0.0](LICENSE). Individuals (hobby, study, research) and noncommercial organizations (schools, public institutions, charities, etc.) may use, modify and share it freely. When sharing, pass on this license and the `Required Notice` line. The original project and its notice are also kept in [NOTICE](NOTICE). GitHub's automatic license detector labels PolyForm as `Other`; the license above is the one that applies.
 

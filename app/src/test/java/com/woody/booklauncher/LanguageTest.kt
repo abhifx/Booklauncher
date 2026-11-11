@@ -39,6 +39,14 @@ class LanguageTest {
         assertFalse(sp.contains("fav_grid"))
     }
 
+    @Test fun `새로 깔면 홈은 목록, 쓰던 사람은 책장`() {
+        HomePrefs.language(sp)
+        assertEquals(HomeLayout.LIST, HomePrefs.homeLayout(sp))
+        sp.edit().clear().putBoolean("onboarded", true).commit()
+        HomePrefs.language(sp)
+        assertEquals(HomeLayout.SHELF, HomePrefs.homeLayout(sp))
+    }
+
     @Test fun `1_5_8 까지 영어로 바꿔 둔 사람은 영어, 옛 값은 지운다`() {
         sp.edit().putBoolean("onboarded", true).putBoolean("english", true).commit()
         assertEquals(AppLanguage.ENGLISH, HomePrefs.language(sp))

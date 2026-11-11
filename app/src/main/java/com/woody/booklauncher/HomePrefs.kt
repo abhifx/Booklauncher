@@ -163,6 +163,16 @@ class HomePrefs(context: Context) {
         get() = sp.getBoolean("fav_short", false)
         set(v) = sp.edit().putBoolean("fav_short", v).apply()
 
+    /** 홈 모양(설정 › 화면 › 홈 보기). 새로 깐 사람은 목록, 이미 쓰던 사람은 책장에서 시작한다([language]). */
+    var homeLayout: HomeLayout
+        get() = homeLayout(sp)
+        set(v) = sp.edit().putString(KEY_HOME_LAYOUT, v.key).apply()
+
+    /** 홈 화면 종류(설정 › 화면 › 홈 화면): 서가(책 중심) / 달력(달력 + 자주 쓰는 앱 격자). 처음은 서가. */
+    var homeStyle: HomeStyle
+        get() = homeStyle(sp)
+        set(v) = sp.edit().putString(KEY_HOME_STYLE, v.key).apply()
+
     /** 독서 기록의 4주를 날마다 막대그래프로. false 면 링 달력 */
     var readingGraph: Boolean
         get() = sp.getBoolean("reading_graph", false)
@@ -306,6 +316,8 @@ class HomePrefs(context: Context) {
         private const val KEY_LANGUAGE = "language"
         private const val KEY_FAV_NAMES = "favorite_names"
         private const val KEY_FAV_GRID = "fav_grid"
+        private const val KEY_HOME_LAYOUT = "home_layout"
+        private const val KEY_HOME_STYLE = "home_style"
         private const val KEY_TEXT_SCALE = "text_scale"
         private const val KEY_ROW_SCALE = "row_scale"
         private const val KEY_THEME = "theme"
@@ -341,6 +353,14 @@ class HomePrefs(context: Context) {
             sp.edit().putString(KEY_THEME, moved.key).remove(KEY_LEGACY_PALETTE).apply()
             return moved
         }
+
+        /** 홈 모양. 아직 정하지 않았으면(이 기능 전 설치) 책장으로 본다. */
+        internal fun homeLayout(sp: android.content.SharedPreferences): HomeLayout =
+            HomeLayout.of(sp.getString(KEY_HOME_LAYOUT, null))
+
+        /** 홈 화면 종류. 아직 정하지 않았으면(이 기능 전 설치) 서가로 본다. */
+        internal fun homeStyle(sp: android.content.SharedPreferences): HomeStyle =
+            HomeStyle.of(sp.getString(KEY_HOME_STYLE, null))
 
         /** 아이콘을 그릴 때마다 설정 객체를 만들지 않으려고 쓴다. */
         fun iconPack(context: Context): String? = prefs(context).getString(KEY_ICON_PACK, null)
@@ -381,6 +401,10 @@ class HomePrefs(context: Context) {
             }
             val edit = sp.edit().putString(KEY_LANGUAGE, first.key).remove(KEY_ENGLISH)
             if (first == AppLanguage.SYSTEM) edit.putBoolean(KEY_FAV_GRID, true)
+            // 새로 깐 사람은 새 홈(목록), 이미 쓰던 사람은 지금과 가장 가까운 책장에서 시작한다.
+            if (!sp.contains(KEY_HOME_LAYOUT)) {
+                edit.putString(KEY_HOME_LAYOUT, (if (sp.all.isEmpty()) HomeLayout.LIST else HomeLayout.SHELF).key)
+            }
             edit.apply()
             return first
         }
@@ -413,5 +437,32 @@ enum class AppLanguage(val key: String) {
 
     companion object {
         fun of(key: String?) = entries.firstOrNull { it.key == key }
+    }
+}
+
+/**
+ * 홈 모양(설정 › 화면 › 홈 보기). [LIST] 는 지금 읽는 책과 `함께 읽는 책` 목록, [TWO_COLUMN] 은 목록을 두 칸으로,
+ * [SHELF] 는 표지 책장(앱 이름·퍼센트 없이 제목과 가는 진행 막대만). 셋 다 맨 위 책은 크게 둔다.
+ */
+enum class HomeLayout(val key: String, val labelRes: Int) {
+    LIST("list", R.string.home_layout_list),
+    TWO_COLUMN("two", R.string.home_layout_two),
+    SHELF("shelf", R.string.home_layout_shelf);
+
+    companion object {
+        fun of(key: String?) = entries.firstOrNull { it.key == key } ?: SHELF
+    }
+}
+
+/**
+ * 홈 화면 종류(설정 › 화면 › 홈 화면). [SHELF] 는 지금까지의 책 중심 홈(지금 읽는 책·함께 읽는 책·자주 쓰는 앱),
+ * [CALENDAR] 는 이번 달 달력과 자주 쓰는 앱 4열 격자를 먼저 보여 주는 홈이다.
+ */
+enum class HomeStyle(val key: String, val labelRes: Int) {
+    SHELF("shelf", R.string.home_style_shelf),
+    CALENDAR("calendar", R.string.home_style_calendar);
+
+    companion object {
+        fun of(key: String?) = entries.firstOrNull { it.key == key } ?: SHELF
     }
 }
