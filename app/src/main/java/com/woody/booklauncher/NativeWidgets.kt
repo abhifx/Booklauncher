@@ -486,14 +486,12 @@ object NativeWidgets {
     private const val WRAP = LinearLayout.LayoutParams.WRAP_CONTENT
 }
 
-/** White card with a thin ink border; no background drawable so Crema's bleach filter is not involved. */
+/**
+ * White rounded card for a built-in widget. Painted in [dispatchDraw] (no background drawable) so
+ * Crema's bleach filter is not involved and the card stands out from the grey canvas like the home cards.
+ */
 class CardFrame(context: Context) : LinearLayout(context) {
-    private val border = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        style = Paint.Style.STROKE
-        strokeWidth = context.dpf(1f)
-        color = Ui.BLACK
-    }
-    private val rect = RectF()
+    private val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Ui.CARD }
 
     init {
         orientation = VERTICAL
@@ -503,10 +501,10 @@ class CardFrame(context: Context) : LinearLayout(context) {
         isLongClickable = true
     }
 
-    override fun onDraw(canvas: Canvas) {
-        val i = border.strokeWidth / 2
-        rect.set(i, i, width - i, height - i)
-        canvas.drawRoundRect(rect, context.dpf(3f), context.dpf(3f), border)
+    override fun dispatchDraw(canvas: Canvas) {
+        val r = context.dpf(Ui.CARD_RADIUS_DP - 4)
+        canvas.drawRoundRect(0f, 0f, width.toFloat(), height.toFloat(), r, r, fill)
+        super.dispatchDraw(canvas)
     }
 }
 

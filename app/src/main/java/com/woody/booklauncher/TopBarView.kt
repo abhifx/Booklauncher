@@ -147,7 +147,7 @@ class TopBarView(context: Context, private val fixedFrame: Boolean = true, priva
     private val singleRow = logo == null &&
         context.resources.displayMetrics.widthPixels / context.resources.displayMetrics.density >= SINGLE_ROW_MIN_DP
     private val clockPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        typeface = Ui.regular
+        typeface = Ui.bold
         textSize = context.spf(CLOCK_SP)
         color = Ui.BLACK
         letterSpacing = -0.02f
@@ -155,7 +155,7 @@ class TopBarView(context: Context, private val fixedFrame: Boolean = true, priva
     private val statusPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         typeface = Ui.regular
         textSize = context.spf(STATUS_SP)
-        color = Ui.BLACK
+        color = Ui.GRAY
     }
     private val dotPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Ui.BLACK }
     private val ringPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {

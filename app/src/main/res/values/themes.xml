@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- 전자잉크용: 흰 바탕 검정 글자, 화면 전환 애니메이션 없음 -->
+    <!-- 전자잉크용: 옅은 회색 바탕 위 흰 카드, 화면 전환 애니메이션 없음 -->
     <style name="Theme.BookLauncher" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:windowBackground">@android:color/white</item>
+        <item name="android:windowBackground">@color/canvas</item>
         <item name="android:colorPrimary">#000000</item>
         <item name="android:colorPrimaryDark">#000000</item>
         <item name="android:colorAccent">#000000</item>
         <item name="android:textColorPrimary">#000000</item>
-        <item name="android:statusBarColor">#FFFFFF</item>
+        <item name="android:statusBarColor">@color/canvas</item>
         <item name="android:windowLightStatusBar">true</item>
-        <!-- 화면 아래 내비게이션 바가 있는 기기(LCD 안드로이드 13 등)에서 기본 검은 띠 대신 흰 바탕·어두운 단추 -->
-        <item name="android:navigationBarColor">#FFFFFF</item>
+        <!-- 화면 아래 내비게이션 바가 있는 기기(LCD 안드로이드 13 등)에서 기본 검은 띠 대신 옅은 회색 바탕·어두운 단추 -->
+        <item name="android:navigationBarColor">@color/canvas</item>
         <item name="android:windowLightNavigationBar">true</item>
         <item name="android:windowAnimationStyle">@null</item>
         <item name="android:windowDisablePreview">true</item>

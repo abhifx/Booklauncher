@@ -25,13 +25,12 @@ class CategoriesActivity : EinkActivity() {
             titleCount = text("", 21f, color = Ui.GRAY)
             addView(titleCount, lp(WRAP, WRAP).apply { marginStart = dp(14); topMargin = dp(6) })
         })
-        root.addView(hline(2))
         empty = text(getString(R.string.categories_empty), 18f, color = Ui.GRAY).apply {
             setPadding(dp(Ui.MARGIN), dp(40), dp(Ui.MARGIN), 0)
         }
         root.addView(empty)
         rows = PagedRows(this, rowDp(Ui.ROW_DP))
-        root.addView(rows, lp(MATCH, 0, 1f))
+        root.addView(softCard(0).apply { addView(rows, lp(MATCH, MATCH)) }, cardLp(weight = 1f, topDp = 8, bottomDp = 10))
         root.addView(hline(1, inset = false))
         val footer = FrameLayout(this)
         footer.addView(text(getString(R.string.category_new), 21f, Ui.bold).apply {

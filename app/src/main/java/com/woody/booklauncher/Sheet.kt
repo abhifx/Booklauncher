@@ -257,6 +257,7 @@ class Sheet(private val context: Context) {
         dialog.setOnDismissListener { open -= shown; onDismiss?.invoke() }
         dialog.setContentView(root)
         dialog.window?.apply {
+            setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
             setGravity(if (centered) Gravity.CENTER else Gravity.BOTTOM)
             val width = if (centered) centeredWidth() else ViewGroup.LayoutParams.MATCH_PARENT
             setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT)
@@ -285,13 +286,13 @@ class Sheet(private val context: Context) {
             dialog.dismiss(); action()
         }
         val root = c.vbox()
-        if (centered) {
-            // 가운데에 뜨면 아래가 가려지지 않는다. 위에 굵은 선 대신 둘레에 테두리.
-            root.background = GradientDrawable().apply { setColor(android.graphics.Color.WHITE); setStroke(c.dp(2), Ui.BLACK) }
-        } else {
-            Crema.reserveHiddenBottom(root)
-            root.addView(c.hline(2, inset = false))
+        // 부드러운 카드: 흰 둥근 판(아래에서 올라오면 위 모서리만). 창 배경은 투명하게 둔다.
+        val r = c.dpf(22)
+        root.background = GradientDrawable().apply {
+            setColor(android.graphics.Color.WHITE)
+            if (centered) cornerRadius = r else cornerRadii = floatArrayOf(r, r, r, r, 0f, 0f, 0f, 0f)
         }
+        if (!centered) Crema.reserveHiddenBottom(root)
         // 머리와 칸들을 한 묶음에 넣는다(정보 바탕을 칠할 때 도장이 넘친 자리까지 같은 바탕이게).
         val info = c.vbox()
         paper?.let { info.setBackgroundColor(it) }

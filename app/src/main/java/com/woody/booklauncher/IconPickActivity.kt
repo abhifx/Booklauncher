@@ -45,7 +45,7 @@ class IconPickActivity : EinkActivity() {
 
         val root = vbox()
         root.addView(titleRow(getString(R.string.change_icon)) { finish() })
-        root.addView(hline(2))
+
         root.addView(appRow(app, app.label, Ui.ROW_ICON_DP, Ui.ROW_SP, showIcon = true, right = resetView()), lp(MATCH, rowDp(Ui.ROW_DP)))
         root.addView(hline(1, Ui.DIVIDER))
 
@@ -74,7 +74,7 @@ class IconPickActivity : EinkActivity() {
                 setOnClickListener { show() }
             })
         })
-        root.addView(hline(2))
+
         status = text(getString(R.string.searching), 17f, color = Ui.GRAY).apply {
             setPadding(dp(Ui.MARGIN), dp(10), dp(Ui.MARGIN), dp(4))
         }
@@ -82,7 +82,7 @@ class IconPickActivity : EinkActivity() {
 
         val labelH = text("가", LABEL_SP).run { measure(0, 0); measuredHeight }
         rows = PagedRows(this, dp(ICON_DP + CELL_PAD_DP * 2 + LABEL_GAP_DP) + labelH, dividers = false)
-        root.addView(rows, lp(MATCH, 0, 1f))
+        root.addView(softCard(0).apply { addView(rows, lp(MATCH, MATCH)) }, cardLp(weight = 1f, topDp = 8, bottomDp = 10))
 
         root.addView(hline(1, inset = false))
         val footer = FrameLayout(this)

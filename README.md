@@ -4,21 +4,22 @@
 
 **An E Ink launcher for Android e-readers.** The book you're reading stays on Home, your shelf is a cover grid, and reading time, stats, widgets and apps are one tap away.
 
-BookLauncher is a fork of [Pebble Desk](https://github.com/hissinger/pebble-desk), rebuilt around a lower, more visual home screen: the current book with a `Continue reading` button and progress, a bookshelf-style `Also reading` grid with each book's app and progress, one row of favorites, and **All apps · Stats · Widgets · Mini apps · Settings** at the bottom (or as a left sidebar in landscape). A second home style, **Calendar**, keeps the current book at the top, then this month's calendar with reading days marked, then a four-column app grid; switch under Settings › Display › Home screen.
+BookLauncher is a fork of [Pebble Desk](https://github.com/hissinger/pebble-desk), rebuilt around a lower, more visual home screen: the current book with a `Continue reading` button and progress, a bookshelf-style `Also reading` grid, a compact reading-habit card, one row of favorites, and **All apps · Stats · Widgets · Mini apps · Settings** at the bottom (or as a left sidebar in landscape). Each part sits in its own white rounded card on a grey canvas that stays visible on e-ink. Swipe up from Home for Widgets. A second home style, **Calendar**, keeps the current book at the top, then this month's calendar with reading days marked, then a five-column app grid; switch under Settings › Display › Home screen.
 
-<p align="center"><img src="docs/screenshots/v2-home.png" width="340" alt="BookLauncher 2.1 home on HiBreak: the current book with Continue reading and progress, a bookshelf cover grid with app and progress under each book, one row of favorite apps, and the bottom bar with All apps, Stats, Widgets, Mini apps and Settings"></p>
+<p align="center"><img src="docs/screenshots/v3-home.png" width="340" alt="BookLauncher 3.0 home on HiBreak: separate white cards for the current book with Continue reading and progress, the Also reading cover grid, a compact reading-habit card, and favorite apps, on a grey canvas"></p>
 
-## What's in 2.5.0
+## What's in 3.0.0
 
-- **A second home, the Calendar** — switch under Settings › Display › Home screen. The current book sits in a hero card, this month's calendar marks the days you read (filled circle) and the days you hit your goal (ring), and your favorite apps sit in a compact grid. Landscape splits into calendar left, book and apps right.
-- **Games** — 2048, minesweeper and Sudoku, built for e-ink: no animation, tap or hold, best score and best time saved. Open them from Mini apps or from the Calendar home.
+- **Soft card home** — every part of Home is its own white rounded card on a grey canvas. The shade is chosen so cards stay clearly separated on a 16-step e-ink panel instead of blending into white.
+- **Shelf cards** — the current book, `Also reading`, reading habit and favorites are separate cards. `Also reading` ends after the covers; the compact reading-habit card below shows streak, today and this week.
+- **Widgets by swipe** — swipe up from either Home style to open Widgets, swipe down there to return. The widget desktop is now a grid of white rounded cards too.
+- **Calendar home** — the current book, this month's calendar with reading days (filled) and goal rings, then a five-column app grid. Landscape uses a compact book and favorites card so names fit.
+- **Games** — 2048, minesweeper and Sudoku, built for e-ink: no animation, tap or hold, best score and best time saved.
 - **Better on big screens** — 10-inch tablets keep text smaller and use two columns in portrait, so more fits on screen.
-- **The current book, on Home** — cover, title, author, reading app, a `Continue reading` button and a progress bar. Tap anywhere to open the book.
-- **Also reading as a cover grid** — the other books in a bookshelf-style grid (4 columns on narrow screens, 6 on the Pebble, 5 in landscape), with title, reading app and progress under each cover. Covers keep their size as you add books; the shelf pages instead. `See all` opens the full book list.
+- **Also reading as a cover grid** — the other books in a bookshelf-style grid, with title and a thin progress bar under each cover. Covers keep their size as you add books; the shelf pages instead. `See all` opens the full book list.
 - **One row of favorites** — 5 apps per page, in your own order. List or grid view. Long-press to rename, change the icon or remove.
-- **Bottom bar** — All apps, reading Stats, Widgets, Mini apps and Settings, with a little breathing room above the device edge. In landscape it becomes a left sidebar so the shelf can use the full width.
-- **Licorice-style desktop widgets** — clock and date, reading stats, continue reading, music, reading calendar, quote of the day, device status, weather, headlines, markets, recent books and the reading year. Add, remove and reorder cards from `Add widget`; Android widgets still get their own pages after them.
-- **A music card that works with audiobooks and TTS** — shows the real title, app and position, and controls the active media session directly instead of firing blind media keys. Notification access makes it reliable when several audio apps are alive; without it the card falls back to media keys.
+- **Licorice-style desktop widgets** — clock and date, reading stats, continue reading, music, reading calendar, quote of the day, device status, weather, headlines, markets, recent books and the reading year. Add, remove and reorder cards from `Add widget`; Android widgets get their own pages after them.
+- **A music card that works with audiobooks and TTS** — shows the real title, app and position, and controls the active media session directly instead of firing blind media keys.
 - **Mini apps** — a calculator, a notes pad and a countdown timer, built in and offline.
 - **Reading stats** — today's ring, streak, four-week calendar or graph, daily goal, and weekly/monthly/yearly totals.
 - **Made for E Ink** — no animation, pages instead of scrolling, monochrome first, optional color on color E Ink.
@@ -27,17 +28,17 @@ BookLauncher is a fork of [Pebble Desk](https://github.com/hissinger/pebble-desk
 
 | Home | Reading log | Widgets |
 |---|---|---|
-| <img src="docs/screenshots/v2-home.png" width="220"> | <img src="docs/screenshots/v1-reading.png" width="220"> | <img src="docs/screenshots/v2-widgets.png" width="220"> |
+| <img src="docs/screenshots/v3-home.png" width="220"> | <img src="docs/screenshots/v3-reading.png" width="220"> | <img src="docs/screenshots/v3-widgets.png" width="220"> |
 | **All apps** | **Mini apps** | **Settings** |
-| <img src="docs/screenshots/v1-apps.png" width="220"> | <img src="docs/screenshots/v2-mini-apps.png" width="220"> | <img src="docs/screenshots/v2-settings.png" width="220"> |
+| <img src="docs/screenshots/v3-apps.png" width="220"> | <img src="docs/screenshots/v3-mini-apps.png" width="220"> | <img src="docs/screenshots/v3-settings.png" width="220"> |
 
 | Calendar home | Games | Sudoku |
 |---|---|---|
-| <img src="docs/screenshots/v2.5-calendar.png" width="220"> | <img src="docs/screenshots/v2.5-games.png" width="220"> | <img src="docs/screenshots/v2.5-sudoku.png" width="220"> |
+| <img src="docs/screenshots/v3-calendar.png" width="220"> | <img src="docs/screenshots/v3-games.png" width="220"> | <img src="docs/screenshots/v3-sudoku.png" width="220"> |
 
-<p align="center"><img src="docs/screenshots/v2-home-landscape.png" width="720" alt="BookLauncher 2.1 landscape home: left sidebar with Mini apps, current book and Favorites cards, and a full-width Also reading shelf"></p>
+<p align="center"><img src="docs/screenshots/v3-home-landscape.png" width="720" alt="BookLauncher 3.0 landscape home: left sidebar, white cards for the current book and favorites, and a full-width Also reading card"></p>
 
-<p align="center"><img src="docs/screenshots/v2.5-calendar-landscape.png" width="720" alt="BookLauncher 2.5 calendar home in landscape: the month calendar on the left, the current book and favorite apps on the right"></p>
+<p align="center"><img src="docs/screenshots/v3-calendar-landscape.png" width="720" alt="BookLauncher 3.0 calendar home in landscape: the month calendar on the left, the current book and favorite apps on the right"></p>
 
 All screenshots were taken on a HiBreak.
 
@@ -70,7 +71,7 @@ NeoReader (BOOX), iReader (built-in) and AcousText are supported too. AcousText 
 
 ## Install
 
-1. Download `BookLauncher-2.5.0-release.apk` from [Releases](https://github.com/abhifx/Booklauncher/releases) and open it in a file manager on the device.
+1. Download `BookLauncher-3.0.0-release.apk` from [Releases](https://github.com/abhifx/Booklauncher/releases) and open it in a file manager on the device.
 2. Choose BookLauncher in Settings › Apps › `Default home app`.
 3. On first run, `Getting started` turns on the two core features: **Auto-add books** (Android Accessibility) and **Reading time** (Usage access). On Android 13+, an app installed from a file may need **Allow restricted settings** in its app info first.
 

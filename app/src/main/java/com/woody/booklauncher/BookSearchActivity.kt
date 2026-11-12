@@ -41,7 +41,6 @@ class BookSearchActivity : EinkActivity() {
 
         val root = vbox()
         root.addView(titleRow(getString(R.string.find_cover), Palette.Area.LIBRARY) { finish() })
-        root.addView(hline(2))
 
         // 제목 입력 줄: 박스 없이 아래 굵은 선만
         input = EditText(this).apply {
@@ -69,14 +68,14 @@ class BookSearchActivity : EinkActivity() {
                 setOnClickListener { search() }
             })
         })
-        root.addView(hline(2))
+
         status = text(getString(R.string.book_search_idle), 17f, color = Ui.GRAY, lines = 4).apply {
             setPadding(dp(Ui.MARGIN), dp(12), dp(Ui.MARGIN), dp(8))
         }
         root.addView(status)
 
         rows = PagedRows(this, coverH + dp(56))
-        root.addView(rows, lp(MATCH, 0, 1f))
+        root.addView(softCard(0).apply { addView(rows, lp(MATCH, MATCH)) }, cardLp(weight = 1f, topDp = 8, bottomDp = 10))
 
         root.addView(hline(1, inset = false))
         val footer = FrameLayout(this)
@@ -134,7 +133,7 @@ class BookSearchActivity : EinkActivity() {
             addView(vbox().apply {
                 val cover = ImageView(context).apply {
                     scaleType = ImageView.ScaleType.FIT_CENTER
-                    setBackgroundColor(0xFFEEEEEE.toInt())
+                    setBackgroundColor(Ui.TILE)
                 }
                 addView(cover, lp(fit.cellW, coverH))
                 loadThumb(cover, book.thumbUrl)

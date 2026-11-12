@@ -63,9 +63,8 @@ class ReadingActivity : EinkActivity() {
             titleBar = this
             fitTitleLink(this, link)
         })
-        root.addView(hline(2))
         body = vbox()
-        root.addView(body, lp(MATCH, 0, 1f))
+        root.addView(softCard(0).apply { addView(body, lp(MATCH, MATCH)) }, cardLp(weight = 1f, topDp = 8))
         // 가로면 달력과 그래프를 함께 둘지는 오른쪽 칸 폭으로 정한다(높이는 잴 필요 없다)
         if (wide) both = (resources.displayMetrics.widthPixels - summaryWidth()) / 2 - 2 * dp(Ui.MARGIN) >= dp(CAL_MIN_DP)
         checkRoom()
@@ -233,7 +232,7 @@ class ReadingActivity : EinkActivity() {
             // 쪽 표시가 작아 누르기 어려우므로 제목 줄 어디를 눌러도 넘긴다.
             page?.let { addView(it, lp(WRAP, WRAP)); setOnClickListener { _ -> it.performClick() } }
         }, lp(MATCH, titleH).apply { bottomMargin = dp(8) })
-        addView(hline(1, inset = false))
+        addView(hline(1, Ui.DIVIDER))
         addView(content, lp(MATCH, if (fill) 0 else WRAP, if (fill) 1f else 0f).apply { topMargin = dp(4) })
     }
 

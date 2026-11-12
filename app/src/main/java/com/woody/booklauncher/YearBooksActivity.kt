@@ -79,7 +79,6 @@ class YearBooksActivity : EinkActivity() {
             addView(yearPick, lp(WRAP, WRAP))
             titleBar = this
         })
-        root.addView(hline(2))
         empty = text(getString(R.string.year_books_empty), 18f, color = Ui.GRAY, lines = 3).apply {
             setPadding(dp(Ui.MARGIN), dp(40), dp(Ui.MARGIN), 0)
         }
@@ -96,7 +95,7 @@ class YearBooksActivity : EinkActivity() {
         val pages = FrameLayout(this)
         pages.addView(listRows, FrameLayout.LayoutParams(MATCH, MATCH))
         pages.addView(gridRows, FrameLayout.LayoutParams(MATCH, MATCH))
-        root.addView(pages, lp(MATCH, 0, 1f))
+        root.addView(softCard(0).apply { addView(pages, lp(MATCH, MATCH)) }, cardLp(weight = 1f, topDp = 8, bottomDp = 10))
 
         root.addView(hline(1, inset = false))
         val footer = FrameLayout(this)

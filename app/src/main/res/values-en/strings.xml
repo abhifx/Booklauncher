@@ -199,6 +199,7 @@
     <string name="see_all">See all</string>
     <string name="continue_reading">Continue reading</string>
     <string name="percent">%1$d%%</string>
+    <string name="percent_read">%1$d%% read</string>
     <string name="home_shelf_empty">Open more books and they line up here.</string>
     <string name="home_layout">Home layout</string>
     <string name="home_layout_list">Reading list</string>

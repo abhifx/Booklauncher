@@ -28,7 +28,6 @@ class FavoritesActivity : EinkActivity() {
             titleCount = text("", 21f, color = Ui.GRAY)
             addView(titleCount, lp(WRAP, WRAP).apply { marginStart = dp(14); topMargin = dp(6) })
         })
-        root.addView(hline(2))
         // 홈에서 보는 꼴(목록 / 격자). 설정 줄과 같은 모양.
         viewValue = text("", 20f, Ui.medium)
         fun settingRow(label: Int, value: TextView, onClick: () -> Unit) {
@@ -54,7 +53,7 @@ class FavoritesActivity : EinkActivity() {
         }
         root.addView(empty)
         rows = PagedRows(this, rowDp(Ui.ROW_DP))
-        root.addView(rows, lp(MATCH, 0, 1f))
+        root.addView(softCard(0).apply { addView(rows, lp(MATCH, MATCH)) }, cardLp(weight = 1f, topDp = 8, bottomDp = 10))
 
         root.addView(hline(1, inset = false))
         val footer = FrameLayout(this)

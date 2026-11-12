@@ -25,6 +25,7 @@ import android.view.ViewGroup
 import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.widget.LinearLayout
+import android.widget.FrameLayout
 import android.widget.TextView
 import kotlin.math.roundToInt
 
@@ -151,8 +152,22 @@ object Ui {
     const val LIGHT_GRAY = 0xFF888888.toInt()
     const val DIVIDER = 0xFFCCCCCC.toInt()
 
-    /** 좌우 여백 */
-    const val MARGIN = 40
+    /**
+     * 부드러운 카드 판(2.6.0): 바탕은 회색, 내용은 흰 둥근 카드에 담는다.
+     * 전자잉크는 16단계 회색이라 흰색(255)과 옅은 회색(#F0)을 같은 단계로 그려 카드가 보이지 않는다.
+     * 한 단계(약 17)보다 넉넉히 어둡게 잡아(#DE, 33 차이) 어떤 기기에서도 카드와 바탕이 갈리게 한다.
+     */
+    const val CANVAS = 0xFFDEDEDB.toInt()
+    const val CARD = Color.WHITE
+    /** 카드 안 아이콘 타일: 바탕과 같은 회색이면 카드 위에서도 한 단계 어둡게 보인다. */
+    const val TILE = CANVAS
+    const val CARD_RADIUS_DP = 22
+    /** 카드 안쪽 여백과 카드 사이 간격 */
+    const val CARD_PAD_DP = 16
+    const val CARD_GAP_DP = 12
+
+    /** 좌우 여백(카드 판에서는 카드 안쪽 여백과 함께 쓴다) */
+    const val MARGIN = 24
 
     /** 화면 맨 아래 줄(모든 앱 · 설정 · 페이지 점 등) 높이. 누르는 자리라 48dp 아래로 줄이지 않는다. */
     const val FOOTER_DP = 56
@@ -479,6 +494,82 @@ fun Context.hbox(): LinearLayout = LinearLayout(this).apply {
     orientation = LinearLayout.HORIZONTAL
     gravity = Gravity.CENTER_VERTICAL
 }
+
+/**
+ * 옅은 회색 바탕을 직접 칠하는 화면 바탕. 배경(background) 대신 그려 크레마가 앱을 바꿀 때 다시 거르지 않게 한다.
+ * 창 배경도 비우고([Activity] 화면은 setContentView 뒤 `window.setBackgroundDrawable(null)`).
+ */
+class CanvasLayout(context: Context) : LinearLayout(context) {
+    init {
+        orientation = VERTICAL
+        setWillNotDraw(false)
+    }
+
+    override fun dispatchDraw(canvas: Canvas) {
+        canvas.drawColor(Ui.CANVAS)
+        super.dispatchDraw(canvas)
+    }
+}
+
+fun Context.canvasPage(): LinearLayout = CanvasLayout(this)
+
+/** 자주 쓰는 앱 타일: 옅은 회색 둥근 사각형. 테두리 대신 면을 직접 그린다(크레마 명암 필터를 피한다). */
+class IconTile(context: Context, private val radiusDp: Int = 15, fillColor: Int = Ui.TILE) : FrameLayout(context) {
+    private val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = fillColor }
+
+    init {
+        setWillNotDraw(false)
+        isClickable = true
+    }
+
+    override fun dispatchDraw(canvas: Canvas) {
+        val r = context.dpf(radiusDp)
+        canvas.drawRoundRect(0f, 0f, width.toFloat(), height.toFloat(), r, r, fill)
+        super.dispatchDraw(canvas)
+    }
+}
+
+/**
+ * 흰 둥근 카드. 배경 대신 [dispatchDraw] 에서 직접 칠해 크레마의 명암 필터를 피한다.
+ * 안쪽 여백은 [softCard] 가 주고, 내용은 카드 모서리를 넘지 않게 배치한다.
+ */
+class SoftCard(context: Context, private val radiusDp: Int = Ui.CARD_RADIUS_DP) : LinearLayout(context) {
+    /** 카드 면 색(보통 흰색, 컬러 테마의 색면·안쪽 회색 판은 다른 색) */
+    var fillColor: Int = Ui.CARD
+        set(v) { field = v; invalidate() }
+    private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+
+    init {
+        orientation = VERTICAL
+        setWillNotDraw(false)
+    }
+
+    override fun dispatchDraw(canvas: Canvas) {
+        paint.color = fillColor
+        val r = context.dpf(radiusDp)
+        canvas.drawRoundRect(0f, 0f, width.toFloat(), height.toFloat(), r, r, paint)
+        super.dispatchDraw(canvas)
+    }
+}
+
+/** 내용을 담는 흰 카드. 안쪽 여백 [padDp] */
+fun Context.softCard(padDp: Int = Ui.CARD_PAD_DP, radiusDp: Int = Ui.CARD_RADIUS_DP): SoftCard =
+    SoftCard(this, radiusDp).apply {
+        setPadding(dp(padDp), dp(padDp), dp(padDp), dp(padDp))
+    }
+
+/** 카드 사이 간격을 준 카드 자리(화면 좌우 여백 [sideDp]) */
+fun Context.cardLp(weight: Float = 0f, sideDp: Int = Ui.CARD_GAP_DP, topDp: Int = 0, bottomDp: Int = 0): LinearLayout.LayoutParams =
+    LinearLayout.LayoutParams(
+        ViewGroup.LayoutParams.MATCH_PARENT,
+        if (weight > 0f) 0 else ViewGroup.LayoutParams.WRAP_CONTENT,
+        weight,
+    ).apply {
+        marginStart = dp(sideDp)
+        marginEnd = dp(sideDp)
+        topMargin = dp(topDp)
+        bottomMargin = dp(bottomDp)
+    }
 
 /** 폭 [widthPx] 에서 잰 높이(높이 제한 없이) */
 fun View.heightAt(widthPx: Int): Int {

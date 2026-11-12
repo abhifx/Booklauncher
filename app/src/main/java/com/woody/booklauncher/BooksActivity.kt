@@ -30,7 +30,6 @@ class BooksActivity : EinkActivity() {
             titleCount = text("", 21f, color = Ui.GRAY)
             addView(titleCount, lp(WRAP, WRAP).apply { marginStart = dp(14); topMargin = dp(6) })
         })
-        root.addView(hline(2))
 
         empty = vbox().apply {
             setPadding(dp(Ui.MARGIN), dp(56), dp(Ui.MARGIN), 0)
@@ -41,7 +40,7 @@ class BooksActivity : EinkActivity() {
         root.addView(empty)
         // 글자를 키우면 줄도 그만큼 높인다(두 줄 제목 아래 진행률이 잘리지 않게. 100% 아래로는 표지 때문에 그대로).
         rows = PagedRows(this, rowDp(ROW_DP * Ui.textGrow))
-        root.addView(rows, lp(MATCH, 0, 1f))
+        root.addView(softCard(0).apply { addView(rows, lp(MATCH, MATCH)) }, cardLp(weight = 1f, topDp = 8, bottomDp = 10))
 
         root.addView(hline(1, inset = false))
         val footer = FrameLayout(this)

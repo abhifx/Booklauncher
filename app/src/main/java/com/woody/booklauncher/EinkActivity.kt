@@ -112,6 +112,12 @@ abstract class EinkActivity : Activity() {
     protected open fun onSwipe(toLeft: Boolean): Boolean = false
 
     /**
+     * 위아래로 민 것. [up] 이면 손가락을 위로 올린 것. 화면을 넘기는 좌우 밀기와 겹치지 않게 따로 둔다.
+     * 기본은 아무것도 하지 않는다(홈은 위로 밀면 위젯, 위젯은 아래로 밀면 홈).
+     */
+    protected open fun onVerticalSwipe(up: Boolean): Boolean = false
+
+    /**
      * 페이지 버튼([PageKeys])을 눌렀을 때. [next] 면 다음 쪽. 넘길 목록이 있으면 true(키를 먹는다).
      * 기본은 밀기와 같은 목록. 넘기는 목록이 둘인 화면(홈)은 설정에서 고른 하나로.
      */
@@ -129,6 +135,12 @@ abstract class EinkActivity : Activity() {
                 val dx = ev.x - downX
                 val dy = ev.y - downY
                 if (abs(dx) > dp(70) && abs(dx) > 2 * abs(dy) && onSwipe(dx < 0)) {
+                    val cancel = MotionEvent.obtain(ev).apply { action = MotionEvent.ACTION_CANCEL }
+                    super.dispatchTouchEvent(cancel)
+                    cancel.recycle()
+                    return true
+                }
+                if (abs(dy) > dp(70) && abs(dy) > 2 * abs(dx) && onVerticalSwipe(dy < 0)) {
                     val cancel = MotionEvent.obtain(ev).apply { action = MotionEvent.ACTION_CANCEL }
                     super.dispatchTouchEvent(cancel)
                     cancel.recycle()

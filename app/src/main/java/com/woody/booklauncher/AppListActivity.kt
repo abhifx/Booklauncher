@@ -60,7 +60,6 @@ class AppListActivity : EinkActivity() {
             titleCount = text("", 21f, color = Ui.GRAY)
             addView(titleCount, lp(WRAP, WRAP).apply { marginStart = dp(14); topMargin = dp(6) })
         })
-        root.addView(hline(2))
         if (picking) {
             root.addView(text(getString(R.string.pick_reader_desc), 17f, color = Ui.GRAY, lines = 2).apply {
                 setPadding(dp(Ui.MARGIN), dp(14), dp(Ui.MARGIN), dp(4))
@@ -87,7 +86,7 @@ class AppListActivity : EinkActivity() {
             indexCol = IndexColumn(this).apply { gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL }
             body.addView(indexCol, lp(dp(48), MATCH).apply { marginEnd = dp(Ui.MARGIN - 18) })
         }
-        root.addView(body, lp(MATCH, 0, 1f))
+        root.addView(softCard(0).apply { addView(body, lp(MATCH, MATCH)) }, cardLp(weight = 1f, topDp = 8, bottomDp = 10))
 
         root.addView(hline(1, inset = false))
         val footer = FrameLayout(this)

@@ -33,7 +33,6 @@ class WatchLogActivity : EinkActivity() {
         super.onCreate(savedInstanceState)
         val root = vbox()
         root.addView(titleRow(getString(R.string.watch_log)) { finish() })
-        root.addView(hline(2))
         val body = vbox().apply { setPadding(dp(Ui.MARGIN), dp(8), dp(Ui.MARGIN), 0) }
         body.addView(text(getString(R.string.watch_log_hint), 15f, color = Ui.GRAY, lines = 2))
         summary = text("", 15f, Ui.bold, lines = 5).apply { setLineSpacing(0f, 1.15f) }
@@ -47,7 +46,7 @@ class WatchLogActivity : EinkActivity() {
         body.addView(hline(1, Ui.DIVIDER, inset = false).apply { (layoutParams as LinearLayout.LayoutParams).topMargin = dp(8) })
         rows = PagedRows(this, dp(ROW_DP), dividers = false)
         body.addView(rows, lp(MATCH, 0, 1f))
-        root.addView(body, lp(MATCH, 0, 1f))
+        root.addView(softCard(0).apply { addView(body, lp(MATCH, MATCH)) }, cardLp(weight = 1f, topDp = 8))
 
         root.addView(hline(1, inset = false))
         val footer = FrameLayout(this)

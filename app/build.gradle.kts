@@ -11,8 +11,8 @@ android {
         applicationId = "com.woody.booklauncher"
         minSdk = 28
         targetSdk = 34
-        versionCode = 250
-        versionName = "2.5.0"
+        versionCode = 300
+        versionName = "3.0.0"
     }
 
     buildTypes {

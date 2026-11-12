@@ -12,8 +12,8 @@ README 는 영어(`README.md`)와 한국어(`README.ko.md`) 두 벌이다. 하�
 
 ```bash
 export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
-./gradlew -q assembleRelease          # app/build/outputs/apk/release/BookLauncher-2.5.0-release.apk
-adb install -r app/build/outputs/apk/release/BookLauncher-2.5.0-release.apk </dev/null
+./gradlew -q assembleRelease          # app/build/outputs/apk/release/BookLauncher-3.0.0-release.apk
+adb install -r app/build/outputs/apk/release/BookLauncher-3.0.0-release.apk </dev/null
 ```
 
 - 릴리스는 R8 축소(약 740KB, 1.6.5 는 720KB·1.6.4 는 705KB·1.6.1 은 734KB·1.5.3 은 480KB. HTML 라이브러리 없이 YES24 검색 결과를 직접 읽는다. 릴리스만 Kotlin 널 검사 호출을 빼고(`-Xno-*-assertions`) `-repackageclasses`, 도장 그림은 16단계 투명도 4비트 PNG). dex 는 minSdk 28 이라 압축하지 않고 넣는다(설치 뒤 풀어 두지 않아 저장 공간·실행이 낫다). 덮어 설치하면 앱 데이터가 남는다.
@@ -44,12 +44,12 @@ adb install -r app/build/outputs/apk/release/BookLauncher-2.5.0-release.apk </de
 
 ## 기기 특성(크레마 페블)
 
-- 1dp = 1.875px(300dpi, 572×777dp). 모든 dp 값은 이 폭 기준이고, 다른 기기는 짧은 변이 572dp 가 되게 앱 밀도를 다시 정한다(`Ui.designDensityDpi`. 메이북 E6 는 320 → 300). 패널 맨 아래 약 8px 는 테두리에 가려 보이지 않는다 → `Crema.reserveHiddenBottom()` 으로 모든 화면·아래 메뉴의 그쪽을 비운다(가로로 돌리면 왼쪽·오른쪽, 회전 방향을 본다. 실기기 미확인). 홈만 좌우 여백이 20dp(`HOME_MARGIN_DP`, 다른 화면은 `Ui.MARGIN` 40dp)이고 책장 칸 사이는 6dp 다.
+- 1dp = 1.875px(300dpi, 572×777dp). 모든 dp 값은 이 폭 기준이고, 다른 기기는 짧은 변이 572dp 가 되게 앱 밀도를 다시 정한다(`Ui.designDensityDpi`. 메이북 E6 는 320 → 300). 패널 맨 아래 약 8px 는 테두리에 가려 보이지 않는다 → `Crema.reserveHiddenBottom()` 으로 모든 화면·아래 메뉴의 그쪽을 비운다(가로로 돌리면 왼쪽·오른쪽, 회전 방향을 본다. 실기기 미확인). 홈만 좌우 여백이 20dp(`HOME_MARGIN_DP`, 다른 화면의 카드 안은 `Ui.MARGIN` 24dp)이고 책장 칸 사이는 6dp 다. 화면 바탕은 옅은 회색(`Ui.CANVAS`·`@color/canvas`, `#DEDEDB`: 전자잉크 16단계에서도 흰 카드와 갈리게 33 어둡게)이고 본문은 흰 둥근 카드(`Ui.SoftCard`)에 담는다. 홈 책 자리는 지금 읽는 책·함께 읽는 책·자주 쓰는 앱을 각각 카드로 나눈다.
 - 연한 회색을 실제보다 어둡게 그린다(#e6 → 약 #c1). 아주 연한 회색은 디자인 값보다 밝게 잡는다(링 바탕 #f2).
   - 원인은 크레마 **화면 대비**(`Settings.System hq_contrast`, 기본 56): 앱 화면 전체를 밝기^(1/s) 로 어둡게 그리고(s = 1 − 대비×90/8000 = 0.37, SystemUI `EinkSettingsProvider`) ImageView 그림만 같은 만큼 다시 밝힌다(bleach).
   - 그래서 직접 그리는 표지는 `Crema.undoContrast` 로 미리 밝힌다(`Crema.contrastTone`). 검색 결과처럼 ImageView 에 넣는 그림은 밝히지 않는다(두 번 밝아짐).
 - 홈은 안드로이드 상단바를 숨기고 자체 상단(로고·시계·상태 줄)을 그린다. 상태 줄을 누르면 크레마 빠른 설정(`com.epd.drop_down` 브로드캐스트).
-- 크레마가 고친 안드로이드는 앱이 바뀔 때마다 모든 `ImageView` 와 배경 있는 뷰 묶음에 명암(bleach) 필터를 다시 걸고 다시 그린다. 그래서 그림은 `PictureView`(직접 그림)로 그리고, 홈의 흰 바탕은 창 배경 대신 직접 칠한다.
+- 크레마가 고친 안드로이드는 앱이 바뀔 때마다 모든 `ImageView` 와 배경 있는 뷰 묶음에 명암(bleach) 필터를 다시 걸고 다시 그린다. 그래서 그림은 `PictureView`(직접 그림)로 그리고, 홈의 옅은 회색 바탕과 카드 면은 창 배경 대신 직접 칠한다.
 - 화면 갱신(깜빡임)의 실제 횟수는 커널 로그 `ebc-dev: frame start` 로 센다. 그리기 횟수와 다르다(갱신 중 들어온 그리기는 합쳐진다).
 - 부팅: 홈이 directBootAware 라 시스템 임시 홈(FallbackHome) 없이 부팅 화면 직후 바로 뜬다. 잠금 해제 전에는 앱 목록·아이콘을 `MATCH_DIRECT_BOOT_AWARE|UNAWARE` 로 찾고, 지워진 앱 정리와 읽은 시간 계산은 잠금이 풀린 뒤에 한다. SD 카드가 꽂혀 있으면 부팅 몇 초 뒤 시스템 알림 때문에 한 번 더 깜빡인다(시스템 동작).
 - 잔상 제거 횟수는 `persist.vendor.fullmode_cnt`(리플렉션 SystemProperties). 로고는 크레마 런처(`com.wetao.cremalauncher`)의 리소스를 불러온다(상표 이미지를 앱에 넣지 않음).
@@ -58,8 +58,8 @@ adb install -r app/build/outputs/apk/release/BookLauncher-2.5.0-release.apk </de
 
 | 파일 | 역할 |
 |---|---|
-| HomeActivity | 홈: 상단 · (서가/달력 두 가지, `HomeStyle`) 서가는 책 자리(스켈레톤/지금 읽는 책 + `이어 읽기`·진행률 + 같은 크기 표지의 `함께 읽는 책` 격자, 책이 늘어도 표지 크기는 그대로·쪽만 늘어남) · 자주 쓰는 앱(고정 1줄) · 하단 줄(모든 앱 · 통계 · 위젯 · 미니 앱 · 설정 아이콘. 가로는 왼쪽 세로 줄). 달력은 `HomeCalendarView` |
-| WidgetsActivity / WidgetPickerActivity | ⑯ 위젯: Licorice-style built-in cards (Clock · Reading stats · Continue reading · Music · Calendar · Quote · Device · Weather · Recent books · This year) in a paged two-column grid, then `AppWidgetHost` Android widgets one per page. Long-press a card for move/remove/settings. Picker lists built-in cards first, then Android widgets. Order in `shared_prefs/widgets.xml` (`native`, `ids`). |
+| HomeActivity | 홈: 상단 · (서가/달력 두 가지, `HomeStyle`) 서가는 책 자리(스켈레톤/지금 읽는 책 + `이어 읽기`·진행률 + 같은 크기 표지의 `함께 읽는 책` 격자, 책이 늘어도 표지 크기는 그대로·쪽만 늘어남) · 자주 쓰는 앱(고정 1줄) · 하단 줄(모든 앱 · 통계 · 위젯 · 미니 앱 · 설정 아이콘. 가로는 왼쪽 세로 줄). 달력은 `HomeCalendarView`. 어느 쪽이든 위로 밀면 ⑯ 위젯을 연다. |
+| WidgetsActivity / WidgetPickerActivity | ⑯ 위젯: Home 에서 위로 밀면 열리고 위젯에서 아래로 밀면 홈으로(`EinkActivity.onVerticalSwipe`. 좌우 밀기는 쪽 넘김). Licorice-style built-in cards (Clock · Reading stats · Continue reading · Music · Calendar · Quote · Device · Weather · Recent books · This year) in a paged two-column grid of white rounded cards on the grey canvas, then `AppWidgetHost` Android widgets one per page inside a white card. Long-press a card for move/remove/settings. Picker lists built-in cards first, then Android widgets. Order in `shared_prefs/widgets.xml` (`native`, `ids`). |
 | NativeWidgets / Weather / Headlines / Stocks / Quotes | Card rendering and data (`WidgetData`), Open-Meteo weather by city (30-minute cache), Hacker News top three, one Yahoo Finance symbol, daily quote. |
 | Media / MediaWatchService | Reads the active `MediaSession` through a notification listener (`MediaWatchService`), falls back to `AudioManager` media keys. Used by the music card and its large control sheet. |
 | MiniAppsActivity / MiniStore | Built-in calculator, notes pad, countdown timer and a `게임` entry (notes JSON in `shared_prefs/mini.xml`). |

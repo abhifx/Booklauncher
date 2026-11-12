@@ -57,7 +57,6 @@ class SettingsActivity : EinkActivity() {
         }
         val titleRow = titleRow(title) { finish() }
         root.addView(titleRow)
-        root.addView(hline(2))
         if (paged) {
             // 한 화면에 다 들어가지 않아 쪽으로 나눈다. 쪽 표시 `‹ 1 / 2 ›` 는 제목 줄 오른쪽 끝(아래 줄이 없는 화면).
             // 제목 줄은 누르면 뒤로 가므로, 쪽 표시가 줄 높이·오른쪽 끝까지 받아 그 근처를 눌러도 뒤로 가지 않게 한다(한 쪽뿐이면 숨긴다).
@@ -74,11 +73,11 @@ class SettingsActivity : EinkActivity() {
                 guidePage.text = pageLabel(guide)
                 guidePage.visibility = if (guide.pageCount > 1) View.VISIBLE else View.GONE
             }
-            root.addView(guide, lp(MATCH, 0, 1f))
+            root.addView(softCard(0).apply { addView(guide, lp(MATCH, MATCH)) }, cardLp(weight = 1f, topDp = 8))
         } else {
             list = vbox()
             col = list
-            root.addView(list, lp(MATCH, 0, 1f))
+            root.addView(softCard(0).apply { addView(list, lp(MATCH, MATCH)) }, cardLp(weight = 1f, topDp = 8))
         }
         // 맨 아래 지금 판, 늘 보인다(업데이트 줄은 새 판이 있으면 새 판 번호를 보여 지금 판이 안 보인다)
         if (page == null) root.addView(text("BookLauncher ${appVersion()}", 15f, color = Ui.LIGHT_GRAY).apply {

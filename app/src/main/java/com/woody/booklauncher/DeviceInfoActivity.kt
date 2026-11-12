@@ -38,9 +38,8 @@ class DeviceInfoActivity : EinkActivity() {
         super.onCreate(savedInstanceState)
         val root = vbox()
         root.addView(titleRow(getString(R.string.device_info)) { finish() })
-        root.addView(hline(2))
         val list = vbox().apply { setPadding(dp(Ui.MARGIN), 0, dp(Ui.MARGIN), 0) }
-        root.addView(list, lp(MATCH, 0, 1f))
+        root.addView(softCard(0).apply { addView(list, lp(MATCH, MATCH)) }, cardLp(weight = 1f, topDp = 8, bottomDp = 10))
 
         list.addView(text(getString(R.string.device_photo_hint), 15f, color = Ui.GRAY),
             lp(MATCH, WRAP).apply { topMargin = dp(8) })

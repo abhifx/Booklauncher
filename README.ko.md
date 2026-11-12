@@ -4,21 +4,22 @@
 
 **이북리더기를 위한 전자잉크 런처.** 지금 읽는 책이 홈에 있고, 서가는 표지 격자로 보이며, 읽은 시간·통계·위젯·앱이 한 번의 누르기로 이어진다.
 
-[Pebble Desk](https://github.com/hissinger/pebble-desk)를 포크해 홈을 더 낮고 책 중심으로 바꿨습니다. 지금 읽는 책에는 `이어 읽기` 단추와 진행률, `함께 읽는 책`은 책마다 앱·진행률이 붙은 책장 격자, 자주 쓰는 앱은 한 줄, 아래에는 **모든 앱 · 통계 · 위젯 · 미니 앱 · 설정** 아이콘 줄(가로에서는 왼쪽 세로 줄)이 있습니다. 설정 › 화면 › `홈 화면`에서 **달력**을 고르면 지금 읽는 책을 맨 위에 두고, 그 아래 읽은 날이 표시되는 이번 달 달력과 자주 쓰는 앱 4열 타일이 이어지는 홈으로 바뀝니다.
+[Pebble Desk](https://github.com/hissinger/pebble-desk)를 포크해 홈을 더 낮고 책 중심으로 바꿨습니다. 지금 읽는 책에는 `이어 읽기` 단추와 진행률, `함께 읽는 책`은 책장 격자, 그 아래에는 작은 읽는 습관 카드, 자주 쓰는 앱은 한 줄, 아래에는 **모든 앱 · 통계 · 위젯 · 미니 앱 · 설정** 아이콘 줄(가로에서는 왼쪽 세로 줄)이 있습니다. 각 부분은 회색 바탕 위 흰 둥근 카드로 나뉘어 전자잉크에서도 또렷하게 보입니다. 홈에서 위로 밀면 위젯이 열립니다. 설정 › 화면 › `홈 화면`에서 **달력**을 고르면 지금 읽는 책을 맨 위에 두고, 그 아래 읽은 날이 표시되는 이번 달 달력과 자주 쓰는 앱 5열 타일이 이어지는 홈으로 바뀝니다.
 
-<p align="center"><img src="docs/screenshots/v2-home.png" width="340" alt="HiBreak의 BookLauncher 2.1 홈: 이어 읽기와 진행률이 있는 지금 읽는 책, 책마다 앱·진행률이 붙은 책장 격자, 자주 쓰는 앱 한 줄, 아래에 모든 앱·통계·위젯·미니 앱·설정 아이콘 줄"></p>
+<p align="center"><img src="docs/screenshots/v3-home.png" width="340" alt="HiBreak의 BookLauncher 3.0 홈: 지금 읽는 책, 함께 읽는 책, 작은 읽는 습관 카드, 자주 쓰는 앱이 회색 바탕 위 흰 카드로 나뉘어 있습니다"></p>
 
-## 2.5.0에 들어간 것
+## 3.0.0에 들어간 것
 
-- **홈이 두 가지** — 설정 › 화면 › 홈 화면에서 `서가`와 `달력`을 고릅니다. 달력 홈은 지금 읽는 책 hero, 읽은 날(검은 원)·목표 달성(링)이 표시되는 이번 달 달력, 자주 쓰는 앱 타일로 이어집니다. 가로 화면은 달력 왼쪽, 책·앱 오른쪽 두 칸입니다.
+- **부드러운 카드 홈** — 홈의 각 부분을 회색 바탕 위 흰 둥근 카드로 나눴습니다. 전자잉크의 16단계 회색에서도 카드와 바탕이 갈리도록 회색을 더 어둡게 잡았습니다.
+- **서가 카드** — 지금 읽는 책·함께 읽는 책·읽는 습관·자주 쓰는 앱이 각각 카드입니다. 함께 읽는 책은 표지까지만 두고, 그 아래 작은 읽는 습관 카드가 연속일·오늘·이번 주 읽은 시간을 보여 줍니다.
+- **밀어서 위젯** — 홈(서가·달력)에서 위로 밀면 위젯이 열리고, 위젯에서 아래로 밀면 홈으로 돌아옵니다. 위젯 화면도 흰 둥근 카드 격자로 그립니다.
+- **달력 홈** — 지금 읽는 책, 읽은 날(검은 원)·목표 달성(링)이 표시되는 이번 달 달력, 자주 쓰는 앱 타일이 이어집니다. 가로 화면은 달력 왼쪽, 책·앱 오른쪽 두 칸입니다.
 - **게임** — 2048·지뢰찾기·스도쿠. 애니메이션 없이 누르기·길게 누르기로 하고, 최고 점수·최단 시간을 남깁니다. 미니 앱이나 달력 홈에서 엽니다.
 - **큰 화면** — 10인치 태블릿은 글자를 덜 키우고 세로에서도 두 칸으로 그려 한 화면에 더 많이 봅니다.
-- **홈의 지금 읽는 책** — 표지·제목·저자·읽는 앱과 `이어 읽기` 단추, 진행률 막대. 누구를 눌러도 그 책의 앱이 열립니다.
-- **함께 읽는 책 표지 격자** — 나머지 책을 책장처럼 격자로(좁은 화면 4칸, 페블 6칸, 가로 5칸 × 2줄), 표지 아래에 제목·읽는 앱·진행률. 책이 늘어도 표지 크기는 그대로이고 쪽만 늘어납니다. `모두 보기`는 책 목록을 엽니다.
+- **함께 읽는 책 표지 격자** — 나머지 책을 책장처럼 격자로, 표지 아래에 제목과 가는 진행 막대만 둡니다. 책이 늘어도 표지 크기는 그대로이고 쪽만 늘어납니다. `모두 보기`는 책 목록을 엽니다.
 - **자주 쓰는 앱 한 줄** — 한 쪽에 5개. 직접 정한 순서, 목록·격자. 길게 눌러 이름·아이콘·빼기를 바꿉니다.
-- **하단 아이콘 줄** — 모든 앱 · 통계 · 위젯 · 미니 앱 · 설정. 기기 아래 테두리와 조금 띄웠습니다. 가로에서는 왼쪽 세로 줄이 되어 책장이 화면 폭을 다 씁니다.
 - **Licorice식 데스크톱 위젯** — 시계·날짜, 읽기 통계, 이어 읽기, 음악, 읽기 달력, 오늘의 문장, 기기 상태, 날씨, 헤드라인, 시세, 최근 책, 올해 읽기. `위젯 추가`에서 넣고 빼고 순서를 바꿉니다. 안드로이드 위젯은 그 뒤 쪽에 그대로 붙습니다.
-- **오디오북·TTS에서도 되는 음악 카드** — 실제 제목·앱·재생 위치를 보여 주고, 미디어 키를 눈감고 보내는 대신 지금 재생 중인 미디어 세션을 직접 조절합니다. 알림 접근을 허용하면 소리 앱이 여럿 떠 있어도 확실하고, 허용하지 않으면 미디어 키로 동작합니다.
+- **오디오북·TTS에서도 되는 음악 카드** — 실제 제목·앱·재생 위치를 보여 주고, 지금 재생 중인 미디어 세션을 직접 조절합니다.
 - **미니 앱** — 계산기, 메모, 타이머를 앱 안에서 오프라인으로 씁니다.
 - **독서 통계** — 오늘 링, 연속일, 4주 달력·그래프, 하루 목표, 주·월·해 합계.
 - **전자잉크에 맞춤** — 애니메이션 없음, 스크롤 대신 쪽, 기본 흑백, 컬러 전자잉크에서는 색.
@@ -27,17 +28,17 @@
 
 | 홈 | 독서 기록 | 위젯 |
 |---|---|---|
-| <img src="docs/screenshots/v2-home.png" width="220"> | <img src="docs/screenshots/v1-reading.png" width="220"> | <img src="docs/screenshots/v2-widgets.png" width="220"> |
+| <img src="docs/screenshots/v3-home.png" width="220"> | <img src="docs/screenshots/v3-reading.png" width="220"> | <img src="docs/screenshots/v3-widgets.png" width="220"> |
 | **모든 앱** | **미니 앱** | **설정** |
-| <img src="docs/screenshots/v1-apps.png" width="220"> | <img src="docs/screenshots/v2-mini-apps.png" width="220"> | <img src="docs/screenshots/v2-settings.png" width="220"> |
+| <img src="docs/screenshots/v3-apps.png" width="220"> | <img src="docs/screenshots/v3-mini-apps.png" width="220"> | <img src="docs/screenshots/v3-settings.png" width="220"> |
 
 | 달력 홈 | 게임 | 스도쿠 |
 |---|---|---|
-| <img src="docs/screenshots/v2.5-calendar.png" width="220"> | <img src="docs/screenshots/v2.5-games.png" width="220"> | <img src="docs/screenshots/v2.5-sudoku.png" width="220"> |
+| <img src="docs/screenshots/v3-calendar.png" width="220"> | <img src="docs/screenshots/v3-games.png" width="220"> | <img src="docs/screenshots/v3-sudoku.png" width="220"> |
 
-<p align="center"><img src="docs/screenshots/v2-home-landscape.png" width="720" alt="BookLauncher 2.1 가로 홈: 미니 앱이 들어간 왼쪽 세로 단추 줄, 지금 읽는 책·자주 쓰는 앱 카드, 화면 폭 전체의 함께 읽는 책 격자"></p>
+<p align="center"><img src="docs/screenshots/v3-home-landscape.png" width="720" alt="BookLauncher 3.0 가로 홈: 왼쪽 세로 단추 줄, 지금 읽는 책·자주 쓰는 앱 카드, 화면 폭 전체의 함께 읽는 책 카드"></p>
 
-<p align="center"><img src="docs/screenshots/v2.5-calendar-landscape.png" width="720" alt="BookLauncher 2.5 가로 달력 홈: 왼쪽에 이번 달 달력, 오른쪽에 지금 읽는 책과 자주 쓰는 앱"></p>
+<p align="center"><img src="docs/screenshots/v3-calendar-landscape.png" width="720" alt="BookLauncher 3.0 가로 달력 홈: 왼쪽에 이번 달 달력, 오른쪽에 지금 읽는 책과 자주 쓰는 앱"></p>
 
 모든 화면은 HiBreak에서 찍었습니다.
 
@@ -70,7 +71,7 @@
 
 ## 설치
 
-1. [Releases](https://github.com/abhifx/Booklauncher/releases)에서 `BookLauncher-2.5.0-release.apk`를 받아 기기의 파일 관리자에서 엽니다.
+1. [Releases](https://github.com/abhifx/Booklauncher/releases)에서 `BookLauncher-3.0.0-release.apk`를 받아 기기의 파일 관리자에서 엽니다.
 2. 설정 › 앱 관리 › `기본 홈 앱`에서 BookLauncher를 고릅니다.
 3. 처음 실행하면 `시작하기`에서 **읽는 책 자동 추가**(접근성)와 **오늘 읽은 시간**(사용 기록 액세스)을 켭니다. 안드로이드 13+에서 파일로 설치한 앱은 앱 정보의 **제한된 설정 허용**이 필요할 수 있습니다.
 

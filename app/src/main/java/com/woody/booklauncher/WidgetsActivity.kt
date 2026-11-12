@@ -131,8 +131,10 @@ class WidgetsActivity : EinkActivity() {
             titleCount = text("", 21f, color = Ui.GRAY)
             addView(titleCount, lp(WRAP, WRAP).apply { marginStart = dp(14); topMargin = dp(6) })
         })
-        root.addView(hline(2))
-        body = FrameLayout(this)
+        // 카드는 책 한 장씩(각 위젯 카드) 흰 둥근 면으로 그리고, 그 사이로 회색 바탕이 보이게 한다.
+        body = FrameLayout(this).apply {
+            setPadding(dp(Ui.CARD_GAP_DP), dp(8), dp(Ui.CARD_GAP_DP), dp(4))
+        }
         root.addView(body, lp(MATCH, 0, 1f))
         root.addView(hline(1, inset = false))
 
@@ -171,6 +173,17 @@ class WidgetsActivity : EinkActivity() {
     override fun onSwipe(toLeft: Boolean): Boolean {
         if (pageCount <= 1) return false
         turn(if (toLeft) 1 else -1)
+        return true
+    }
+
+    /**
+     * 위젯 화면에서 아래로 밀면 홈으로 돌아간다(홈에서 위로 민 것의 반대). 안드로이드 위젯 쪽은
+     * 위젯이 스크롤·누름을 받을 수 있어 그대로 두고, 기본 카드 쪽에서만 닫는다.
+     */
+    override fun onVerticalSwipe(up: Boolean): Boolean {
+        if (up) return false
+        if (ids.isNotEmpty() && index >= nativePages.size) return false
+        finish()
         return true
     }
 
@@ -234,14 +247,16 @@ class WidgetsActivity : EinkActivity() {
         return rows.chunked(rowsPerPage).map { it.flatten() }
     }
 
-    private fun rowsPerPage(): Int {
-        val h = body.height.takeIf { it > 0 } ?: (resources.displayMetrics.heightPixels - dp(150))
-        return (h / dp(150)).coerceIn(2, 3)
-    }
+    private fun rowsPerPage(): Int = (pageHeight() / dp(150)).coerceIn(2, 3)
+
+    /** 카드가 들어갈 높이(화면 바탕 여백은 뺀다). 아직 재기 전이면 화면 높이로 어림한다. */
+    private fun pageHeight(): Int =
+        (body.height - body.paddingTop - body.paddingBottom).takeIf { it > 0 }
+            ?: (resources.displayMetrics.heightPixels - dp(150))
 
     private fun nativePage(widgets: List<NativeWidget>): View {
         val column = vbox()
-        val gap = dp(8)
+        val gap = dp(Ui.CARD_GAP_DP)
         val rows = mutableListOf<List<NativeWidget>>()
         var i = 0
         while (i < widgets.size) {
@@ -255,7 +270,7 @@ class WidgetsActivity : EinkActivity() {
                 i += 2
             }
         }
-        val height = body.height.takeIf { it > 0 } ?: (resources.displayMetrics.heightPixels - dp(150))
+        val height = pageHeight()
         val rowH = ((height - gap * (rows.size - 1)) / rows.size.coerceAtLeast(1))
             .coerceIn(dp(140), dp(240))
         // A short last page (one wide card, for example) sits in the middle instead
@@ -282,8 +297,7 @@ class WidgetsActivity : EinkActivity() {
         return column
     }
 
-    private fun emptyPage(): View = vbox().apply {
-        setPadding(dp(Ui.MARGIN), dp(24), dp(Ui.MARGIN), dp(12))
+    private fun emptyPage(): View = softCard().apply {
         addView(text(getString(R.string.widget_none), 22f, Ui.bold))
         addView(
             text(getString(R.string.widget_none_desc), 15f, color = Ui.GRAY, lines = 4),
@@ -419,33 +433,38 @@ class WidgetsActivity : EinkActivity() {
 
     // ---- Android widgets ----------------------------------------------------
 
-    private fun widgetPage(id: Int, info: AppWidgetProviderInfo): View = vbox().apply {
-        setPadding(dp(Ui.MARGIN), dp(16), dp(Ui.MARGIN), dp(12))
+    private fun widgetPage(id: Int, info: AppWidgetProviderInfo): View {
         val label = runCatching { info.loadLabel(packageManager).toString() }.getOrDefault(info.provider.shortClassName)
-        addView(hbox().apply {
-            addView(text(label, 20f, Ui.bold), lp(0, WRAP, 1f))
-            addView(text(getString(R.string.widget_remove), 15f, color = Ui.GRAY).apply {
-                setPadding(dp(16), dp(4), 0, dp(4))
-                setOnClickListener { confirmRemove(id, label) }
-            })
-        }, lp(MATCH, WRAP))
-        addView(hline(1), lp(MATCH, WRAP).apply { topMargin = dp(8) })
-        val frame = FrameLayout(this@WidgetsActivity).apply {
-            setPadding(dp(2), dp(12), dp(2), dp(2))
+        return softCard(0).apply {
+            val page = vbox().apply {
+                setPadding(dp(16), dp(14), dp(16), dp(12))
+                addView(hbox().apply {
+                    addView(text(label, 20f, Ui.bold), lp(0, WRAP, 1f))
+                    addView(text(getString(R.string.widget_remove), 15f, color = Ui.GRAY).apply {
+                        setPadding(dp(16), dp(4), 0, dp(4))
+                        setOnClickListener { confirmRemove(id, label) }
+                    })
+                }, lp(MATCH, WRAP))
+                addView(hline(1), lp(MATCH, WRAP).apply { topMargin = dp(8) })
+                val frame = FrameLayout(this@WidgetsActivity).apply {
+                    setPadding(dp(2), dp(12), dp(2), dp(2))
+                    setOnLongClickListener { confirmRemove(id, label); true }
+                }
+                val view: AppWidgetHostView? = runCatching { host.createView(this@WidgetsActivity, id, info) }.getOrNull()
+                if (view == null) {
+                    frame.addView(text(getString(R.string.widget_add_failed), 17f, color = Ui.GRAY, lines = 3).apply {
+                        setPadding(dp(8), dp(20), dp(8), 0)
+                    })
+                } else {
+                    view.setAppWidget(id, info)
+                    frame.addView(view, FrameLayout.LayoutParams(MATCH, MATCH))
+                    view.post { resize(view, frame) }
+                }
+                addView(frame, lp(MATCH, 0, 1f))
+            }
+            addView(page, lp(MATCH, MATCH))
             setOnLongClickListener { confirmRemove(id, label); true }
         }
-        val view: AppWidgetHostView? = runCatching { host.createView(this@WidgetsActivity, id, info) }.getOrNull()
-        if (view == null) {
-            frame.addView(text(getString(R.string.widget_add_failed), 17f, color = Ui.GRAY, lines = 3).apply {
-                setPadding(dp(8), dp(20), dp(8), 0)
-            })
-        } else {
-            view.setAppWidget(id, info)
-            frame.addView(view, FrameLayout.LayoutParams(MATCH, MATCH))
-            view.post { resize(view, frame) }
-        }
-        addView(frame, lp(MATCH, 0, 1f))
-        setOnLongClickListener { confirmRemove(id, label); true }
     }
 
     private fun resize(view: AppWidgetHostView, frame: FrameLayout) {

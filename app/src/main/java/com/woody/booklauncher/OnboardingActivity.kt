@@ -57,9 +57,8 @@ class OnboardingActivity : EinkActivity() {
             setLineSpacing(0f, 1.2f)
             setPadding(dp(Ui.MARGIN), dp(8), dp(Ui.MARGIN), dp(14))
         })
-        root.addView(hline(2))
         content = FrameLayout(this)
-        root.addView(content, lp(MATCH, 0, 1f))
+        root.addView(softCard(0).apply { addView(content, lp(MATCH, MATCH)) }, cardLp(weight = 1f, topDp = 8))
         // 높이가 정해지면(보통 처음 한 번) 이번 그리기를 건너뛰고 그 높이에 맞춰 채운 뒤 그린다(홈 책 자리와 같다. 빈 화면을 한 번 그리지 않는다).
         content.viewTreeObserver.addOnPreDrawListener {
             if (content.height == available) true else { available = content.height; shownState = null; render(); false }
