@@ -526,7 +526,8 @@ class IconTile(context: Context, private val radiusDp: Int = 15, fillColor: Int 
 
     init {
         setWillNotDraw(false)
-        isClickable = true
+        // 누르기는 타일을 감싼 칸(아이콘+이름)이 받는다. 여기서 누르기를 받으면 타일을 눌렀을 때
+        // 그 아래 칸의 클릭이 오지 않아 아무 일도 일어나지 않는다(3.0.0 자주 쓰는 앱).
     }
 
     override fun dispatchDraw(canvas: Canvas) {
