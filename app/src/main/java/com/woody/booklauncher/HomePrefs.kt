@@ -173,6 +173,11 @@ class HomePrefs(context: Context) {
         get() = homeStyle(sp)
         set(v) = sp.edit().putString(KEY_HOME_STYLE, v.key).apply()
 
+    /** 홈 배경 사진의 진하기(%): [WALLPAPER_STRENGTHS] 중 하나, 처음 30. 0 이면 사진이 있어도 바탕색([Wallpaper]). */
+    var wallpaperStrength: Int
+        get() = sp.getInt(KEY_WALLPAPER, WALLPAPER_DEFAULT).takeIf { it in WALLPAPER_STRENGTHS } ?: WALLPAPER_DEFAULT
+        set(v) = sp.edit().putInt(KEY_WALLPAPER, v).apply()
+
     /** 독서 기록의 4주를 날마다 막대그래프로. false 면 링 달력 */
     var readingGraph: Boolean
         get() = sp.getBoolean("reading_graph", false)
@@ -325,10 +330,14 @@ class HomePrefs(context: Context) {
         private const val KEY_LEGACY_PALETTE = "palette"
         private const val KEY_ICON_PACK = "icon_pack"
         private const val KEY_ICON_OVERRIDES = "icon_overrides"
+        private const val KEY_WALLPAPER = "wallpaper_strength"
+        private const val WALLPAPER_DEFAULT = 30
 
         /** 설정 › 글자 · 간격의 단계(%): 글자 크기는 70~150(기기 글꼴 크기에 곱한다), 줄 간격은 80~150, 10% 씩 */
         val TEXT_SCALES = (70..150 step 10).toList()
         val ROW_SCALES = (80..150 step 10).toList()
+        /** 설정 › 배경 사진의 진하기 단계(%): 0~100, 10% 씩 */
+        val WALLPAPER_STRENGTHS = (0..100 step 10).toList()
 
         private fun percent(sp: android.content.SharedPreferences, key: String, steps: List<Int>) =
             sp.getInt(key, 100).takeIf { it in steps } ?: 100

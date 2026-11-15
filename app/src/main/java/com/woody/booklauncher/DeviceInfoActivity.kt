@@ -15,6 +15,8 @@ import android.view.KeyEvent
 import android.widget.LinearLayout
 import android.widget.TextView
 import java.text.SimpleDateFormat
+import java.time.YearMonth
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.roundToInt
 
@@ -71,7 +73,11 @@ class DeviceInfoActivity : EinkActivity() {
             "${Build.MODEL} (${Build.DEVICE})", Build.MANUFACTURER, Build.BRAND,
             "${getString(R.string.device_android)} ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})",
             kind, "BookLauncher ${appVersion()}", screen, Build.DISPLAY,
-        ).joinToString(" · "), 14f, lines = 4).apply { setLineSpacing(0f, 1.15f) })
+        ).joinToString(" · "), 14f, lines = 4).apply {
+            setLineSpacing(0f, 1.15f)
+            // 숨은 메뉴: 길게 누르면 달마다 읽은 시간 지우기(문의가 오면 안내한다)
+            setOnLongClickListener { dropTimeSheet(); true }
+        })
 
         // 기기마다 다른 동작을 가르는 시스템 속성·설정 값: 이미 아는 키(크레마·메이북)와 이름으로 찾은 기기 고유 값 중 있는 것만.
         section(list, R.string.device_section_values)
@@ -134,6 +140,31 @@ class DeviceInfoActivity : EinkActivity() {
             result.text = getString(R.string.device_system_back, name, ((SystemClock.elapsedRealtime() - at) / 1000).toInt())
             opened = null
         }
+    }
+
+    /**
+     * 읽은 시간 지우기(기기 정보 첫 줄을 길게 눌러 여는 숨은 메뉴): 저장해 둔 읽은 시간이 있는 달(최근 달부터)과 그 시간, 고르면 확인 뒤
+     * 그달 시간을 책에 붙은 것까지 모두 지운다([ReadingLog.dropMonth]). 자동 추가를 켜지 않아 어떤 책인지 모르는 시간은 책 기록에서 지울 수 없어서
+     * (사용 기록 액세스를 잠깐 켜면 지난 7일이 그렇게 들어온다). 지운 뒤 목록을 다시 띄운다.
+     */
+    private fun dropTimeSheet() {
+        // 권한이 있으면 먼저 세어 아직 저장하지 않은 지난날까지 저장해 둔다(지운 뒤 그날을 다시 세어 채우지 않게)
+        ReadingLog.days(this, ReadingLog.readerPackages(this))
+        val months = ReadingLog.savedMonths(this).toSortedMap(reverseOrder())
+        val fmt = DateTimeFormatter.ofPattern(getString(R.string.recap_month_year_fmt), resources.configuration.locales[0])
+        val sheet = Sheet(this).header(getString(R.string.drop_time_title),
+            getString(if (months.isEmpty()) R.string.drop_time_none else R.string.drop_time_hint))
+        months.forEach { (month, ms) ->
+            sheet.item(month.format(fmt), right = duration(ms)) {
+                val today = if (month == YearMonth.now() && ReadingLog.hasAccess(this)) " " + getString(R.string.drop_time_today) else ""
+                confirm(getString(R.string.drop_time_confirm_title, month.format(fmt)), getString(R.string.drop_time_confirm, duration(ms)) + today,
+                    getString(R.string.drop_time_action)) {
+                    ReadingLog.dropMonth(this, month)
+                    dropTimeSheet()
+                }
+            }
+        }
+        sheet.show()
     }
 
     /** [intent] 를 열고 연 화면 이름(`Settings$AppUsageAccessSettingsActivity` → `AppUsageAccessSettings`)을 기억한다. 받는 화면이 없거나 열지 못하면 바로 쓴다. */

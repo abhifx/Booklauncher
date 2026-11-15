@@ -5,6 +5,7 @@ import android.os.Build
 import com.woody.booklauncher.readers.Acoustext
 import com.woody.booklauncher.readers.Aladin
 import com.woody.booklauncher.readers.BookFusion
+import com.woody.booklauncher.readers.Bookcube
 import com.woody.booklauncher.readers.Bookers
 import com.woody.booklauncher.readers.Bookers2
 import com.woody.booklauncher.readers.CherieViewer
@@ -25,6 +26,7 @@ import com.woody.booklauncher.readers.KyoboLibrary
 import com.woody.booklauncher.readers.Libby
 import com.woody.booklauncher.readers.Librera
 import com.woody.booklauncher.readers.LibreraPro
+import com.woody.booklauncher.readers.LibreraX
 import com.woody.booklauncher.readers.Mihon
 import com.woody.booklauncher.readers.Millie
 import com.woody.booklauncher.readers.MillieMobile
@@ -222,6 +224,11 @@ internal object ReaderGuide {
             bookFiles = R.string.guide_files_librera, note = R.string.guide_note_librera,
             coverBefore11 = Field(R.string.guide_added_book_files, R.string.guide_n_librera_cover_files),
         )),
+        App(listOf(R.string.guide_librerax), listOf(LibreraX), Info(
+            emptyList(),
+            cover = YES, title = YES, author = YES, progress = YES, due = OWN_FILE,
+            appCover = true,
+        )),
         App(listOf(R.string.guide_acoustext), listOf(Acoustext), Info(
             emptyList(),
             cover = YES, title = YES, author = NO, progress = YES, due = NO,
@@ -234,6 +241,12 @@ internal object ReaderGuide {
         App(listOf(R.string.guide_eco), listOf(EcoViewer), Info(
             emptyList(),
             cover = YES, title = YES, author = YES, progress = YES, due = YES, note = R.string.guide_note_eco,
+        )),
+        App(listOf(R.string.guide_bookcube), listOf(Bookcube), Info(
+            listOf(R.string.guide_t_bookcube_list, R.string.guide_t_bookcube_bottom),
+            cover = yes(R.string.guide_n_bookcube_cover), title = yes(R.string.guide_n_bookcube_title),
+            author = Field(R.string.guide_added_bookcube_list), progress = yes(R.string.guide_n_bookcube_pdf), due = Field(R.string.guide_added_bookcube_list),
+            note = R.string.guide_note_bookcube,
         )),
     )
 }

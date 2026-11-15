@@ -29,6 +29,13 @@ import java.security.MessageDigest
 object Update {
     // 포크의 릴리스 저장소. GitHub 에 이 이름으로 저장소·릴리스를 만들면 앱 안 업데이트가 동작한다.
     private const val LATEST = "https://api.github.com/repos/abhifx/Booklauncher/releases/latest"
+    /** API 를 쓰지 않는 최신 릴리스 주소: `…/releases/tag/v1.5.1` 로 넘겨 준다(API 요청 한도와 상관없다, [latestTag]) */
+    private const val LATEST_PAGE = "https://github.com/abhifx/Booklauncher/releases/latest"
+    /**
+     * 마지막으로 받은 릴리스 정보(API 응답 그대로). API 요청 한도가 찼을 때 판이 같으면 이것을 쓴다.
+     * (ETag 로 묻는 것은 로그인하지 않으면 304 여도 한도를 쓰므로 하지 않는다)
+     */
+    private const val KEY_BODY = "body"
     /** 설정을 열 때 이보다 오래됐으면 다시 확인한다(누르면 언제든 다시). */
     private const val RECHECK_MS = 6 * 60 * 60 * 1000L
     /** 받는 중 창을 이만큼은 보인다(금방 받아도 무슨 일이 있었는지 알 수 있게) */
@@ -62,6 +69,11 @@ object Update {
         object Offline : State()
         /** GitHub 이 응답하지 않았다(오류·시간 초과·알 수 없는 응답). 설정을 열 때마다 다시 확인한다. */
         object Failed : State()
+        /**
+         * GitHub API 의 요청 한도(로그인 없이 같은 공인 IP 에서 시간당 60번)가 찼고, 마지막으로 받아 둔 릴리스가 지금 최신 판이 아니다.
+         * [until] 은 한도가 다시 차는 때(벽시계 ms, 모르면 0). 설정을 열 때마다 다시 확인한다.
+         */
+        class Limited(val until: Long) : State()
     }
 
     @Volatile var state: State = State.Unknown
@@ -155,13 +167,20 @@ object Update {
         if (!online(context)) return set(State.Offline)
         askedAt = SystemClock.elapsedRealtime()
         set(State.Checking)
-        Bg.run({ latest() }) { r ->
+        val app = context.applicationContext
+        Bg.run({ latest(app) }) { r ->
             if (gen != generation) return@run
             checkedAt = SystemClock.elapsedRealtime()
             set(r.fold(
                 { if (newer(it.version, current)) State.Available(it) else State.Latest },
                 // 이름을 못 찾거나 연결하지 못하면 인터넷이 안 되는 것(와이파이만 켜져 있고 바깥으로 못 나가는 때)
-                { e -> if (e is UnknownHostException || e is ConnectException || e is NoRouteToHostException) State.Offline else State.Failed },
+                { e ->
+                    when (e) {
+                        is UnknownHostException, is ConnectException, is NoRouteToHostException -> State.Offline
+                        is RateLimited -> State.Limited(e.until)
+                        else -> State.Failed
+                    }
+                },
             ))
         }
     }
@@ -212,9 +231,42 @@ object Update {
         return false
     }
 
-    /** 최신 릴리스(태그 `v1.5.1`, 자산 `BookLauncher-1.5.1-release.apk`). 네트워크를 쓰므로 백그라운드에서. */
-    private fun latest(): Release {
-        val json = JSONObject(String(open(LATEST).use { readLimited(it.inputStream, MAX_JSON_BYTES) }, Charsets.UTF_8))
+    /**
+     * 최신 릴리스(태그 `v1.5.1`, 자산 `BookLauncher-1.5.1-release.apk`). 네트워크를 쓰므로 백그라운드에서.
+     * 받은 응답은 릴리스로 읽히면 파일에 두고(읽히지 않는 응답이 둔 것을 덮지 않게), API 요청 한도가 찼으면 API 를 쓰지 않는 주소로 최신 판 번호만 보고, 둔 응답이 그 판이면 그것을 쓴다(아니면 [RateLimited]).
+     */
+    private fun latest(context: Context): Release {
+        val prefs = prefs(context)
+        val body = try {
+            String(open(LATEST).use { readLimited(it.inputStream, MAX_JSON_BYTES) }, Charsets.UTF_8)
+        } catch (e: RateLimited) {
+            val cached = prefs.getString(KEY_BODY, null)?.let { runCatching { release(it) }.getOrNull() }
+            if (cached == null || runCatching { latestTag() }.getOrNull() != cached.version) throw e
+            return cached
+        }
+        return release(body).also { prefs.edit().putString(KEY_BODY, body).apply() }
+    }
+
+    /** API 를 쓰지 않고 최신 판 번호만: `github.com/…/releases/latest` 가 넘겨 주는 주소 `…/releases/tag/v1.5.1` 에서 */
+    private fun latestTag(): String? {
+        val conn = connect(LATEST_PAGE)
+        try {
+            conn.instanceFollowRedirects = false
+            conn.requestMethod = "HEAD"
+            if (conn.responseCode !in 301..308) return null
+            val tag = conn.getHeaderField("Location")?.substringAfterLast("/releases/tag/", "") ?: return null
+            return TAG.matchEntire(tag)?.groupValues?.get(1)
+        } finally {
+            conn.disconnect()
+        }
+    }
+
+    /** GitHub API 요청 한도가 찼다. [until] 은 다시 차는 때(이 기기의 벽시계 ms, 모르면 0) */
+    class RateLimited(val until: Long) : IOException("rate limited")
+
+    /** 릴리스 정보(API 응답)를 읽는다. 태그·자산·크기·SHA-256 이 맞지 않으면 실패 */
+    private fun release(body: String): Release {
+        val json = JSONObject(body)
         // 태그 `v1.5.1` 과 자산 `BookLauncher-1.5.1-release.apk` 가 맞아야 한다(받은 APK 의 versionName 도 [verify] 가 본다).
         val version = TAG.matchEntire(json.getString("tag_name"))?.groupValues?.get(1) ?: throw IOException("bad tag")
         val assets = json.getJSONArray("assets")
@@ -251,18 +303,25 @@ object Update {
         override fun close() = conn.disconnect()
     }
 
+    /** 시간 제한(연결 15초·읽기 30초)과 User-Agent 를 단 연결 */
+    private fun connect(url: String) = (URL(url).openConnection() as HttpURLConnection).apply {
+        connectTimeout = 15_000
+        readTimeout = 30_000
+        setRequestProperty("User-Agent", "BookLauncher")
+    }
+
+    /** [url] 을 연다(200 만). GitHub API 요청 한도가 찼으면 [RateLimited] */
     private fun open(url: String): Response {
-        val conn = URL(url).openConnection() as HttpURLConnection
-        conn.connectTimeout = 15_000
-        conn.readTimeout = 30_000
+        val conn = connect(url)
         conn.setRequestProperty("Accept", "application/vnd.github+json")
-        conn.setRequestProperty("User-Agent", "BookLauncher")
         val code = try { conn.responseCode } catch (e: IOException) { conn.disconnect(); throw e }
-        if (code != HttpURLConnection.HTTP_OK) {
-            conn.disconnect()
-            throw IOException("HTTP $code")
-        }
-        return Response(conn)
+        if (code == HttpURLConnection.HTTP_OK) return Response(conn)
+        val limited = code == 429 || (code == HttpURLConnection.HTTP_FORBIDDEN && conn.getHeaderField("X-RateLimit-Remaining") == "0")
+        // 다시 차는 때는 서버 시계 기준이라 응답 시각(Date)과의 차이만 이 기기 시계에 더한다(기기 시계가 틀려도 남은 시간은 맞게).
+        val reset = conn.getHeaderField("X-RateLimit-Reset")?.toLongOrNull()?.times(1000)
+        val until = if (reset == null) 0L else System.currentTimeMillis() + (reset - (conn.date.takeIf { it > 0 } ?: System.currentTimeMillis()))
+        conn.disconnect()
+        throw if (limited) RateLimited(until) else IOException("HTTP $code")
     }
 
     /** [file] 에 받는다(크기·SHA-256 이 다르면 실패. 지우는 것은 부르는 쪽) */

@@ -157,7 +157,7 @@ object Wattpad : ReaderApp(
  * 서재에 있는 이야기의 상세를 보면 빈 저자를 채운다(격자 보기 서재에는 저자가 없다).
  */
 class WattpadReader(private val wattpad: Wattpad) : DetailReader(wattpad, clickOnly = false, wattpad::detail) {
-    /** 이 서비스에서 이야기 번호를 찾아본 책(실패해도 서비스가 다시 붙을 때까지 다시 묻지 않는다) */
+    /** 이 서비스에서 이야기 번호를 찾았거나 찾는 중인 책(같은 책을 겹쳐 찾지 않게. 인터넷이 안 되는 등 실패하면 빼서 다음에 열 때 다시) */
     private val searched = mutableSetOf<String>()
 
     /**
@@ -184,7 +184,7 @@ class WattpadReader(private val wattpad: Wattpad) : DetailReader(wattpad, clickO
 
     /**
      * 홈에서 바로 열 이야기 번호를 뒤에서 한 번 찾아 둔다: 이미 있거나 저자를 모르면(같은 제목이 많다) 하지 않는다.
-     * 앱이 보여 준 제목으로 공개 검색해 제목·사용자 이름이 같은 이야기가 하나일 때만([Wattpad.matchStory])
+     * 앱이 보여 준 제목으로 공개 검색해 제목·사용자 이름이 같은 이야기가 하나일 때만([Wattpad.matchStory]). 검색이 실패하면(인터넷이 안 되는 등) 다음에 그 책을 열 때 다시 찾는다
      */
     private fun findStory(ctx: AppContext, book: ShelfBook) {
         val author = book.author.trim()
@@ -192,6 +192,7 @@ class WattpadReader(private val wattpad: Wattpad) : DetailReader(wattpad, clickO
         if (author.isEmpty() || ctx.prefs.contains(pref) || !searched.add(book.id)) return
         val title = book.seenTitle.ifBlank { book.title }
         ctx.inBackground({ wattpad.matchStory(String(BookSearch.download(wattpad.searchUrl(title))), title, author) }) { result ->
+            if (result.isFailure) { searched.remove(book.id); return@inBackground }
             result.getOrNull()?.let { id -> ctx.prefs.edit().putString(pref, id).apply() }
         }
     }

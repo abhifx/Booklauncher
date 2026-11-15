@@ -15,6 +15,7 @@ import com.woody.booklauncher.Db.tx
 import com.woody.booklauncher.readers.ReaderApps
 import java.time.Instant
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.ZoneId
 
 /** 오늘 읽은 시간과 연속 독서일(오늘까지, 오늘 아직 안 읽었으면 어제까지) */
@@ -356,6 +357,35 @@ object ReadingLog {
         // 나간 책은 잠금 밖에서 읽는다(잠금 순서는 늘 BookShelf → ReadingLog)
         val past = BookShelf.history(context)
         return withoutDropped(savedRaw(context), past)
+    }
+
+    /** 저장해 둔 끝난 날의 읽은 시간을 달마다 더한 것([savedDays] 로, 시간이 있는 달만). 기기 정보의 `읽은 시간 지우기` 목록. */
+    fun savedMonths(context: Context): Map<YearMonth, Long> =
+        savedDays(context).entries.groupBy({ YearMonth.from(it.key) }, { it.value.values.sum() })
+            .mapValues { (_, ms) -> ms.sum() }.filterValues { it > 0 }
+
+    /**
+     * 저장해 둔 [month] 의 읽은 시간을 책에 붙은 칸까지 모두 지운다(기기 정보의 숨은 메뉴. 어떤 책인지 모르는 시간은 책 기록에서 지울 수 없어서).
+     * 기록 시작일은 그대로(지운 날은 '기록 없음'이 아니라 '안 읽음'). 오늘은 저장하지 않는 날이라 사용 기록 권한이 있으면 다시 센다.
+     * 마지막으로 센 날(through)이 그달 앞까지 와 있으면 그달 끝(어제까지)으로 올려, 나중에 권한을 켜도 지운 날을 사용 기록으로 다시 채우지 않게 한다.
+     * 부르는 쪽은 먼저 [days] 로 세어 지난날을 저장해 둔다. 지운 줄 수.
+     */
+    @Synchronized
+    fun dropMonth(context: Context, month: YearMonth): Int {
+        val saved = load(context)
+        val yesterday = LocalDate.now().minusDays(1)
+        val end = minOf(month.atEndOfMonth(), yesterday)
+        val through = saved.through?.let { if (it >= month.atDay(1).minusDays(1) && it < end) end else it }
+        val n = runCatching {
+            Db.get(context).tx {
+                val n = delete("reading_day", "day BETWEEN ? AND ?", arrayOf(month.atDay(1).toEpochDay().toString(), month.atEndOfMonth().toEpochDay().toString()))
+                if (through != saved.through) replaceOrThrow("reading_meta", null, Db.values("name" to "through", "value" to through.toString()))
+                n
+            }
+        }.getOrDefault(0)
+        // 메모리 사본은 비워 다음에 DB 에서 다시 읽는다(세던 범위는 through 가 바뀌면 [count] 가 알아서 새로 잡는다)
+        cached = null
+        return n
     }
 
     @Synchronized

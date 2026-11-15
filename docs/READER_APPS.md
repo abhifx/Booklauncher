@@ -910,3 +910,18 @@ Bilingify 의 오픈소스 리더(https://github.com/readest/readest, Tauri). �
   - **DjVu**(2026-10-29, 예제는 djvu.js 저장소 `library/assets` 의 `boy.djvu`·`DjVu3Spec_bundled.djvu`·`czech_1-3.djvu` 를 이름을 바꿔 `Download` 에): Librera 의 라이브러리 칸 제목은 책 안 제목(DjVu 메타데이터 `title`, `DjvuExtract`)이 있으면 그것, 없으면 파일 이름을 손본 것이다(`TxtUtils.getTitleAuthorByPath`: 확장자를 떼고, ` - `·` _ ` 등이 있으면 앞은 저자·뒤는 제목, 끝의 `(…)`(10자 넘음)도 저자, 첫 글자를 대문자로, `-`·`—`·`_` 은 빈칸으로. PDF 도 이름에 ` - ` 가 있으면 같다). 그래서 `djvu-notitle.djvu` 는 `Djvu notitle`, `djvu-spec.djvu` 는 `Djvu spec` 로 보였고, 읽는 화면 제목(파일 이름)으로 넣은 책 `djvu-notitle`·`djvu-spec` 과 정리한 제목(`normTitle`, 대소문자·빈칸·기호 무시)이 같아 서재 칸의 첫 쪽이 표지로 붙었다. `Kim Author - Czech Pages.djvu` 는 칸이 제목 `Czech Pages`·저자 `Kim Author` 라 칸 제목만으로는 책 `Kim Author - Czech Pages` 와 맞지 않아, 칸의 저자·제목을 이은 것으로도 맞춘다(제목·저자 순서도. 고친 뒤 `Park Writer - Boy Again.djvu` 에 표지와 저자 `Park Writer` 가 붙었다). 라이브러리 격자는 위 막대(`filterLayout`)·아래 탭 줄(`slidingTabs2`) 밑까지 이어져, 넘긴 서재의 첫 줄 칸을 자르면 위 막대가 표지에 찍혔다(`Czech Pages`): 막대에 걸린 칸은 자르지 않는다(걸린 동안 `Boy Again` 은 표지 없음 → 맨 위로 올리자 붙음). 한 가지 색(검은 첫 쪽 `Czech Again`)은 공통 규칙대로 표지로 두지 않는다. 책 안 제목이 든 DjVu 는 시험하지 못했다(직접 `ANTa` 묶음으로 제목을 넣은 한 쪽짜리 파일은 Librera 가 제목으로 읽지 않았다. 문서 전체 메타데이터는 공유 주석 파일에 두는 것으로 보인다).
   - Librera 를 뒤로 나올 때 Play 스토어 평가 창(`InAppReviewActivity`)이 한 번 떴다(Librera 동작).
   - **무료판**(Play 10.0.11, 광고 포함, minSdk 24): 매니페스트에 저장소 권한이 없다. 처음 열면 라이브러리에 데모 책 둘(`Alice's Adventures in Wonderland`·`The Count of Monte Cristo`, Librera 전용 폴더 `Android/data/com.foobnix.pdf.reader/files/TempDownloads/`)과 `다운로드 폴더를 검색하도록 허용` 띠(폴더 허용, SAF)가 보인다. 기록은 `Download/Librera/profile.BETA/device.<기기>/` 에 적힌다(`app-Recent.json` 경로가 `internal-storage:/Android/data/…`). 화면 요소 이름은 Pro 와 같다. 칸을 눌러 연 `The Count of Monte Cristo` 가 저자 `Alexandre Dumas, Auguste Maquet` 와 함께 들어왔다. 그 전에 `uiautomator` 를 돌린 바로 뒤 연 `Alice's Adventures in Wonderland` 는 누름을 놓쳐 메뉴 제목으로 저자 없이 들어왔다가, 서재를 다시 볼 때 칸의 저자 `Lewis Carroll` 이 채워졌다(시험 도구 탓). 기록의 책 파일을 Pebble Desk 가 읽을 수 없어 메뉴 없이 쪽을 넘긴 진행률은 들어오지 않는다(예상대로).
+
+### LibreraX `com.librerax` (2026-11-13, 에뮬레이터, **지원**)
+
+- **앱**: Librera(foobnix) 개발자가 Librera 의 다음 판으로 만든 Compose 앱. Play `com.librerax`, GitHub 릴리스의 `LibreraX-PRO-<판>.apk`. 패키지·화면·요소 이름·기록 파일이 Librera 와 모두 달라 `LibreraApp` 으로는 잡히지 않는다.
+- **화면**: 서재·읽는 화면이 모두 `com.librerax.ComposeMainActivity` 하나. 책을 열어도 액티비티·창이 바뀌지 않아 읽는 화면은 화면 내용으로 가른다(`screenInsideActivity`·`markedScreens`). 서재 칸은 누르기·길게 누르기가 되는 `View` 이고 그 안 글자가 제목·저자·형식. 메뉴가 뜬 읽는 화면은 위 제목·저자, 아래 서재 줄·쪽 `SeekBar`·`< 페이지 >`. 메뉴가 없으면 아래 상태 줄(`남은 페이지: 7`·`1 / 81`)만 보인다.
+- **Pebble Desk**(`readers/LibreraX.kt`, Librera 와 코드를 나누지 않음): 읽는 화면은 SeekBar 양옆이 글자 요소인 메뉴가 보이거나, 누를 수 있는 것이 하나도 없는 동안(`showsViewer`·`viewerIn`). 책은 메뉴 맨 위 제목·저자. 들어와 처음 읽은 제목의 책은 들어온 때부터. 진행률은 메뉴의 쪽·상태 줄·리스트 보기 칸. 표지는 LibreraX 가 내주는 미디어 서비스(`BookMediaService`)의 최근 책에서 `content://com.librerax.covers/<숫자>` 로 받는다(`LibreraX.recent`, `wantCovers`).
+- **홈에서 열기**: 최근 책 항목의 경로를 책을 폈을 때 `reader_watch` 설정에 적고(`book_path_com.librerax_<책 id>`), 홈에서는 그 경로를 `reader.ReaderActivity` 로 보낸다(`LibreraX.open`). PDF 는 최근 책 제목이 파일 이름과 달라 경로의 파일 이름으로도 찾는다(`recentFor`·`fileTitle`).
+- **알아 둘 것**: TTS 창의 `엔진` 줄이 책 제목으로 들어오지 않게 메뉴가 있는 창에서만, 넘기는 줄 안의 묶음은 빼고 제목을 찾는다. 홈에서 열 때 경로를 모르는 책은 앱만 연다.
+
+### 북큐브 `com.bookcube.bookplayer` (2026-11-14, 에뮬레이터, **지원**)
+
+- **앱**: 북큐브 서점·도서관 대출 책을 읽는 앱. 서재(`BookShelfActivity` 안)`·읽는 화면(EPUB·웹툰)이 Compose·웹 화면이라 요소 이름이 없다.
+- **서재**: 칸에서 제목·저자·반납일(`⏰ D-14` 딱지)·진행률을 글자로 읽는다. 표지는 칸에서 자르지 않고 공개 검색(서점 `site=book`, 웹소설 `site=novel`) 결과에서 찾는다.
+- **읽는 화면**: 메뉴가 뜨면 위 막대에 작품·화 이름과 진행 원, 아래 화 칸. 웹툰은 화면 안 HTML(`view-header`·`viewer`)로 바로 본다.
+- **Pebble Desk**(`readers/Bookcube.kt`): 서재 칸·누른 칸·읽는 화면을 화면에서 읽고(`BookcubeReader`), 표지는 공개 검색으로. 화마다 한 권으로 넣는다.

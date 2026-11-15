@@ -76,6 +76,8 @@ class HomeActivity : EinkActivity() {
     /** 읽고 있는 책 자리. 자주 쓰는 앱 높이가 고정이라 남는 높이를 모두 차지하고, 책이 한 권이면 표지가 그만큼 커진다. */
     private lateinit var hero: LinearLayout
     private var heroHeight = 0
+    /** 홈 맨 바깥 뷰(바탕색과 배경 사진을 직접 칠한다) */
+    private lateinit var homeRoot: CanvasLayout
     /** 이 화면을 만들 때의 홈 모양과, 그 모양(설정에서 바뀌면 돌아올 때 다시 만든다) */
     private lateinit var homeLayout: HomeLayout
     private lateinit var builtLayout: HomeLayout
@@ -519,6 +521,8 @@ class HomeActivity : EinkActivity() {
         // 흰 바탕은 배경(background)으로 두지 않고 직접 칠한다. 크레마는 앱이 바뀔 때마다 배경이 있는 뷰 묶음(창의 맨 바깥 포함)에
         // 명암 필터를 다시 걸고 다시 그려, 홈으로 돌아올 때 전자잉크가 한 번 더 깜빡인다. 창 배경도 그래서 비운다.
         val root = canvasPage()
+        homeRoot = root
+        homeRoot.photo = Wallpaper.spec(this, prefs.wallpaperStrength, Palette.current.color)
         topBar = TopBarView(this, fixedFrame, HOME_MARGIN_DP).apply { setOnClickListener { Device.openQuickSettings(this@HomeActivity) } }
         root.addView(topBar, lp(MATCH, WRAP))
         // 달력 홈: 상단 아래에 이번 달 달력과 자주 쓰는 앱 5열 격자, 하단 줄(모든 앱 · 미니 앱 · 게임 · 설정).
@@ -705,6 +709,8 @@ class HomeActivity : EinkActivity() {
 
     /** 앱 목록과 설정을 다시 읽어 그린다. 홈으로 돌아올 때마다 부른다. */
     private fun refresh() {
+        // 배경 사진(설정에서 고르거나 진하기를 바꾸고 돌아오면 바탕을 다시 그린다)
+        homeRoot.photo = Wallpaper.spec(this, prefs.wallpaperStrength, Palette.current.color)
         // 달력 홈은 자주 쓰는 앱만 다시 그린다(책 자리·함께 읽는 책 없음).
         if (homeStyle == HomeStyle.CALENDAR) {
             val changedPkgs = AppIcons.clearChangedPackages(this)

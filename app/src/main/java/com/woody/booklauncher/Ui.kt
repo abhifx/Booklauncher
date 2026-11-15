@@ -498,8 +498,14 @@ fun Context.hbox(): LinearLayout = LinearLayout(this).apply {
 /**
  * 옅은 회색 바탕을 직접 칠하는 화면 바탕. 배경(background) 대신 그려 크레마가 앱을 바꿀 때 다시 거르지 않게 한다.
  * 창 배경도 비우고([Activity] 화면은 setContentView 뒤 `window.setBackgroundDrawable(null)`).
+ * 홈 배경 사진([Wallpaper])이 있으면 회색 위에 채워 그린다(사진이 카드 밖을 다 덮는다).
  */
 class CanvasLayout(context: Context) : LinearLayout(context) {
+    /** 그릴 배경 사진(없으면 null). 바뀌면 다음 그리기에 새로 만든다. */
+    var photo: Wallpaper.Spec? = null
+        set(v) { if (field != v) { field = v; invalidate() } }
+    private val photoCache = Wallpaper.Cache()
+
     init {
         orientation = VERTICAL
         setWillNotDraw(false)
@@ -507,11 +513,12 @@ class CanvasLayout(context: Context) : LinearLayout(context) {
 
     override fun dispatchDraw(canvas: Canvas) {
         canvas.drawColor(Ui.CANVAS)
+        photoCache.get(context, photo, width, height)?.let { canvas.drawBitmap(it, 0f, 0f, null) }
         super.dispatchDraw(canvas)
     }
 }
 
-fun Context.canvasPage(): LinearLayout = CanvasLayout(this)
+fun Context.canvasPage(): CanvasLayout = CanvasLayout(this)
 
 /** 자주 쓰는 앱 타일: 옅은 회색 둥근 사각형. 테두리 대신 면을 직접 그린다(크레마 명암 필터를 피한다). */
 class IconTile(context: Context, private val radiusDp: Int = 15, fillColor: Int = Ui.TILE) : FrameLayout(context) {

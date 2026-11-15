@@ -1,12 +1,13 @@
 package com.woody.booklauncher.readers
 
+import android.content.res.Resources
 import android.graphics.Rect
 import android.view.accessibility.AccessibilityNodeInfo
 
 /**
  * 리디: 책은 교보eBook처럼 읽는 화면 메뉴의 제목(26.10 부터 `reader_title_bar`, 그 전은 `title`)으로 안다. 서재(React Native, 내 서재 탭과 작품 화면)는 요소 이름이 없어
- * 칸 설명·글자로 표지만 잘라 둔다(칸을 눌러도 알림이 없다). 받지 않은 권(작품 화면 격자 보기에서 어둡게 덮이고 받기 단추가 붙는다)은
- * 자르지 않는다. 표지는 서재가 멈췄을 때만 자른다: 바로 자르기([eagerCovers])는 누른 순간에 찍게 되는데, 받지 않은 책의 `이어보기`·책 메뉴는
+ * 칸 설명·글자로 표지만 잘라 둔다(칸을 눌러도 알림이 없다). 받지 않은 권(작품 화면 격자 보기에서 받기 단추가 붙는다. 26.10 은 표지를 어둡게 덮는다)은
+ * 자르지 않는다. 서재는 26.10 까지 `libraryGnbMenus` 로, 26.11 부터(`모든 책장`: 최근 본·구매 목록·…) 머리 글자로 알아본다. 표지는 서재가 멈췄을 때만 자른다: 바로 자르기([eagerCovers])는 누른 순간에 찍게 되는데, 받지 않은 책의 `이어보기`·책 메뉴는
  * 서재 위에 어두운 막을 깔고 그 막이 화면 트리에 늦게 들어와 어두운 표지가 잘렸다(2026-10-21).
  * 진행률은 뷰어 설정의 '하단 좌/우 정보 표시'를 켜면 아래 좌·우(`15 / 640`, `2%`), 꺼 두면 메뉴의 쪽(`14 / 626`).
  * 원스토어판(`com.ridi.books.onestore`, '리디 완전판')은 패키지만 다르고 코드는 같다고 본다 **(미확인)**.
@@ -39,7 +40,7 @@ open class RidiSpec(pkg: String) : ReaderApp(
         fun walk(n: AccessibilityNodeInfo, depth: Int, over: List<Rect>) {
             // 같은 화면이 품은 홈·검색 탭의 웹 화면은 훑지 않는다.
             if (n.isWebView()) return
-            if (n.viewIdResourceName == SHELF_MARKER) shelf = true
+            if (n.viewIdResourceName == SHELF_MARKER || n.text?.toString() == SHELF_HEADER) shelf = true
             val desc = n.contentDescription?.toString()
             if (!desc.isNullOrEmpty()) cell(n, desc)?.let { s ->
                 val old = found[s.title]
@@ -61,39 +62,60 @@ open class RidiSpec(pkg: String) : ReaderApp(
 
     /**
      * [cell] 안의 글자 가운데 설명 [desc] 가 그것으로 시작하는 것(제목)과 표지 모양 그림. 둘 다 있어야 책 칸.
-     * 목록 보기 칸은 설명 뒤에 진행률이 있다(`정의란 무엇인가, 26.7MB, 소장, 48%`).
-     * 표지 위 요소([coverOverlays], 받기 단추)가 있는 칸(받지 않은 권)은 책 칸으로 보지 않는다: 작품 화면 격자 보기는 그 표지를 어둡게 덮고 단추를 얹어 그린다.
+     * 목록 보기 칸은 설명 뒤에 진행률이 있다(`정의란 무엇인가, 26.7MB, 소장, 48%`. 26.11 의 최근 본은 진행률이 옆 `이어보기` 칸에 따로 있어 읽지 않는다).
+     * 26.11 은 여러 권 묶음 칸의 설명이 표지 위 `총 5권` 으로 시작해(`총 5권, 본격 한중일 세계사, 이용 권한 없음`) 그것을 떼고 맞춘다.
+     * 작품 화면 권 칸이 제목과 권 번호를 따로 두면(26.11: `본격 한중일 세계사 `·`1`, 설명 `본격 한중일 세계사 , 1, 본격 한중일 세계사 1, …`) 설명에 있는 `제목 번호` 를 제목으로.
+     * 표지 위 요소(받기 단추: 26.10 은 이름 [coverOverlays], 26.11 은 설명 [DOWNLOAD_DESC])가 있는 칸(받지 않은 권)은 책 칸으로 보지 않는다:
+     * 단추가 표지에 찍히고, 26.10 작품 화면 격자 보기는 그 표지를 어둡게 덮어 그린다.
      */
     private fun cell(cell: AccessibilityNodeInfo, desc: String): Cell? {
+        val body = desc.replaceFirst(VOLUMES, "")
         var title: String? = null
+        val numbers = mutableListOf<String>()
+        val minCover = MIN_COVER_DP * Resources.getSystem().displayMetrics.density
         var thumb: Rect? = null
         var covered = false
         fun walk(n: AccessibilityNodeInfo, depth: Int) {
             if (n.isWebView()) return
-            if (n.viewIdResourceName in coverOverlays && n.isVisibleToUser) covered = true
+            if (n.isVisibleToUser && (n.viewIdResourceName in coverOverlays || n.contentDescription?.toString() == DOWNLOAD_DESC)) covered = true
             val t = n.text?.toString()?.trim()
-            if (!t.isNullOrEmpty() && desc.startsWith(t) && t.length > (title?.length ?: 0)) title = t
+            if (!t.isNullOrEmpty() && body.startsWith(t) && t.length > (title?.length ?: 0)) title = t
+            if (!t.isNullOrEmpty() && t.all(Char::isDigit)) numbers += t
             if (n.className?.endsWith("ImageView") == true && thumb == null) {
                 val r = n.bounds()
-                if (usableThumb(r) && r.width() >= MIN_COVER_PX) thumb = r
+                if (usableThumb(r) && r.width() >= minCover) thumb = r
             }
             if (depth < WALK_DEPTH) for (i in 0 until n.childCount) n.getChild(i)?.let { walk(it, depth + 1) }
         }
         walk(cell, 0)
         if (covered) return null
-        val t = title ?: return null
-        return Cell(t, "", percent(desc.removePrefix(t)), -1, thumb ?: return null, cell.bounds())
+        val head = title ?: return null
+        // 숫자 제목(`1984`)의 글자는 번호가 아니다. 설명에 `제목 번호` 가 그대로 있을 때만
+        val t = numbers.firstOrNull { it != head && body.contains("$head $it") }?.let { "$head $it" } ?: head
+        return Cell(t, "", percent(body.removePrefix(head)), -1, thumb ?: return null, cell.bounds())
     }
 }
 
 /** 서재 표시 요소(내 서재 머리). 이름에 `패키지:id/` 가 없어 이름으로 찾기가 안 되어 훑으면서 본다. */
 private const val SHELF_MARKER = "libraryGnbMenus"
 
-/** 받지 않은 권 칸의 받기 단추(작품 화면. 이름에 `패키지:id/` 가 없다) */
+/** 26.11 부터의 서재 머리 글자(최근 본·구매 목록·다운로드·내 책장·관심 작품 탭 위). 홈·검색 탭에는 없다 */
+private const val SHELF_HEADER = "모든 책장"
+
+/** 받지 않은 권 칸의 받기 단추(작품 화면. 이름에 `패키지:id/` 가 없다). 26.10 까지 */
 private const val DOWNLOAD = "download"
 
-/** 표지로 쓸 그림의 최소 폭(목록 보기 표지 86px 는 받고 아래 '최근 본' 줄의 66px 는 뺀다) */
-private const val MIN_COVER_PX = 80
+/** 26.11 부터 받기 단추는 이름 없이 설명만 있다 */
+private const val DOWNLOAD_DESC = "다운로드"
+
+/** 26.11 여러 권 묶음 칸의 설명 앞 `총 5권, ` */
+private val VOLUMES = Regex("^총 \\d+권, ")
+
+/**
+ * 표지로 쓸 그림의 최소 폭(dp, 리디가 그리는 시스템 밀도로 잰다). 페블(1.875)에서 79px: 26.10 목록 보기 표지 86px 는 받고 아래 '최근 본' 줄의 66px 는 뺀다.
+ * 26.11 아래 '읽고 있는 작품' 줄의 표지(폰 450dpi 에서 98px = 35dp)도 뺀다(화소로 재면 밀도 높은 기기에서 이 작은 표지가 잘렸다).
+ */
+private const val MIN_COVER_DP = 42f
 
 /** Play 스토어판 */
 object Ridi : RidiSpec("com.initialcoms.ridi")
