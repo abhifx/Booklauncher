@@ -8,8 +8,11 @@ BookLauncher is a fork of [Pebble Desk](https://github.com/hissinger/pebble-desk
 
 <p align="center"><img src="docs/screenshots/v3-home.png" width="340" alt="BookLauncher 3.0 home on HiBreak: separate white cards for the current book with Continue reading and progress, the Also reading cover grid, a compact reading-habit card, and favorite apps, on a grey canvas"></p>
 
-## What's in 3.0.0
+## What's in 3.1.0
 
+- **Home background picture** — pick a photo under Settings › Display › Background picture and blend it into the Home background at 0–100% strength. Cards and text stay readable; the photo is copied into app storage, so moving or deleting the original changes nothing.
+- **LibreraX and Bookcube** — auto-add books from LibreraX (including covers from its media service and opening the book from Home) and Bookcube. Also in Settings › Reading › How auto-add works.
+- **Fixes** — tapping a favourite app icon now launches the app; RIDI 26.11 shelf covers; a clearer update check when GitHub's API rate limit is reached. Long-press the first Device info line to clear reading time by month.
 - **Soft card home** — every part of Home is its own white rounded card on a grey canvas. The shade is chosen so cards stay clearly separated on a 16-step e-ink panel instead of blending into white.
 - **Shelf cards** — the current book, `Also reading`, reading habit and favorites are separate cards. `Also reading` ends after the covers; the compact reading-habit card below shows streak, today and this week.
 - **Widgets by swipe** — swipe up from either Home style to open Widgets, swipe down there to return. The widget desktop is now a grid of white rounded cards too.
@@ -71,7 +74,7 @@ NeoReader (BOOX), iReader (built-in) and AcousText are supported too. AcousText 
 
 ## Install
 
-1. Download `BookLauncher-3.0.0-release.apk` from [Releases](https://github.com/abhifx/Booklauncher/releases) and open it in a file manager on the device.
+1. Download `BookLauncher-3.1.0-release.apk` from [Releases](https://github.com/abhifx/Booklauncher/releases) and open it in a file manager on the device.
 2. Choose BookLauncher in Settings › Apps › `Default home app`.
 3. On first run, `Getting started` turns on the two core features: **Auto-add books** (Android Accessibility) and **Reading time** (Usage access). On Android 13+, an app installed from a file may need **Allow restricted settings** in its app info first.
 
