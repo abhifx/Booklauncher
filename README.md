@@ -8,8 +8,9 @@ BookLauncher is a fork of [Pebble Desk](https://github.com/hissinger/pebble-desk
 
 <p align="center"><img src="docs/screenshots/v3-home.png" width="340" alt="BookLauncher 3.0 home on HiBreak: separate white cards for the current book with Continue reading and progress, the Also reading cover grid, a compact reading-habit card, and favorite apps, on a grey canvas"></p>
 
-## What's in 3.1.0
+## What's in 4.0.0
 
+- **Fifteen games** — 2048, minesweeper, Sudoku, nonogram, Connect Four, checkers, **Chess**, Othello, Hearts, solitaire, The Intercept, Carnivore, Murdle, battleship and Wordle, each with its own records, undo where it makes sense, and a saved board. Chess has castling, en passant, promotion, check/checkmate, stalemate, the fifty-move rule and insufficient-material draws, with a three-level computer opponent. Othello plays 8×8 against the device at three levels; Hearts seats four with passing and shooting the moon; The Intercept is a branching story; Carnivore deduces culprits from animal statements; Murdle fills a logic grid from clues. Minesweeper has three sizes, flags, chording and a safe first tap; Sudoku has notes, hints, conflicts and undo; Connect Four, checkers and battleship play against the device; solitaire is Klondike; Wordle has an on-screen keyboard and streak.
 - **Home background picture** — pick a photo under Settings › Display › Background picture and blend it into the Home background at 0–100% strength. Cards and text stay readable; the photo is copied into app storage, so moving or deleting the original changes nothing.
 - **LibreraX and Bookcube** — auto-add books from LibreraX (including covers from its media service and opening the book from Home) and Bookcube. Also in Settings › Reading › How auto-add works.
 - **Fixes** — tapping a favourite app icon now launches the app; RIDI 26.11 shelf covers; a clearer update check when GitHub's API rate limit is reached. Long-press the first Device info line to clear reading time by month.
@@ -17,13 +18,14 @@ BookLauncher is a fork of [Pebble Desk](https://github.com/hissinger/pebble-desk
 - **Shelf cards** — the current book, `Also reading`, reading habit and favorites are separate cards. `Also reading` ends after the covers; the compact reading-habit card below shows streak, today and this week.
 - **Widgets by swipe** — swipe up from either Home style to open Widgets, swipe down there to return. The widget desktop is now a grid of white rounded cards too.
 - **Calendar home** — the current book, this month's calendar with reading days (filled) and goal rings, then a five-column app grid. Landscape uses a compact book and favorites card so names fit.
-- **Games** — 2048, minesweeper and Sudoku, built for e-ink: no animation, tap or hold, best score and best time saved.
+- **More games** — Chess (full rules and a three-level computer opponent), Othello (8×8 against the device at three levels), Hearts (four seats, passing and shooting the moon), The Intercept (a branching story at a rainy station), Carnivore (find the culprits from animal statements) and Murdle (fill a logic grid from clues), each with a saved game.
 - **Better on big screens** — 10-inch tablets keep text smaller and use two columns in portrait, so more fits on screen.
 - **Also reading as a cover grid** — the other books in a bookshelf-style grid, with title and a thin progress bar under each cover. Covers keep their size as you add books; the shelf pages instead. `See all` opens the full book list.
 - **One row of favorites** — 5 apps per page, in your own order. List or grid view. Long-press to rename, change the icon or remove.
 - **Licorice-style desktop widgets** — clock and date, reading stats, continue reading, music, reading calendar, quote of the day, device status, weather, headlines, markets, recent books and the reading year. Add, remove and reorder cards from `Add widget`; Android widgets get their own pages after them.
 - **A music card that works with audiobooks and TTS** — shows the real title, app and position, and controls the active media session directly instead of firing blind media keys.
-- **Mini apps** — a calculator, a notes pad and a countdown timer, built in and offline.
+- **Mini apps** — a calculator, a notes pad, a countdown timer, a companion, a reading quest, habits, a to-do list, counters, quotes and a clock with this month's calendar, built in and offline.
+- **Companion and reading quest** — a small companion that grows with new reading time, changes mood and energy, and can be fed, played with and rested once a day. The reading quest is a nine-chapter story whose chapters unlock as you read (30 to 1,000 minutes); each choice leans toward courage, wisdom or kindness, and the strongest trait decides one of four endings. Both are offline and use only the reading log.
 - **Reading stats** — today's ring, streak, four-week calendar or graph, daily goal, and weekly/monthly/yearly totals.
 - **Made for E Ink** — no animation, pages instead of scrolling, monochrome first, optional color on color E Ink.
 
@@ -55,8 +57,8 @@ All screenshots were taken on a HiBreak.
 - **All apps** — paged, with a letter index. Hide the apps you never use.
 - **Icon packs** — Arcticons and other Android icon packs, with per-app overrides.
 - **Display** — text size 70–150%, line spacing 80–150%, optional color theme, a Home background picture, landscape and tall screens.
-- **Mini apps** — calculator, notes and a timer, without leaving the launcher.
-- **Games** — 2048, minesweeper and Sudoku, made for e-ink (no animation, tap or hold, best-score and best-time records). Open them from Mini apps or from the Calendar home.
+- **Mini apps** — calculator, notes, timer, companion, reading quest, habits, to-do, counters, quotes and clock with calendar, without leaving the launcher.
+- **Games** — 2048, minesweeper, Sudoku, nonogram, Connect Four, checkers, Chess, Othello, Hearts, solitaire, The Intercept, Carnivore, Murdle, battleship and Wordle, made for e-ink (no animation, tap/hold/swipe, best score/time, wins and games saved for later). Open them from Mini apps or from the Calendar home.
 - **Your data stays on the device** — the reading log is never sent anywhere. Weather, headlines and markets use the network (Open-Meteo, Hacker News, Yahoo Finance; no account).
 
 ## Supported apps
@@ -74,7 +76,7 @@ NeoReader (BOOX), iReader (built-in) and AcousText are supported too. AcousText 
 
 ## Install
 
-1. Download `BookLauncher-3.1.0-release.apk` from [Releases](https://github.com/abhifx/Booklauncher/releases) and open it in a file manager on the device.
+1. Download `BookLauncher-4.0.0-release.apk` from [Releases](https://github.com/abhifx/Booklauncher/releases) and open it in a file manager on the device.
 2. Choose BookLauncher in Settings › Apps › `Default home app`.
 3. On first run, `Getting started` turns on the two core features: **Auto-add books** (Android Accessibility) and **Reading time** (Usage access). On Android 13+, an app installed from a file may need **Allow restricted settings** in its app info first.
 
@@ -121,5 +123,7 @@ The screenshots show book covers and other apps' icons. These are not under the 
 The completed stamp (`app/src/main/res/drawable-nodpi/stamp_completed.png`) is not under the license above. It is a modified version of [TheDigitalArtist's 'Approved Stamp'](https://pixabay.com/illustrations/approved-stamp-approval-business-5254258/) on Pixabay ([Pixabay Content License](https://pixabay.com/service/license-summary/)) (center text changed to `COMPLETED`, black and white, `tools/stamp_completed.py`).
 
 The Java part of libarchive for unpacking comic covers (`app/src/main/java/me/zhanghai/android/libarchive/`) is taken from [libarchive-android](https://github.com/zhanghai/libarchive-android) (Apache-2.0) with one line changed where it loads the native library. The native library `libarchive-jni.so` is not bundled; users download it from the upstream Pebble Desk release [`libarchive-1.1.7`](https://github.com/hissinger/pebble-desk/releases/tag/libarchive-1.1.7). Licenses for libarchive, bzip2, xz, lz4, zstd, Mbed TLS and zlib are in that release's `NOTICE.txt`; it is built with `tools/libarchive/make-assets.sh`.
+
+The Wordle word lists in `app/src/main/res/raw/` are MIT-licensed data from FrequencyWords (Copyright 2016 Hermit Dave) and five-letter-words (Copyright 2017 Charles Reid); the full notice is in [NOTICE](NOTICE).
 
 The sample book cover on the Getting started screens (`app/src/main/res/drawable-nodpi/sample_cover.jpg`) is the first-edition cover of Yun Dong-ju's *Sky, Wind, Stars and Poems* (Jeongeumsa, 1948), a black-and-white reduction of the [public domain file](https://commons.wikimedia.org/wiki/File:%EC%9C%A4%EB%8F%99%EC%A3%BC_%ED%95%98%EB%8A%98%EA%B3%BC_%EB%B0%94%EB%9E%8C%EA%B3%BC_%EB%B3%84%EA%B3%BC_%EC%8B%9C_(%EC%B4%88%ED%8C%90%EB%B3%B8,_1948).pdf) on Wikimedia Commons, scanned by the National Hangeul Museum archive (`tools/sample_cover.py`).

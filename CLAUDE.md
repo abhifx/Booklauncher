@@ -12,11 +12,11 @@ README 는 영어(`README.md`)와 한국어(`README.ko.md`) 두 벌이다. 하�
 
 ```bash
 export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
-./gradlew -q assembleRelease          # app/build/outputs/apk/release/BookLauncher-3.1.0-release.apk
-adb install -r app/build/outputs/apk/release/BookLauncher-3.1.0-release.apk </dev/null
+./gradlew -q assembleRelease          # app/build/outputs/apk/release/BookLauncher-4.0.0-release.apk
+adb install -r app/build/outputs/apk/release/BookLauncher-4.0.0-release.apk </dev/null
 ```
 
-- 릴리스는 R8 축소(약 740KB, 1.6.5 는 720KB·1.6.4 는 705KB·1.6.1 은 734KB·1.5.3 은 480KB. HTML 라이브러리 없이 YES24 검색 결과를 직접 읽는다. 릴리스만 Kotlin 널 검사 호출을 빼고(`-Xno-*-assertions`) `-repackageclasses`, 도장 그림은 16단계 투명도 4비트 PNG). dex 는 minSdk 28 이라 압축하지 않고 넣는다(설치 뒤 풀어 두지 않아 저장 공간·실행이 낫다). 덮어 설치하면 앱 데이터가 남는다.
+- 릴리스는 R8 축소(4.0.0 은 1,228,792B. 1.6.5 는 720KB·1.6.4 는 705KB·1.6.1 은 734KB·1.5.3 은 480KB. HTML 라이브러리 없이 YES24 검색 결과를 직접 읽는다. 릴리스만 Kotlin 널 검사 호출을 빼고(`-Xno-*-assertions`) `-repackageclasses`, 도장 그림은 16단계 투명도 4비트 PNG). dex 는 minSdk 28 이라 압축하지 않고 넣는다(설치 뒤 풀어 두지 않아 저장 공간·실행이 낫다). 덮어 설치하면 앱 데이터가 남는다.
 - 서명: 이 포크는 새 패키지(`com.woody.booklauncher`)라 기존 Pebble Desk 와 따로 깔린다. 릴리스도 디버그 키로 서명한다(`app/build.gradle.kts`). 나중에 배포용 키를 만들면 `signingConfigs` 에 넣고 `release` 에 지정한다. 키는 저장소(공개)에 넣지 않는다.
 - 앱 데이터는 **기기 보호 저장소**(`/data/user_de/0/com.woody.booklauncher/`)에 있다(`Storage`). 홈이 잠금 해제 전에도 뜨게(directBootAware) 하려고 옮겼다.
   - DB `databases/pebble.db`(`Db`, 안드로이드 기본 SQLite, 버전 9): 읽은 시간 `reading_day`(날·앱 `pkg`·편 책 제목 `title`·붙은 책 `book_id`(모르면 "", 저장할 때 `bookFor` 로 한 번 정하고 다시 정하지 않는다)·ms. 버전 3 에서 `패키지/제목` 한 칸을 나누고 책 id 를 더함)·`reading_meta`, 편 책 `book_open`(그 책 id 도), Libby 읽는 화면이 뜨고 닫힌 때·KOReader 책을 열고 닫은 때 `viewer_mark`(버전 3), 읽고 있는 책 `shelf`(진행률 % 대신 앱이 보여 준 읽는 화 `chapter`, Mihon 의 화 이름. 버전 5. 홈에서 숨긴 책 `home_hidden`, 나간 책 `past` 에도. 버전 9), 나간 책 `past`, 완독 `finish`(한 번에 한 줄·줄 id 와 기기를 옮겨도 그대로인 `uid`, 같은 날 두 번도(순서는 누른 때 `at`). 회차 번호는 저장하지 않고 순서로 센다. 그 회차를 다시 읽기한 날 `started`·별점·감상 `stars`·`text`. 버전 3. 사용자가 고친 읽기 시작한 날 `began`, 버전 6), 진행 중인 마지막 회차의 별점·감상 `review`(버전 2), 다시 읽기한 날 `round_start`(버전 3), 진행 중 회차의 고친 읽기 시작한 날 `round_began`(완독하면 `finish.began` 으로, 버전 6), 파일로만 여는 이북 앱(네오리더)에서 연 책 파일 경로 `book_file`(책 id → 경로, 버전 4), 전체 기록의 휴지통으로 지운 회차 `round_drop`(그 책의 `after_day` 다음 날 ~ `until_day` 에 읽은 시간을 그 책의 기록에서 뺀다, 버전 7), 카테고리 `category`(이름·순서·통계에서 빼기·`uid`)와 책마다 붙인 것 `book_category`(책 id → 카테고리, 없으면 줄 없음, 버전 7), 기록에서 지울 때 읽은 시간까지 지운 책 `past.time_dropped`(그 책의 `reading_day` 줄은 남기고 셀 때 뺀다, 버전 8). 기록은 지우지 않는다. 릴리스된 DB 는 1.3.0~1.4.2 가 버전 1, 1.5.0~1.5.3 이 버전 2, 1.5.4 가 버전 3, 1.5.5~1.6.0 이 버전 4, 1.6.1~1.7.2 가 버전 5, BookLauncher 1.0.0~2.0.0 과 1.7.3~1.7.6 이 버전 6, 2.1.0 과 1.7.7~1.7.8 이 버전 7, 1.7.9 가 버전 8, 다음 판부터 버전 9(그 전은 JSON). 버전을 올리면 이 모든 판에서 올라오는 경로(`onUpgrade`)와 새 설치(`onCreate`)를 단위 테스트(`./gradlew testDebugUnitTest`, `app/src/test`: 회차 계산·마이그레이션·JSON 옮기기·저장과 캐시, Robolectric)와 에뮬에서 시험한다. 낮은 버전으로 되돌리기는 지원하지 않는다(판 낮춘 시험 빌드는 깨끗한 에뮬에서).
@@ -62,9 +62,9 @@ adb install -r app/build/outputs/apk/release/BookLauncher-3.1.0-release.apk </de
 | WidgetsActivity / WidgetPickerActivity | ⑯ 위젯: Home 에서 위로 밀면 열리고 위젯에서 아래로 밀면 홈으로(`EinkActivity.onVerticalSwipe`. 좌우 밀기는 쪽 넘김). Licorice-style built-in cards (Clock · Reading stats · Continue reading · Music · Calendar · Quote · Device · Weather · Recent books · This year) in a paged two-column grid of white rounded cards on the grey canvas, then `AppWidgetHost` Android widgets one per page inside a white card. Long-press a card for move/remove/settings. Picker lists built-in cards first, then Android widgets. Order in `shared_prefs/widgets.xml` (`native`, `ids`). |
 | NativeWidgets / Weather / Headlines / Stocks / Quotes | Card rendering and data (`WidgetData`), Open-Meteo weather by city (30-minute cache), Hacker News top three, one Yahoo Finance symbol, daily quote. |
 | Media / MediaWatchService | Reads the active `MediaSession` through a notification listener (`MediaWatchService`), falls back to `AudioManager` media keys. Used by the music card and its large control sheet. |
-| MiniAppsActivity / MiniStore | Built-in calculator, notes pad, countdown timer and a `게임` entry (notes JSON in `shared_prefs/mini.xml`). |
+| MiniAppsActivity / MiniStore / MiniExtras | 계산기·메모·타이머·동반자·읽기 퀘스트·습관·할 일·계수기·문장·시계·달력과 `게임` 입구. 메모는 `MiniStore`, 나머지는 `MiniExtrasStore`(`shared_prefs/mini.xml`). 습관은 월~일 칸에 날짜(ISO)로 표시, 할 일은 끝낸 것을 뒤로, 계수기는 길게 눌러 0으로·지우기, 문장은 한 장씩 넘기고, 시계는 기기 12/24시간 설정과 이번 달 달력(오늘 검은 원)을 그린다. 동반자는 새로 읽은 시간으로 자라고(`PetState`, `PetView`), 읽기 퀘스트는 아홉 장 이야기와 용기·지혜·다정함 결말(`ReadingQuest`). 글자를 키우면 허브가 쪽으로 넘어간다. |
 | HomeCalendarView | 달력 홈(설정 › 화면 › 홈 화면 › 달력): 지금 읽는 책 카드(표지 112dp·바형 132dp·태블릿 144dp, 제목 28sp·저자·진행률·이어 읽기, `HomeActivity.calendarHero`) + 이번 달 달력(6주 고정, 읽은 날 검은 원·목표 링·오늘 테두리, `MonthDots` 와 같은 규칙, 날짜를 누르면 독서 기록) + 자주 쓰는 앱 4열 타일 격자(줄 78dp) + 하단 줄(모든 앱 · 미니 앱 · 게임 · 설정). 세로는 위에서 아래로, 가로는 달력 왼쪽·책과 앱 오른쪽 두 칸. 달을 넘기고 앱은 쪽으로 넘긴다. |
-| GamesActivity / GameStore | 전자잉크 게임(2048 · 지뢰찾기 · 스도쿠): 애니메이션 없이 바뀐 판만 다시 그리고, 최고 점수·최단 시간은 `shared_prefs/games.xml`. 스도쿠는 답이 하나뿐인 문제를 만든다. |
+| GamesActivity / GameStore / games/ | 전자잉크 게임 열다섯(2048 · 지뢰찾기 · 스도쿠 · 노노그램 · 사목 · 체커 · 체스 · 오셀로 · 하트 · 솔리테어 · 인터셉트 · 카니보어 · 머들 · 배틀십 · 워들): 애니메이션 없이 바뀐 판만 다시 그리고, 규칙은 `games/` 의 파일마다(화면 없이 단위 시험), 판 그리기는 `games/GameViews.kt`·`ChessView.kt`. 최고 점수·최단 시간·승패·하던 판은 `shared_prefs/games.xml`(`GameStore`). 지뢰찾기는 첫 칸 안전·깃발·chord, 스도쿠는 메모·힌트·충돌·되돌리기, 사목·체커·오셀로·체스·배틀십은 기기 대전(오셀로·체스 세 난이도), 체스는 캐슬링·앙파상·승급·체크/메이트·스테일메이트·50수·기물 부족 무승부와 perft 시험, 하트는 네 자리·세 장 넘기기·2클럽 선공·달 사냥, 인터셉트는 두 언어 선택형 이야기, 카니보어는 네 동물의 진술과 목숨 두 번, 머들은 단서로 논리 표, 솔리테어는 클론다이크, 워들은 단어 목록을 `res/raw` 에서 읽는다. 허브는 한 쪽에 열 게임씩 넘긴다. |
 | ReadingActivity | ⑫ 독서 기록: 연속일·오늘 링, 4주 링 달력·막대그래프(각각 뷰 하나로 그림, 같은 높이), 합계, 이번 주 읽은 책 |
 | YearBooksActivity | ⑬ 올해 읽은 책(목록·격자, 해 고르기): 읽는 중·완독한 책(표지에 띠)·뺀 책, 완독·다시 읽기·기록에서 지우기 |
 | Recap / RecapImage / RecapActivity | ⑮ 월간 결산: 한 달 데이터와 배치(막대 끊기·주마다 줄 채우기·오른쪽 칸 모양 `Recap`), 1080×1350 그림(`RecapImage`, 표지는 `BookShelf.shareCover`), 화면(올해 읽은 책 아래 줄 오른쪽 `10월 결산 ›`, `‹ 9월 · 공유 · 11월 ›`, 그림을 누르면 크게, 공유 = 파일로 저장·다른 앱으로 보내기, 보내는 그림은 `RecapFiles` 가 내준다) |
@@ -110,22 +110,23 @@ adb install -r app/build/outputs/apk/release/BookLauncher-3.1.0-release.apk </de
 - 가로 화면(1.5.4 까지는 세로 고정): 세로의 칸 모양은 그대로 두고 남는 폭에 칸을 나란히(독서 기록 요약 | 달력(넓으면 그래프도), 아래 메뉴 정보 | 항목, 설정 묶음 두 칸, 격자는 표지 크기 그대로 열을 늘림). 홈은 왼쪽 세로 단추 줄 + 오른쪽 위 카드 두 장(지금 읽는 책 | 자주 쓰는 앱) + 그 아래 화면 폭 전체의 `함께 읽는 책` 격자. 바형도 같은 규칙. 판단은 `landscape()`(폭 > 높이), 자세한 건 DESIGN.md `가로 화면`. 높이가 낮은 가로 화면(HiBreak 835×383dp)은 독서 기록 왼쪽 칸의 링·줄 높이를 줄이고(`DENSE_*`), 홈 카드·표지도 줄인다. 에뮬은 `settings put system user_rotation 1`(자동 회전 끄고)로 돌린다.
 - 하단 줄 56dp(모든 화면). 홈은 아이콘 다섯 칸(모든 앱 · 통계 · 위젯 · 미니 앱 · 설정), 가로 홈은 왼쪽 세로 줄. 오늘 읽은 시간은 통계 화면에서 본다.
 - 홈 화면은 설정 › 화면 › `홈 화면` 에서 `서가`(책 중심, 지금까지의 홈)와 `달력`(이번 달 달력 + 자주 쓰는 앱 4열 타일 + 모든 앱 · 미니 앱 · 게임 · 설정) 중에 고른다(`HomeStyle`). 처음은 서가라 업데이트로 홈이 갑자기 바뀌지 않는다. 달력의 날짜를 누르면 독서 기록을 연다.
-- 게임은 미니 앱 안의 `게임`(2048 · 지뢰찾기 · 스도쿠, `GamesActivity`). 애니메이션 없이 바뀐 판만 다시 그리고, 기록은 `shared_prefs/games.xml`. 가볍게 더할 게임은 `games` 의 판·규칙을 따로 두고 이 화면에 페이지를 더한다.
+- 게임은 미니 앱 안의 `게임`(2048 · 지뢰찾기 · 스도쿠 · 노노그램 · 사목 · 체커 · 체스 · 오셀로 · 하트 · 솔리테어 · 인터셉트 · 카니보어 · 머들 · 배틀십 · 워들, `GamesActivity`). 애니메이션 없이 바뀐 판만 다시 그리고, 기록·하던 판은 `shared_prefs/games.xml`. 규칙은 `games/` 의 파일마다 화면 없이 시험하고, 판 그리기는 `games/GameViews.kt`·`ChessView.kt` 에 둔다. 가볍게 더할 게임은 판·규칙을 `games/` 에 더하고 허브와 `GamesActivity` 의 페이지를 더한다(허브는 한 쪽에 열 게임).
 - 읽는 책 자동 추가·오늘 읽은 시간은 앱에 켜짐 값을 두지 않고 시스템 값(접근성 켜짐 / **사용 기록 액세스**(`PACKAGE_USAGE_STATS`) 허용)이 곧 켜짐이다(어긋나지 않게). 어떤 책인지는 접근성 서비스가 그 앱에서 마지막으로 편 책으로 나누고(그 앱에서 편 책을 한 번도 몰랐으면 앱별. 서비스가 꺼진 동안 읽은 시간은 책 없이 하루 합계·연속일에만 들어간다). 읽는 화면은 클래스 이름 규칙(`READER` 정규식)으로 가린다. 연속일 = 5분 이상 읽은 날. 하루 목표 기본 30분(설정, 없음 / 15분~1시간 / 직접 입력 1~300분). 바꿔도 지난날은 그날의 목표로 센다.
 - 기록은 처음 켤 때 7일 전까지 채우고 그날을 기록 시작일로 둔다(그 전은 '기록 없음').
 - KOReader 는 화면(접근성)으로 아무것도 알 수 없어 '모든 파일 액세스'(설정 › 독서 › 책 파일 읽기)로 KOReader 가 남기는 파일을 읽는다: 어떤 책은 `koreader/history.lua` 맨 앞 줄, 열림·닫힘은 그 줄의 때와 책 파일의 접근 시각(KOReader 가 열 때만 맞춘다, 저장소는 noatime), 제목·진행률은 책 옆 `.sdr`. 권한 없는 길(koreader 폴더만 허락·플러그인·KOSync)은 조사 뒤 쓰지 않기로 했다(docs/READER_APPS.md).
 - 태블릿(실제 짧은 변 800dp 이상)은 1dp 를 표준의 1.32배로만 그린다(10.3인치 1404px 는 299dpi·751×999dp). 넓은 화면(700dp 이상)은 세로에서도 두 칸(설정·독서 기록·아래 메뉴), 홈 책장은 5~6칸 × 2~4줄, 가로는 단추 줄 200dp·카드 250dp·책장 2~4줄.
 - **저장소 전체를 훑어 책 파일을 찾지 않는다**: 책 파일은 이북 앱이 알려 주는 경로(앱 기록·데이터 창구·화면에 보이는 위치·홈에서 연 파일)로만 쓰고, 모르면 쓰지 않는다(표지는 화면에서 잘라 오고, 홈에서는 앱을 연다). 이름·제목으로 저장소를 훑으면 같은 이름의 다른 파일(만화 `01.cbz`)·같은 책의 사본을 가를 수 없고 SD 카드는 찾지 못한다. 그래서 문리더(메뉴 제목으로 EPUB 찾기)·네오리더(파일 이름으로 다시 찾기)의 저장소 찾기를 뺐다(2026-11-01). 이북 앱의 데이터 폴더를 알려진 자리나 얕은 몇 단계에서 찾는 것(Readest·Mihon)은 책 파일 찾기가 아니라 괜찮다.
 
-## 일하는 방식(사용자 선호)
+## Ways of working (user preference)
 
-- 답은 한국어로. 짧게, 결과·확인한 것 위주.
-- "시안 보여줘"면 **앱을 건드리지 말고** 그림(PIL 등)으로만 보여 준다. 정한 뒤에 구현한다.
-- 디자인을 바꾸면 기기에 설치하고 캡처로 확인한다.
-- 커밋은 요청할 때만. 메시지는 한국어, 끝에 `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. 푸시는 하지 않는다.
-- `/audit --fix` 를 자주 쓴다(버그 → 불필요 → 리팩토링 순, 찾은 것 바로 고침).
-- 완독 도장 `drawable-nodpi/stamp_completed.png` 는 Pixabay 그림을 고친 것(`tools/stamp_completed.py`, 출처는 README 라이선스 절). 원본 파일은 저장소에 넣지 않는다(Pixabay 는 원본 그대로 따로 배포하는 것을 금지).
-- 다른 앱 아이콘·책 표지가 들어간 시안 이미지는 저장소에 넣지 않는다(`design-review/`, `design-*.svg` 는 git 제외).
+- Reply in English. Keep it short and focused on results and what was verified.
+- **This is now an independent fork.** Do not merge or track upstream Pebble Desk. Keep the required attribution in `NOTICE`, but make product and technical decisions here.
+- If the user asks to "show a mock-up", **do not touch the app**; show a picture (PIL or similar) first. Implement only after it is agreed.
+- After a design change, install it on the device and check a screenshot.
+- Commit only when asked. Commit messages in English, ending with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. Do not push.
+- `/audit --fix` is used often (bugs → dead code → refactor; fix what is found).
+- The finished stamp `drawable-nodpi/stamp_completed.png` is edited from a Pixabay image (`tools/stamp_completed.py`; credit in the README license section). Do not put the original file in the repo (Pixabay forbids redistributing the original as-is).
+- Do not put mock-ups containing other apps' icons or book covers in the repo (`design-review/`, `design-*.svg` are git-ignored).
 
 ## 남은 일·아이디어
 
